@@ -12,4 +12,18 @@
 
 = Source Code =
 
-Find your google-generated password from the link in the Source tab of the project website.  
+  * Find your google-generated password from the link in the Source tab of the project website.  
+  * Using Windows Explorer, browse to the directory to place the source tree in.
+  * Right-click the folder background and select "SVN Checkout..."
+  * Fill out the form as in the image: TODO
+
+= Xilinx Project =
+
+  * Open the Xilinx Project Navigator
+  * Go File -> New Project
+  * Set Project Name to "hmc-mips"
+  * Change the Project Location to the exact path to the root of the SVN tree (where you checked out the code, *NOT* the svn subdirectory and *NOT* a new subdirectory called hmc-mips) TODO IMAGE
+  * Click next, make the details the same as this: TODO IMAGE
+  * Click next, next.
+  * In the Add Existing Sources dialog, select "Add Source."  Add all the source files that are in the svn tree.  (At the time of this writing, this is all the .v files in the src and testing subdirectories)
+  * *Uncheck* "Copy to project" -- we want to be working on the same version that Subversion manages.
