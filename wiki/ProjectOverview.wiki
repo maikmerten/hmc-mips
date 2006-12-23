@@ -13,3 +13,9 @@ The original proposal is available [http://docs.google.com/View?docid=df39snmn_1
 
 = Schedule =
 
+See the design proposal.
+
+= Development Documentation =
+
+DevelopmentEnvironmentGuide
+
