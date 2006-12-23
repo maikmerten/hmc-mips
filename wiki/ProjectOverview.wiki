@@ -1,0 +1,12 @@
+#summary One-sentence summary of this page.
+#labels Featured,Phase-Design
+
+= Introduction =
+
+For the Spring, 2007 semester, the VLSI class plans to develop a MIPS microprocessor. The processor will implement the MIPS R2000-class instruction set as well as utilize a cache memory system.
+
+
+= Project Design Proposal =
+
+The proposal is available [http://docs.google.com/View?docid=df39snmn_10g5gbr3 here].
+
