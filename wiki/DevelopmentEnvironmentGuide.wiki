@@ -4,7 +4,7 @@
 = Prerequisites =
 
   # Provide the project administer with your gmail address so you may be added as a project member.
-  # [http://tortoisesvn.net/downloads ToirtoiseSVN]
+  # [http://tortoisesvn.net/downloads ToirtoiseSVN] (Requires restart)
   # Xilinx ISE (8.2i is tried and tested)
   # ModelSim (6.2c is tried and tested)
   # Synplify Pro (8.5.1 is tried and tested)
