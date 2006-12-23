@@ -10,14 +10,17 @@
   # Synplify Pro (8.5.1 is tried and tested)
 
 
-= Source Code =
+= Checking Out the Source Code =
 
   * Find your google-generated password from the link in the Source tab of the project website.  
   * Using Windows Explorer, browse to the directory to place the source tree in.
   * Right-click the folder background and select "SVN Checkout..."
   * Fill out the form as in the image: TODO
 
-= Xilinx Project =
+
+= Creating the Xilinx Project =
+
+The Xilinx project file format is not friendly to version control.  To avoid irritating conflict, the project must be created and modified manually.  
 
   * Open the Xilinx Project Navigator
   * Go File -> New Project
@@ -26,4 +29,22 @@
   * Click next, make the details the same as this: TODO IMAGE
   * Click next, next.
   * In the Add Existing Sources dialog, select "Add Source."  Add all the source files that are in the svn tree.  (At the time of this writing, this is all the .v files in the src and testing subdirectories)
-  * *Uncheck* "Copy to project" -- we want to be working on the same version that Subversion manages.
+  * *Uncheck* "Copy to project" -- we want to be working on the same version that Subversion manages. Note that there will likely be several more files than shown in the screenshot below.  TODO Image
+  * Click next, finish.
+  * Click OK when the "Adding Source Files..." dialog comes up
+
+
+= Run a Trial Simulation =
+
+  * With the project open, in the Source window, change "Sources for:" to "Behavioral Simulation."
+  * Select "testbench" in the hierachy.
+  * In the Processes window, expand "Modelsim Simulator" and double click "Simulate model behavior.  TODO Image.
+  * When Modelsim loads, type "run" a few times.  If everything works, "Simulation Succeeded" or some similar positive message will come up. *Note: Testing is likely to change significantly from this description, see the testing documentation for more details.*
+{{{
+VSIM 2> run
+VSIM 3> run
+VSIM 4> run
+# Simulation succeeded
+# Break at testing/mipstest.v line 36
+VSIM 5> 
+}}}
