@@ -1,0 +1,15 @@
+#summary Guide to setting up your own machine to develop on the hmc-mips project on Windows.
+
+
+= Prerequisites =
+
+  # Provide the project administer with your gmail address so you may be added as a project member.
+  # [http://tortoisesvn.net/downloads ToirtoiseSVN]
+  # Xilinx ISE (8.2i is tried and tested)
+  # ModelSim (6.2c is tried and tested)
+  # Synplify Pro (8.5.1 is tried and tested)
+
+
+= Source Code =
+
+Find your google-generated password from the link in the Source tab of the project website.  
