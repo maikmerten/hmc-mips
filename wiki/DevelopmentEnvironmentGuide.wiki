@@ -48,3 +48,8 @@ VSIM 4> run
 # Break at testing/mipstest.v line 36
 VSIM 5> 
 }}}
+
+
+= Source Code Updates =
+
+Use SVN's update feature to load changes from the server.  Watch for new files being added to the source tree.  These will have to be added as non-copies to your project.  (If you don't notice the files being added, you'll probably get an error.)  Also, any conflicts will have to be resolved in the usual manner.  For more details on code management, Google a Subversion tutorial. 
