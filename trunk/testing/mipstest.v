@@ -15,12 +15,27 @@ module testbench();
   // instantiate device to be tested
   top dut(clk, reset, writedata, dataadr, memwrite);
   
+  integer currentTest;
+  reg currentSuccess;
+  
   // initialize test
   initial
     begin
-      reset <= 1; # 22; reset <= 0;
+      // Be sure to keep timing synced with imem's memory loads
+      for(currentTest = 0; currentTest < 2; currentTest = currentTest + 1) begin
+        currentSuccess <= 0;
+        reset <= 1; # 10; reset <= 0;
+        #1990;
+        if(currentSuccess) begin
+          $display("Simulation %d succeeded", currentTest);
+        end else begin
+          $display("Simulation %d failed", currentTest);
+        end
+      end
+      $display("Test complete");
+      $stop;
     end
-
+    
   // generate clock to sequence tests
   always
     begin
@@ -30,15 +45,23 @@ module testbench();
   // check results
   always@(negedge clk)
     begin
-      if(memwrite) begin
-        if(dataadr === 84 & writedata === 7) begin
-          $display("Simulation succeeded");
-          $stop;
-        end else if (dataadr !== 80) begin
-          $display("Simulation failed");
-          $stop;
-        end
-      end
+      case (currentTest)
+        0:
+          if(memwrite) begin
+            if(dataadr === 18 & writedata === 21) begin
+              currentSuccess <= 1;
+            end else begin
+              $display("Writing value %d to address %h", writedata, dataadr);
+            end
+          end
+        1:
+          if(memwrite) begin
+            if(dataadr === 84 & writedata === 7) begin
+              currentSuccess <= 1;
+            end
+          end
+//        default:
+      endcase
     end
 endmodule
 
