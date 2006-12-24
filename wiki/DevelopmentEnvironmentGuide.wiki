@@ -22,12 +22,12 @@ http://hmc-mips.googlecode.com/svn/trunk/images/checkout1.jpg
 
 = Creating the Xilinx Project =
 
-The Xilinx project file format is not friendly to version control.  To avoid irritating conflict, the project must be created and modified manually.  
+The Xilinx project file format is not friendly to version control.  To avoid irritating conflicts, the project must be created and modified manually.  
 
   * Open the Xilinx Project Navigator
   * Go File -> New Project
   * Set Project Name to "hmc-mips"
-  * Change the Project Location to the exact path to the root of the SVN tree (where you checked out the code, *NOT* the svn subdirectory and *NOT* a new subdirectory called hmc-mips)
+  * Change the Project Location to the exact path to the root of the SVN tree (where you checked out the code, *NOT* the "src" subdirectory and *NOT* a new subdirectory called hmc-mips)
 
 http://hmc-mips.googlecode.com/svn/trunk/images/newproject1.jpg
 
@@ -75,4 +75,3 @@ http://hmc-mips.googlecode.com/svn/trunk/images/editor_options.jpg
 = Source Code Updates =
 
 Use SVN's update feature to load changes from the server.  Watch for new files being added to the source tree.  These will have to be added as non-copies to your project.  (If you don't notice the files being added, you'll probably get an error.)  Also, any conflicts will have to be resolved in the usual manner.  For more details on code management, Google a Subversion tutorial. 
-
