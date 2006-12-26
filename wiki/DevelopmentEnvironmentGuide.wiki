@@ -53,7 +53,7 @@ http://hmc-mips.googlecode.com/svn/trunk/images/newproject3.jpg
 
 http://hmc-mips.googlecode.com/svn/trunk/images/behavior1.jpg
 
-  * When Modelsim loads, type "run" a few times.  If everything works, "Simulation Succeeded" or some similar positive message will come up. *Note: Testing is likely to change significantly from this description, see the testing documentation for more details.*
+  * When Modelsim loads, type "run" a few times.  If everything works, "Simulation Succeeded" or some similar positive message will come up. *Note: Testing is likely to change significantly from this description, see the [TestingGuide testing documentation] for more details.*
 {{{
 VSIM 2> run
 VSIM 3> run
