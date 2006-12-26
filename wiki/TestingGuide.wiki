@@ -1,0 +1,38 @@
+#summary Guide to the Verilog testing method.
+
+= Running Test =
+
+  # In the Xilinx ISE, select the sources for "Behavioral Simulation"
+  # Select the testbench module
+  # Under "Modelsim Simulator" Double-click "Simulate Model Behavior"
+  # Modelsim should start.  If the simulation does not automatically run, type "run 100000ns"
+  # Something like the following should be printed:
+{{{
+# Simulation           0 succeeded
+# Simulation           1 succeeded
+# Test complete
+}}}
+
+= Viewing More Internal Objects =
+
+By default Modelsim will optimize and not make it possible to view most internal components of thse simulation (in a waveform view for example).  
+
+You can bypass this (while also making the simulation slower) by doing the following:
+
+The vopt (opimization) command can control the visibility of components.  The +acc flag determines which components are visible.  Type {{{vopt -help}}} to see the various components that +acc controls.  In the following example "rn" refers to registers and nets. 
+
+To make these things visible, once Modelsim is open, type this into the console:
+
+{{{
+vopt +acc=rn testbench -o testbench_debug
+}}}
+
+Switch to optimized mode with 
+
+{{{
+vsim testbench_debug
+}}}
+
+Finally run the command as usual.
+
+Run 100000ns
