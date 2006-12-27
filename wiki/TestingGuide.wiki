@@ -15,7 +15,7 @@
 
 = Viewing More Internal Objects =
 
-By default Modelsim will optimize and not make it possible to view most internal components of thse simulation (in a waveform view for example).  
+By default Modelsim will optimize and not make it possible to view most internal components of the simulation (in a waveform view for example).  
 
 You can bypass this (while also making the simulation slower) by doing the following:
 
@@ -33,6 +33,10 @@ Switch to optimized mode with
 vsim testbench_debug
 }}}
 
-Finally run the command as usual.
+You may now view various components of the system in the Workspace by dragging the corresponding objects to the waveform window. 
 
-Run 100000ns
+Finally run as usual.
+
+{{{
+run 100000ns
+}}}
