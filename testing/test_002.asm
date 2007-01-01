@@ -5,10 +5,6 @@
 #
 # Created: 12/28/06
 #
-# Commands tested: 
-#   addiu, beq, sw
-#
-# Expected Behavior:
 #   Tests immediate instructions, hazards, negative numbers.  
 
 main:   addiu $2, $0, -10       # $2 = -10
@@ -25,6 +21,6 @@ main:   addiu $2, $0, -10       # $2 = -10
         # although sltiu is unsigned, normal sign extension still occurs on the
         # immediate value
         sltiu $2, $4, -1        # $2 = (0x70f00ff0 < 0xffffffff) = 1
-        addu  $2, $2, $3        # $2 = $2 + $3 = 0 + 1 = 2
+        addu  $2, $2, $3        # $2 = $2 + $3 = 1 + 1 = 2
 write:  sw   $2, 0($4)          # should write 2 to address 0x70f00ff0
 end:    beq  $0, $0, end        # loop forever
