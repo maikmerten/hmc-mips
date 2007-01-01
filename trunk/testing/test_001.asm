@@ -1,9 +1,19 @@
-# mipstest.asm
-# David_Harris@hmc.edu 9 November 2005 
+# Harvey Mudd College VLSI MIPS Project
+# Spring, 2007
 #
-# Test the MIPS processor.  
-#  add, sub, and, or, slt, addi, lw, sw, beq, j
+# Test 001
+#
+# Created: 12/24/06
+#
+# Commands tested:
+#   add, sub, and, or, slt, addi, lw, sw, beq, j
+#
+# Expected Behavior:
 # If successful, it should write the value 7 to address 84
+#
+# Notes:
+# Original code by
+# David_Harris@hmc.edu 9 November 2005 
 
 main:   addi $2, $0, 5          # initialize $2 = 5     0       20020005
         addi $3, $0, 12         # initialize $3 = 12    4       2003000c
@@ -23,5 +33,5 @@ around: slt  $4, $7, $2         # $4 = 3 < 5 = 1        28      00e2202a
         j    end                # should be taken       3c      08000011
         addi $2, $0, 1          # shouldn't happen      40      20020001
 end:    sw   $2, 84($0)         # write adr 84 = 7      44      ac020054
-
+loop:   beq  $0, $0, loop       # loop forever          48      1000ffff
 
