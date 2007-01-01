@@ -2,6 +2,10 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/1/2007==
+
+I believe I misinterpretted the sltiu command.  I originally added an enable slot to the immediate sign extender so that the immediate can be turned off for these unsigned instructions.  I can't find any reference to this issue in See MIPS Run, but [http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html this website] says that all immediate values are first sign extended and then treated as signed or unsigned.  
+
 ==12/31/2006==
 
 I implemented some of the immediate instructions.  I am becoming better at debugging, so my speed of development should start to pick up more and more.
