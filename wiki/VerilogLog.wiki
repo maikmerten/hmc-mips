@@ -4,7 +4,7 @@
 
 ==1/1/2007==
 
-I believe I misinterpretted the sltiu command.  I originally added an enable slot to the immediate sign extender so that the immediate can be turned off for these unsigned instructions.  I can't find any reference to this issue in See MIPS Run, but [http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html this website] says that all immediate values are first sign extended and then treated as signed or unsigned.  
+I believe I misinterpretted the sltiu command.  I originally added an enable slot to the immediate sign extender so that the immediate can be turned off for these unsigned instructions.  I can't find any reference to this issue in See MIPS Run, but [http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html this website] says that all immediate values are first sign extended and then treated as signed or unsigned.  I believe only a certain set of intrsuctions have their immediates sign extended.  Page 223 of See MIPS Run for example shows "signed" and "unsigned."  PCSPIM seems to behave in a way consistent with those instructions being zero-extended.
 
 ==12/31/2006==
 
