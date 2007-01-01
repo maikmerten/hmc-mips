@@ -11,9 +11,12 @@ module imem(input  [5:0]  a,
 
   initial
     begin
+      // TODO: Zero out memory each time
       $readmemh("testing/test_000.dat",RAM);
       #2000;
       $readmemh("testing/test_001.dat",RAM);
+      #2000;
+      $readmemh("testing/test_002.dat",RAM);
       #2000;
     end
 
