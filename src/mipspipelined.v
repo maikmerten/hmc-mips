@@ -21,17 +21,18 @@ module mips(input         clk, reset,
   wire [5:0]  opD, functD;
   wire        regdstE, alusrcE, 
               pcsrcD, unsignedD,
-              memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW;
-  wire [3:0]  alucontrolE;
+              memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
+              aluoutsrcE;
+  wire [2:0]  alushcontrolE;
   wire        flushE, equalD;
 
   controller c(clk, reset, opD, functD, flushE, equalD,
                memtoregE, memtoregM, memtoregW, memwriteM, pcsrcD, branchD,
                alusrcE, unsignedD, unsignedE, regdstE, regwriteE, regwriteM, 
-               regwriteW, jumpD, alucontrolE);
+               regwriteW, jumpD, aluoutsrcE, alushcontrolE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, pcsrcD, branchD, 
               unsignedD, unsignedE, alusrcE, regdstE, regwriteE, regwriteM, 
-              regwriteW, jumpD, alucontrolE,
+              regwriteW, jumpD, aluoutsrcE, alushcontrolE,
               equalD, pcF, instrF,
               aluoutM, writedataM, readdataM,
               opD, functD, flushE);
@@ -43,21 +44,21 @@ module controller(input        clk, reset,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
                   output       pcsrcD, branchD, alusrcE, unsignedD, unsignedE,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
-                  output       jumpD,
-                  output [3:0] alucontrolE);
+                  output       jumpD, aluoutsrcE,
+                  output [2:0] alushcontrolE);
 
   wire       memtoregD, memwriteD, alusrcD,
-             regdstD, regwriteD;
-  wire [3:0] alucontmaindec, alucontrolD;
+             regdstD, regwriteD, alushmainoutsrcD, aluoutsrcD;
+  wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
 
   maindec md(opD, memtoregD, memwriteD, branchD,
              alusrcD, regdstD, regwriteD, unsignedD,
-             jumpD,
-             alucontmaindec);
+             jumpD, alushmainoutsrcD,
+             alushcontmaindecD);
 
-  aludec  ad(functD, alucontmaindec, alucontrolD);
-
+  alushdec  ad(functD, alushmainoutsrcD, alushcontmaindecD, aluoutsrcD,
+             alushcontrolD);
 
 
   assign pcsrcD = branchD & equalD;
@@ -65,9 +66,9 @@ module controller(input        clk, reset,
   // pipeline registers
   floprc #(10) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
-                  alucontrolD, unsignedD}, 
+                  aluoutsrcD, alushcontrolD, unsignedD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
-                  alucontrolE, unsignedE});
+                  aluoutsrcE, alushcontrolE, unsignedE});
   flopr #(3) regM(clk, reset, 
                   {memtoregE, memwriteE, regwriteE},
                   {memtoregM, memwriteM, regwriteM});
@@ -80,19 +81,19 @@ module maindec(input  [5:0] op,
                output       memtoreg, memwrite,
                output       branch, alusrc,
                output       regdst, regwrite, 
-               output       unsignedD, jump,
-               output [3:0] alucontrol);
+               output       unsignedD, jump, aluoutsrc,
+               output [2:0] alushcontrol);
 
   reg [11:0] controls;
 
   assign {regwrite, regdst, alusrc,
           branch, memwrite,
-          memtoreg, jump, alucontrol /* 4 bits */,
+          memtoreg, jump, aluoutsrc, alushcontrol /* 3 bits */,
           unsignedD} = controls;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 12'b110000011110; //R-type
+      6'b000000: controls <= 12'b110000001010; //R-type
       6'b100011: controls <= 12'b101001000100; //LW
       6'b101011: controls <= 12'b001010000100; //SW
       6'b000100: controls <= 12'b000100001100; //BEQ
@@ -103,23 +104,28 @@ module maindec(input  [5:0] op,
       6'b001100: controls <= 12'b101000000001; //ANDI
       6'b001101: controls <= 12'b101000000011; //ORI
       6'b001110: controls <= 12'b101000001001; //XORI
-      6'b001111: controls <= 12'b101000011101; //LUI
+      6'b001111: controls <= 12'b101000011111; //LUI
       6'b000010: controls <= 12'b000000100100; //J
       default:   controls <= 12'bxxxxxxxxxxxx; //???
     endcase
 endmodule
 
-module aludec(input      [5:0] funct,
-              input      [3:0] alumaincontrol,
-              output     [3:0] alucontrol);
-
+// ALU and Shifter decoders
+module alushdec(input      [5:0] funct,
+                input            alushmainoutsrc, 
+                input      [2:0] alushmaincontrol,
+                output           aluoutsrc, /* True when using shifts */
+                output     [2:0] alushcontrol);
 
   reg [3:0] functcontrol;
 
-  // The pattern 1111 indicates that we have an R-type and should use the 
-  // funct code
-  assign #1 alucontrol = (alumaincontrol == 4'b1111 ? 
-                           functcontrol : alumaincontrol);
+  // The pattern 0101 indicates that we have an R-type and should use the 
+  // funct code (0101 is also the nor command, of which there is no immediate
+  // equivalent; hence 0101 is available)
+  assign #1 {aluoutsrc, alushcontrol} = 
+    (({alushmainoutsrc, alushmaincontrol} == 4'b0101) 
+      ? functcontrol 
+      : {alushmainoutsrc, alushmaincontrol});
 
   always @ ( * )
       case(funct)
@@ -134,8 +140,17 @@ module aludec(input      [5:0] funct,
           6'b100111: functcontrol <= 4'b0101; // NOR
           6'b101010: functcontrol <= 4'b0111; // SLT
           6'b101011: functcontrol <= 4'b0011; // SLTU
+
           // Shift Ops
-          //6'b: functcontrol <= 4'b; // (All Shifts)
+          // 4'b1111 is a special case used directly by microcontroller for LUI
+          //
+          // The lower 3 bits are: {constant, left, associative}
+          6'b000000: functcontrol <= 4'b1110; // SLL
+          6'b000010: functcontrol <= 4'b1100; // SRL
+          6'b000011: functcontrol <= 4'b1101; // SRA
+          6'b000100: functcontrol <= 4'b1010; // SLLV
+          6'b000110: functcontrol <= 4'b1000; // SRLV
+          6'b000111: functcontrol <= 4'b1001; // SRAV
           default:   functcontrol <= 4'bxxxx; // ???
       endcase
 endmodule
@@ -145,8 +160,8 @@ module datapath(input         clk, reset,
                 input         pcsrcD, branchD, unsignedD, unsignedE,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
-                input         jumpD,
-                input  [3:0]  alucontrolE,
+                input         jumpD, aluoutsrcE,
+                input  [2:0]  alushcontrolE,
                 output        equalD,
                 output [31:0] pcF,
                 input  [31:0] instrF,
@@ -166,6 +181,7 @@ module datapath(input         clk, reset,
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
   wire [31:0] pcplus4D, instrD;
+  wire [31:0] aluresultE, shiftresultE;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
 
@@ -218,7 +234,12 @@ module datapath(input         clk, reset,
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
   mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
-  alu         alu(srca2E, srcb3E, alucontrolE, aluoutE);
+
+  alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE);
+  shifter     shifter(srca2E, srcb3E, alushcontrolE, signimmE[10:6],
+                      shiftresultE);
+  mux2 #(32)  alushmux(aluresultE, shiftresultE, aluoutsrcE, aluoutE);
+
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
 
   // Memory stage
@@ -275,26 +296,22 @@ module hazard(input  [4:0] rsD, rtD, rsE, rtE,
 endmodule
 
 module alu(input      [31:0] a, b, 
-           input      [3:0]  alucont, 
-           output     [31:0] result);
+           input      [2:0]  control, 
+           output reg [31:0] aluresult);
 
   wire [31:0] b2, sum, aorb;
-  reg [31:0] aluresult, shiftresult;
   wire sltSigned, sltUnsigned;
 
-  assign #1 b2 = alucont[2] ? ~b:b; 
-  assign #1 sum = a + b2 + alucont[2];
+  assign #1 b2 = control[2] ? ~b:b; 
+  assign #1 sum = a + b2 + control[2];
   assign #1 sltSigned = sum[31];
   // a < b is an unsigned comparrison
   assign #1 sltUnsigned = a < b;
   assign #1 aorb = a | b;
 
-  // alucont[3] indicates whether to use shift unit or normal alu
-  assign #1 result = (alucont[3] ? shiftresult : aluresult);
-
   // ALU Unit
   always@( * )
-    case(alucont[2:0])
+    case(control[2:0])
       3'b000: aluresult <= #1 a & b;      // and
       3'b001: aluresult <= #1 aorb;       // or
       3'b010: aluresult <= #1 sum;        // add
@@ -305,20 +322,32 @@ module alu(input      [31:0] a, b,
       3'b101: aluresult <= #1 ~aorb;      // nor
       default: aluresult <= #1 32'hxxxxxxxx; 
     endcase
+endmodule
 
-  // Shift Unit
-  always@( * )
-    case(alucont[2:0])
-      3'b000: shiftresult <= #1 32'hxxxxxxxx;
-      3'b001: shiftresult <= #1 32'hxxxxxxxx;
-      3'b010: shiftresult <= #1 32'hxxxxxxxx;
-      3'b110: shiftresult <= #1 {b[15:0], 16'b0};   // lui
-      3'b111: shiftresult <= #1 32'hxxxxxxxx;
-      3'b011: shiftresult <= #1 32'hxxxxxxxx;
-      3'b100: shiftresult <= #1 32'hxxxxxxxx;
-      3'b101: shiftresult <= #1 32'hxxxxxxxx;
-      default: shiftresult <= #1 32'hxxxxxxxx;
-    endcase
+module shifter(input signed [31:0] a, b,
+               input        [2:0] control,
+               input        [4:0] constshift,
+               output       [31:0] shiftresult);
+
+  wire lui, constant, left, associative, extensionval;
+  wire [4:0] shiftamount;
+
+  // We need to handle the special case where control = 4'b1111, this is the LUI
+  // instruction (it is a left shift by 5'b10000)
+
+  assign #1 lui = (control == 3'b111);
+  assign #1 {constant, left, associative} = 
+    {control[2:1], (lui ? 1'b0 : control[0])};
+  assign #1 shiftamount = (constant
+                            ? (lui ? 5'b10000 : constshift)
+                            : a[4:0]);
+  
+  assign #1 extensionval = associative & b[31];
+  
+  assign shiftresult = (left ? (b << shiftamount) 
+                             : associative ? (b >>> shiftamount)
+                                           : (b >> shiftamount));
+
 endmodule
 
 module regfile(input         clk, 
