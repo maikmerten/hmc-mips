@@ -92,14 +92,14 @@ module maindec(input  [5:0] op,
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 12'b110000001100; //Rtyp
+      6'b000000: controls <= 12'b110000011110; //R-type
       6'b100011: controls <= 12'b101001000100; //LW
       6'b101011: controls <= 12'b001010000100; //SW
-      6'b000100: controls <= 12'b000100010100; //BEQ
+      6'b000100: controls <= 12'b000100001100; //BEQ
       6'b001000: controls <= 12'b101000000100; //ADDI (treat same as ADDIU)
       6'b001001: controls <= 12'b101000000100; //ADDIU
-      6'b001010: controls <= 12'b101000010110; //SLTI
-      6'b001011: controls <= 12'b101000001110; //SLTIU (imm _IS_ sign extended)
+      6'b001010: controls <= 12'b101000001110; //SLTI
+      6'b001011: controls <= 12'b101000000110; //SLTIU (imm _IS_ sign extended)
       6'b001100: controls <= 12'b101000000001; //ANDI
       6'b001101: controls <= 12'b101000000011; //ORI
       6'b001110: controls <= 12'b101000001001; //XORI
@@ -116,22 +116,26 @@ module aludec(input      [5:0] funct,
 
   reg [3:0] functcontrol;
 
-  // The pattern 0110 indicates that we should use the funct code
-  assign #1 alucontrol = (alumaincontrol == 4'b0110 ? 
+  // The pattern 1111 indicates that we have an R-type and should use the 
+  // funct code
+  assign #1 alucontrol = (alumaincontrol == 4'b1111 ? 
                            functcontrol : alumaincontrol);
 
   always @ ( * )
       case(funct)
+          // ALU Ops
           6'b100000: functcontrol <= 4'b0010; // ADD (same as ADDU)
           6'b100001: functcontrol <= 4'b0010; // ADDU
-          6'b100010: functcontrol <= 4'b1010; // SUB (same as SUBU)
-          6'b100011: functcontrol <= 4'b1010; // SUBU
+          6'b100010: functcontrol <= 4'b0110; // SUB (same as SUBU)
+          6'b100011: functcontrol <= 4'b0110; // SUBU
           6'b100100: functcontrol <= 4'b0000; // AND
           6'b100101: functcontrol <= 4'b0001; // OR
           6'b100110: functcontrol <= 4'b0100; // XOR
           6'b100111: functcontrol <= 4'b0101; // NOR
-          6'b101010: functcontrol <= 4'b1011; // SLT
-          6'b101011: functcontrol <= 4'b1111; // SLTU
+          6'b101010: functcontrol <= 4'b0111; // SLT
+          6'b101011: functcontrol <= 4'b0011; // SLTU
+          // Shift Ops
+          //6'b: functcontrol <= 4'b; // (All Shifts)
           default:   functcontrol <= 4'bxxxx; // ???
       endcase
 endmodule
@@ -272,31 +276,48 @@ endmodule
 
 module alu(input      [31:0] a, b, 
            input      [3:0]  alucont, 
-           output reg [31:0] result);
+           output     [31:0] result);
 
   wire [31:0] b2, sum, aorb;
-
+  reg [31:0] aluresult, shiftresult;
   wire sltSigned, sltUnsigned;
 
-  assign #1 b2 = alucont[3] ? ~b:b; 
-  assign #1 sum = a + b2 + alucont[3];
+  assign #1 b2 = alucont[2] ? ~b:b; 
+  assign #1 sum = a + b2 + alucont[2];
   assign #1 sltSigned = sum[31];
   // a < b is an unsigned comparrison
   assign #1 sltUnsigned = a < b;
   assign #1 aorb = a | b;
 
+  // alucont[3] indicates whether to use shift unit or normal alu
+  assign #1 result = (alucont[3] ? shiftresult : aluresult);
+
+  // ALU Unit
   always@( * )
     case(alucont[2:0])
-      3'b000: result <= #1 a & b;     // and
-      3'b001: result <= #1 aorb;      // or
-      3'b010: result <= #1 sum;       // add, sub
-      3'b011: result <= #1 sltSigned; // slt signed
-      3'b100: result <= #1 a ^ b;     // xor
-      3'b101: result <= #1 ~aorb;     // nor
-      // 0110 is reserved for main decoder (it indicates to choose alucont based
-      // on the funct), but 1110 is used for LUI
-      3'b110: result <= #1 {b[15:0], 16'b0}; // lu (load upper)
-      3'b111: result <= #1 sltUnsigned; // slt unsigned
+      3'b000: aluresult <= #1 a & b;      // and
+      3'b001: aluresult <= #1 aorb;       // or
+      3'b010: aluresult <= #1 sum;        // add
+      3'b110: aluresult <= #1 sum;        // sub
+      3'b111: aluresult <= #1 sltSigned;  // slt signed
+      3'b011: aluresult <= #1 sltUnsigned;// slt unsigned
+      3'b100: aluresult <= #1 a ^ b;      // xor
+      3'b101: aluresult <= #1 ~aorb;      // nor
+      default: aluresult <= #1 32'hxxxxxxxx; 
+    endcase
+
+  // Shift Unit
+  always@( * )
+    case(alucont[2:0])
+      3'b000: shiftresult <= #1 32'hxxxxxxxx;
+      3'b001: shiftresult <= #1 32'hxxxxxxxx;
+      3'b010: shiftresult <= #1 32'hxxxxxxxx;
+      3'b110: shiftresult <= #1 {b[15:0], 16'b0};   // lui
+      3'b111: shiftresult <= #1 32'hxxxxxxxx;
+      3'b011: shiftresult <= #1 32'hxxxxxxxx;
+      3'b100: shiftresult <= #1 32'hxxxxxxxx;
+      3'b101: shiftresult <= #1 32'hxxxxxxxx;
+      default: shiftresult <= #1 32'hxxxxxxxx;
     endcase
 endmodule
 
