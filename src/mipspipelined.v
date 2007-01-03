@@ -174,10 +174,9 @@ module branchdec(input  [5:0] op,
                  input  [5:0] funct,
                  output       jump,
                  output       branch,
-                 output [3:0] branchcont,
+                 output [3:0] branchcont,  // {lt, gt, eq, src};
                  output       link);
 
-  // Think of branchcont  as {lt, gt, eq, src};
   reg [6:0] controls;
 
   assign #1 {jump, branch, branchcont, link} = controls;
@@ -389,7 +388,7 @@ module branchunit(input      [31:0] pc,
           rdsrc = link;
         end
       end else if(branch) begin // Branch
-        // All linking branches linkg to register 31
+        // All linking branches link to register 31
         rdsrc = link;
         if(src) begin // Compare a and b
           if((eq & aeqb) | (~eq & ~aeqb)) begin
