@@ -24,3 +24,4 @@ main:   addiu $2, $0, -10       # $2 = -10
         addu  $2, $2, $3        # $2 = $2 + $3 = 1 + 1 = 2
 write:  sw   $2, 0($4)          # should write 2 to address 0x70f00ff0
 end:    beq  $0, $0, end        # loop forever
+        nop

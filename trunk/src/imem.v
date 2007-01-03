@@ -4,6 +4,8 @@
 // Instruction memory used by MIPS processors
 //------------------------------------------------
 
+`timescale 1 ns / 1 ps
+
 module imem(input  [5:0]  a,
             output [31:0] rd);
 
@@ -21,6 +23,8 @@ module imem(input  [5:0]  a,
       $readmemh("testing/test_003.dat",RAM);
       #2000;
       $readmemh("testing/test_004.dat",RAM);
+      #2000;
+      $readmemh("testing/test_005.dat",RAM);
       #2000;
     end
 

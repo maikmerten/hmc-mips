@@ -31,3 +31,4 @@ main:   addiu $2, $0, -10       # $2 = -10
         nor   $4, $4, $2        # $4 = ~(0x70f00ff0 | 0x2) = 0x8f0ff00d
 write:  sw    $2, 0($4)         # should write 2 to address 0x8f0ff00d
 end:    beq   $0, $0, end       # loop forever
+        nop

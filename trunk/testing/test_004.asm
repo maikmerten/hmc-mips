@@ -21,3 +21,4 @@ main:   addiu $2, $0, 0x7f      # $2 = 0x7f
         srlv  $4, $4, $3        # $4 = 0x1ffffff8 >> 1 = 0x0ffffffc
         sw    $2, 0($4)         # should write 0x3f8 to address 0x0ffffffc
 end:    beq   $0, $0, end       # loop forever
+        nop
