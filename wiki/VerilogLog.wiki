@@ -6,6 +6,12 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/2/2007==
+
+I spent today adding support for all the jump and branch commands, as well as the branch delay slot.  I believe that supporting the branch delay slot is as simple as removing the clear feature of the register between the Fetch and Decode stages.
+
+The hard part was supporting all the different kinds of branches.  There are 2 R-type commands with jumps, opcode 1 has four branches, as well as six other instructions with their own opcodes.  I also have to support linking, which means I have to add to the main datapath.
+
 ==1/1/2007==
 
 I believe I misinterpretted the sltiu command.  I originally added an enable slot to the immediate sign extender so that the immediate can be turned off for these unsigned instructions.  I can't find any reference to this issue in See MIPS Run, but [http://www.mrc.uidaho.edu/mrc/people/jff/digital/MIPSir.html this website] says that all immediate values are first sign extended and then treated as signed or unsigned.  I believe only a certain set of intrsuctions have their immediates sign extended.  Page 223 of See MIPS Run for example shows "signed" and "unsigned."  PCSPIM seems to behave in a way consistent with those instructions being zero-extended.
