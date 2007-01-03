@@ -4,6 +4,8 @@
 // Top level system including MIPS and memories
 //------------------------------------------------
 
+`timescale 1 ns / 1 ps
+
 module top(input         clk, reset, 
            output [31:0] writedata, dataadr, 
            output        memwrite);

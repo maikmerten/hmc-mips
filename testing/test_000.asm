@@ -18,6 +18,9 @@ loop:   add  $4, $2, $3         # $4 <= $2 + $3
         add  $2, $3, $0         # $2 <= $3
         add  $3, $4, $0         # $3 <= $4
         beq  $4, $5, write      # when sum is 21, jump to write
+        nop
         beq  $0, $0, loop       # loop (beq is easier to assemble than jump)
+        nop
 write:  sw   $4, 5($2)          # should write 21 @ 5 + 13 = 18 = 0x12
 end:    beq  $0, $0, end        # loop forever
+        nop

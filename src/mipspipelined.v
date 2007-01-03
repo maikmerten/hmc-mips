@@ -10,6 +10,8 @@
 //  imem.v
 //  mipspipelined.v
 
+`timescale 1 ns / 1 ps
+
 // pipelined MIPS processor
 module mips(input         clk, reset,
             output [31:0] pcF,
@@ -19,56 +21,61 @@ module mips(input         clk, reset,
             input  [31:0] readdataM);
 
   wire [5:0]  opD, functD;
+  wire [4:0]  rtD;
   wire        regdstE, alusrcE, 
-              pcsrcD, unsignedD,
+              unsignedD, linkD, linkE, 
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
               aluoutsrcE;
   wire [2:0]  alushcontrolE;
-  wire        flushE, equalD;
+  wire [3:0]  branchcontD;
+  wire        flushE;
 
-  controller c(clk, reset, opD, functD, flushE, equalD,
-               memtoregE, memtoregM, memtoregW, memwriteM, pcsrcD, branchD,
+  controller c(clk, reset, opD, functD, rtD, flushE, 
+               memtoregE, memtoregM, memtoregW, memwriteM, branchD,
                alusrcE, unsignedD, unsignedE, regdstE, regwriteE, regwriteM, 
-               regwriteW, jumpD, aluoutsrcE, alushcontrolE);
-  datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, pcsrcD, branchD, 
+               regwriteW, jumpD, aluoutsrcE, alushcontrolE, linkD, linkE, 
+               branchcontD);
+  datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, branchD, 
               unsignedD, unsignedE, alusrcE, regdstE, regwriteE, regwriteM, 
-              regwriteW, jumpD, aluoutsrcE, alushcontrolE,
-              equalD, pcF, instrF,
+              regwriteW, jumpD, aluoutsrcE, linkD, linkE,
+              branchcontD, alushcontrolE,
+              pcF, instrF,
               aluoutM, writedataM, readdataM,
-              opD, functD, flushE);
+              opD, functD, rtD, flushE);
 endmodule
 
 module controller(input        clk, reset,
                   input  [5:0] opD, functD,
-                  input        flushE, equalD,
+                  input  [4:0] rtD,
+                  input        flushE,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
-                  output       pcsrcD, branchD, alusrcE, unsignedD, unsignedE,
+                  output       branchD, alusrcE, unsignedD, unsignedE,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
-                  output       jumpD, aluoutsrcE,
-                  output [2:0] alushcontrolE);
+                  output       jumpD, aluoutsrcE, 
+                  output [2:0] alushcontrolE, 
+                  output       linkD, linkE,
+                  output [3:0] branchcontD);
 
   wire       memtoregD, memwriteD, alusrcD,
              regdstD, regwriteD, alushmainoutsrcD, aluoutsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
 
-  maindec md(opD, memtoregD, memwriteD, branchD,
+  maindec md(opD, memtoregD, memwriteD,
              alusrcD, regdstD, regwriteD, unsignedD,
-             jumpD, alushmainoutsrcD,
-             alushcontmaindecD);
+             alushmainoutsrcD, alushcontmaindecD);
 
   alushdec  ad(functD, alushmainoutsrcD, alushcontmaindecD, aluoutsrcD,
              alushcontrolD);
 
-
-  assign pcsrcD = branchD & equalD;
+  branchdec bd(opD, rtD, functD, jumpD, branchD, branchcontD, linkD);
 
   // pipeline registers
-  floprc #(10) regE(clk, reset, flushE,
+  floprc #(11) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
-                  aluoutsrcD, alushcontrolD, unsignedD}, 
+                  aluoutsrcD, alushcontrolD, unsignedD, linkD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
-                  aluoutsrcE, alushcontrolE, unsignedE});
+                  aluoutsrcE, alushcontrolE, unsignedE, linkE});
   flopr #(3) regM(clk, reset, 
                   {memtoregE, memwriteE, regwriteE},
                   {memtoregM, memwriteM, regwriteM});
@@ -79,35 +86,38 @@ endmodule
 
 module maindec(input  [5:0] op,
                output       memtoreg, memwrite,
-               output       branch, alusrc,
+               output       alusrc,
                output       regdst, regwrite, 
-               output       unsignedD, jump, aluoutsrc,
+               output       unsignedD, aluoutsrc,
                output [2:0] alushcontrol);
 
-  reg [11:0] controls;
-
+  reg [9:0] controls;
+  
   assign {regwrite, regdst, alusrc,
-          branch, memwrite,
-          memtoreg, jump, aluoutsrc, alushcontrol /* 3 bits */,
+          memwrite,
+          memtoreg, aluoutsrc, alushcontrol /* 3 bits */,
           unsignedD} = controls;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 12'b110000001010; //R-type
-      6'b100011: controls <= 12'b101001000100; //LW
-      6'b101011: controls <= 12'b001010000100; //SW
-      6'b000100: controls <= 12'b000100001100; //BEQ
-      6'b001000: controls <= 12'b101000000100; //ADDI (treat same as ADDIU)
-      6'b001001: controls <= 12'b101000000100; //ADDIU
-      6'b001010: controls <= 12'b101000001110; //SLTI
-      6'b001011: controls <= 12'b101000000110; //SLTIU (imm _IS_ sign extended)
-      6'b001100: controls <= 12'b101000000001; //ANDI
-      6'b001101: controls <= 12'b101000000011; //ORI
-      6'b001110: controls <= 12'b101000001001; //XORI
-      6'b001111: controls <= 12'b101000011111; //LUI
-      6'b000010: controls <= 12'b000000100100; //J
-      default:   controls <= 12'bxxxxxxxxxxxx; //???
+      6'b000000: controls <= 12'b1100001010; //R-type
+      6'b000001: controls <= 12'b1100001010; //Opcode 1 (Some branches)
+      6'b100011: controls <= 12'b1010100100; //LW
+      6'b101011: controls <= 12'b0011000100; //SW
+      6'b000100: controls <= 12'b0000001100; //BEQ
+      6'b001000: controls <= 12'b1010000100; //ADDI (treated same as ADDIU)
+      6'b001001: controls <= 12'b1010000100; //ADDIU
+      6'b001010: controls <= 12'b1010001110; //SLTI
+      6'b001011: controls <= 12'b1010000110; //SLTIU (imm _IS_ sign extended)
+      6'b001100: controls <= 12'b1010000001; //ANDI
+      6'b001101: controls <= 12'b1010000011; //ORI
+      6'b001110: controls <= 12'b1010001001; //XORI
+      6'b001111: controls <= 12'b1010011111; //LUI
+      6'b000010: controls <= 12'b0000000100; //J
+      6'b000011: controls <= 12'b0000000100; //JAL TODO: ADD ALL THE BRANCHES
+      default:   controls <= 12'bxxxxxxxxxx; //???
     endcase
+
 endmodule
 
 // ALU and Shifter decoders
@@ -151,39 +161,84 @@ module alushdec(input      [5:0] funct,
           6'b000100: functcontrol <= 4'b1010; // SLLV
           6'b000110: functcontrol <= 4'b1000; // SRLV
           6'b000111: functcontrol <= 4'b1001; // SRAV
+
+          // Branch Ops (These are all don't cares)
+
           default:   functcontrol <= 4'bxxxx; // ???
       endcase
 endmodule
 
+// Branch decoder
+module branchdec(input  [5:0] op,
+                 input  [4:0] rt,
+                 input  [5:0] funct,
+                 output       jump,
+                 output       branch,
+                 output [3:0] branchcont,
+                 output       link);
+
+  // Think of branchcont  as {lt, gt, eq, src};
+  reg [6:0] controls;
+
+  assign #1 {jump, branch, branchcont, link} = controls;
+
+  always @ ( * )
+    case(op)
+      6'b000010: controls <= 7'b1011100;      // J
+      6'b000011: controls <= 7'b1011101;      // JAL
+      6'b000000: // R-type
+        case(funct)
+          6'b001000: controls <= 7'b1011110;  // JR
+          6'b001001: controls <= 7'b1011111;  // JALR
+          default:   controls <= 7'b0000000;  // Another R-type, no branching
+        endcase
+      6'b000001: // Opcode 1
+        case(rt)
+          6'b000000: controls <= 7'b0110000;  // BLTZ
+          6'b000001: controls <= 7'b0101100;  // BGEZ
+          6'b100000: controls <= 7'b0110001;  // BLTZAL
+          6'b100001: controls <= 7'b0101101;  // BGEZAL
+          default:   controls <= 7'bxxxxxxx;  // Error, unsupported instruction
+        endcase
+      6'b000100: controls <= 7'b0100110;      // BEQ
+      6'b000101: controls <= 7'b0111010;      // BNE
+      6'b000110: controls <= 7'b0110100;      // BLEZ
+      6'b000111: controls <= 7'b0101000;      // BGTZ
+      default:   controls <= 7'b0000000;      // All others, no branching
+    endcase
+endmodule
+
 module datapath(input         clk, reset,
                 input         memtoregE, memtoregM, memtoregW, 
-                input         pcsrcD, branchD, unsignedD, unsignedE,
+                input         branchD, unsignedD, unsignedE,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
-                input         jumpD, aluoutsrcE,
+                input         jumpD, aluoutsrcE, linkD, linkE,
+                input  [3:0]  branchcontD,
                 input  [2:0]  alushcontrolE,
-                output        equalD,
                 output [31:0] pcF,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedataM,
                 input  [31:0] readdataM,
                 output [5:0]  opD, functD,
+                output [4:0]  rtD,
                 output        flushE);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
   wire        stallF;
-  wire [4:0]  rsD, rtD, rdD, rsE, rtE, rdE;
+  wire [4:0]  rsD, rdD, rd2D, rsE, rtE, rdE;
   wire [4:0]  writeregE, writeregM, writeregW;
-  wire        flushD;
   wire [31:0] pcnextFD, pcnextbrFD, pcplus4F, pcbranchD;
-  wire [31:0] signimmD, signimmE, signimmshD;
+  wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
-  wire [31:0] pcplus4D, instrD;
-  wire [31:0] aluresultE, shiftresultE;
+  wire [31:0] pcD, pcplus4D, pcplus8D, pcplus8E, instrD;
+  wire [31:0] aluresultE, shiftresultE, alushresultE;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
+  wire        pcsrcD, rdsrcD;
+
 
   // hazard detection
   hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
@@ -193,9 +248,7 @@ module datapath(input         clk, reset,
               stallF, stallD, flushE);
 
   // next PC logic (operates in fetch and decode)
-  mux2 #(32)  pcbrmux(pcplus4F, pcbranchD, pcsrcD, pcnextbrFD);
-  mux2 #(32)  pcmux(pcnextbrFD,{pcplus4D[31:28], instrD[25:0], 2'b00}, 
-                    jumpD, pcnextFD);
+  mux2 #(32)  pcmux(pcplus4F, pcnextbrFD, pcsrcD, pcnextFD);
 
   // register file (operates in decode and writeback)
   regfile     rf(clk, regwriteW, rsD, rtD, writeregW,
@@ -207,13 +260,16 @@ module datapath(input         clk, reset,
 
   // Decode stage 
   flopenr #(32) r1D(clk, reset, ~stallD, pcplus4F, pcplus4D);
-  flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
+  flopenr #(32) r3D(clk, reset, ~stallD, pcF, pcD);
+  flopenr #(32) r2D(clk, reset, ~stallD, instrF, instrD);
   signext     se(instrD[15:0], ~unsignedD, signimmD);
-  sl2         immsh(signimmD, signimmshD);
-  adder       pcadd2(pcplus4D, signimmshD, pcbranchD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
   eqcmp       comp(srca2D, srcb2D, equalD);
+  adder       pcadd2(pcplus4D, 32'b100, pcplus8D);
+  branchunit  bu(pcD, pcplus4D, srca2D, srcb2D, instrD[25:0], jumpD, branchD,
+                 linkD, branchcontD, rdsrcD, pcsrcD, pcnextbrFD);
+  mux2 #(5)  rdmux(rdD, 5'b11111, rdsrcD, rd2D);
 
   // Instruction breakdown
   assign opD = instrD[31:26];
@@ -222,15 +278,14 @@ module datapath(input         clk, reset,
   assign rtD = instrD[20:16];
   assign rdD = instrD[15:11];
 
-  assign flushD = pcsrcD | jumpD;
-
   // Execute stage 
   floprc #(32) r1E(clk, reset, flushE, srcaD, srcaE);
   floprc #(32) r2E(clk, reset, flushE, srcbD, srcbE);
   floprc #(32) r3E(clk, reset, flushE, signimmD, signimmE);
+  floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
   floprc #(5)  r4E(clk, reset, flushE, rsD, rsE);
   floprc #(5)  r5E(clk, reset, flushE, rtD, rtE);
-  floprc #(5)  r6E(clk, reset, flushE, rdD, rdE);
+  floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
   mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
@@ -238,7 +293,8 @@ module datapath(input         clk, reset,
   alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE);
   shifter     shifter(srca2E, srcb3E, alushcontrolE, signimmE[10:6],
                       shiftresultE);
-  mux2 #(32)  alushmux(aluresultE, shiftresultE, aluoutsrcE, aluoutE);
+  mux2 #(32)  alushmux(aluresultE, shiftresultE, aluoutsrcE, alushresultE);
+  mux2 #(32)  alulinkmux(alushresultE, pcplus8E, linkE, aluoutE);
 
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
 
@@ -283,6 +339,7 @@ module hazard(input  [4:0] rsD, rtD, rsE, rtE,
 
   // stalls  
   assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
+  // TODO: Don't stall for $0
   assign #1 branchstallD = branchD & 
              (regwriteE & (writeregE == rsD | writeregE == rtD) |
               memtoregM & (writeregM == rsD | writeregM == rtD));
@@ -295,6 +352,62 @@ module hazard(input  [4:0] rsD, rtD, rsE, rtE,
   // *** instead, another bypass network could be added from W to M
 endmodule
 
+module branchunit(input      [31:0] pc, 
+                  input      [31:0] pcplusfour, 
+                  input      [31:0] a, b,
+                  input      [25:0] jumpimm, 
+                  input             jump, branch, link,
+                  input      [3:0]  branchcont,
+                  output reg        rdsrc, /* when true, rd becomes 5'b11111 */
+                  output reg        pcsrc, /* makes pcbranch the next instr. */
+                  output reg [31:0] pcbranch);
+
+  wire aeqz, aeqb, agtz, altz;
+  wire lt, gt, eq, src;
+  wire ltsat, gtsat, eqsat;
+  wire [31:0] branchtarget;
+
+  assign #1 {aeqz, aeqb, agtz, altz} = {a == 0, a == b, 
+                                        ~a[31] & (a[30:0] !== 0), a[31]};
+
+  assign #1 {lt, gt, eq, src} = branchcont;
+
+  // Use PC not PC+4
+  adder btadd(pc, {{14{jumpimm[15]}}, jumpimm[15:0], 2'b00}, branchtarget);
+
+  always @ ( * )
+    begin
+      pcsrc = 1'b0;
+      rdsrc = 1'b0;
+      pcbranch = 32'hxxxxxxxx;
+      if(jump) begin // Jump
+        pcsrc = 1'b1;
+        if(src) begin  // Jump using register
+          pcbranch = a;
+        end else begin // Jump using immediate
+          pcbranch = {pc[31:27], jumpimm, 2'b00}; 
+          rdsrc = link;
+        end
+      end else if(branch) begin // Branch
+        // All linking branches linkg to register 31
+        rdsrc = link;
+        if(src) begin // Compare a and b
+          if((eq & aeqb) | (~eq & ~aeqb)) begin
+            pcsrc = 1'b1;
+            pcbranch = branchtarget;
+          end
+        end else begin  // Compare a to zero
+          if((~eq | aeqz) & (~gt | agtz) & (~lt | altz)) begin
+            pcsrc = 1'b1;
+            pcbranch = branchtarget;
+          end else begin
+            pcbranch = 32'hxxxxxxxx;
+          end
+        end
+      end
+    end
+endmodule
+           
 module alu(input      [31:0] a, b, 
            input      [2:0]  control, 
            output reg [31:0] aluresult);
