@@ -101,10 +101,9 @@ module maindec(input  [5:0] op,
   always @ ( * )
     case(op)
       6'b000000: controls <= 12'b1100001010; //R-type
-      6'b000001: controls <= 12'b1100001010; //Opcode 1 (Some branches)
+      6'b000001: controls <= 12'b1100001010; //Opcode 1 (branches)
       6'b100011: controls <= 12'b1010100100; //LW
       6'b101011: controls <= 12'b0011000100; //SW
-      6'b000100: controls <= 12'b0000001100; //BEQ
       6'b001000: controls <= 12'b1010000100; //ADDI (treated same as ADDIU)
       6'b001001: controls <= 12'b1010000100; //ADDIU
       6'b001010: controls <= 12'b1010001110; //SLTI
@@ -114,7 +113,11 @@ module maindec(input  [5:0] op,
       6'b001110: controls <= 12'b1010001001; //XORI
       6'b001111: controls <= 12'b1010011111; //LUI
       6'b000010: controls <= 12'b0000000100; //J
-      6'b000011: controls <= 12'b0000000100; //JAL TODO: ADD ALL THE BRANCHES
+      6'b000011: controls <= 12'b0000000100; //JAL
+      6'b000100: controls <= 12'b0000001100; //BEQ
+      6'b000101: controls <= 12'b0000001100; //BNE
+      6'b000110: controls <= 12'b0000001100; //BLEZ
+      6'b000111: controls <= 12'b0000001100; //BGTZ
       default:   controls <= 12'bxxxxxxxxxx; //???
     endcase
 
