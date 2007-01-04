@@ -436,32 +436,24 @@ module shifter(input signed [31:0] a, b,
                input        [2:0] control,
                input              lui,
                input        [4:0] constshift,
-               output reg   [31:0] shiftresult);
+               output       [31:0] shiftresult);
 
   wire [31:0] leftlogical, rightlogical, rightassociative;
-  reg  [4:0] shiftamount;
+  wire [4:0] shiftamount;
 
   assign leftlogical      = b << shiftamount;
   assign rightlogical     = b >> shiftamount;
   assign rightassociative = b >>> shiftamount;
 
   // The control bits are: {constant, left, rightassociative}
+ 
+  mux3 #(5)  shamtmux(a[4:0],     // Variable shift taken from a register
+                      constshift, // Shift taken from the immediate value
+                      5'b10000,   // LUI always shifts by 16
+                      {lui, control[2]}, shiftamount);
 
-  always @ ( * )
-    case({lui, control[2]})
-      2'b00: shiftamount <= a[4:0];     // Variable shift taken from a register
-      2'b01: shiftamount <= constshift; // Shift taken from the immediate value
-      2'b10: shiftamount <= 5'b10000;   // LUI always shifts by 16
-      2'b11: shiftamount <= 5'b10000;   // " " (could be a don't care)
-    endcase
-
-  always @ ( * )
-    case(control[1:0])
-      2'b00: shiftresult <= rightlogical;
-      2'b10: shiftresult <= leftlogical;
-      2'b01: shiftresult <= rightassociative;
-      2'b11: shiftresult <= rightassociative; // (This is really a don't care)
-    endcase
+  mux3 #(32) shresmux(rightlogical, rightassociative, leftlogical, control[1:0],
+                      shiftresult);
 endmodule
 
 module regfile(input         clk, 
