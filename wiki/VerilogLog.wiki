@@ -6,6 +6,14 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/4/2007==
+
+I began work on the cache and load/store operations. 
+
+==1/3/2007==
+
+I worked more on branching, making a fairly rigorous test.  I changed the branching so that the controller made all the control decisions and the datapath simply provides comparison values and enacts mux operations.  Likewise with the shifter module.
+
 ==1/2/2007==
 
 I spent today adding support for all the jump and branch commands, as well as the branch delay slot.  I believe that supporting the branch delay slot is as simple as removing the clear feature of the register between the Fetch and Decode stages.
