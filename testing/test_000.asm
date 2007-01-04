@@ -1,4 +1,5 @@
 # Harvey Mudd College VLSI MIPS Project
+# Carl Nygaard
 # Spring, 2007
 #
 # Test 000

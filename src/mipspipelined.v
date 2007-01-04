@@ -56,13 +56,15 @@ module controller(input        clk, reset,
                   output       linkD, linkE,
                   output [3:0] branchcontD);
 
-  wire       memtoregD, memwriteD, alusrcD,
+  wire       memtoregD, memwriteD, alusrcD, mainregwrite,
              regdstD, regwriteD, alushmainoutsrcD, aluoutsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
 
+  assign #1 regwriteD = linkD | mainregwrite;
+
   maindec md(opD, memtoregD, memwriteD,
-             alusrcD, regdstD, regwriteD, unsignedD,
+             alusrcD, regdstD, mainregwrite, unsignedD,
              alushmainoutsrcD, alushcontmaindecD);
 
   alushdec  ad(functD, alushmainoutsrcD, alushcontmaindecD, aluoutsrcD,
@@ -93,7 +95,8 @@ module maindec(input  [5:0] op,
 
   reg [9:0] controls;
   
-  assign {regwrite, regdst, alusrc,
+  assign {regwrite, /* regwrite is enabled by the controller on link commands */
+          regdst, alusrc,
           memwrite,
           memtoreg, aluoutsrc, alushcontrol /* 3 bits */,
           unsignedD} = controls;
@@ -101,7 +104,7 @@ module maindec(input  [5:0] op,
   always @ ( * )
     case(op)
       6'b000000: controls <= 12'b1100001010; //R-type
-      6'b000001: controls <= 12'b1100001010; //Opcode 1 (branches)
+      6'b000001: controls <= 12'b0100001010; //Opcode 1 (branches)
       6'b100011: controls <= 12'b1010100100; //LW
       6'b101011: controls <= 12'b0011000100; //SW
       6'b001000: controls <= 12'b1010000100; //ADDI (treated same as ADDIU)
@@ -113,7 +116,7 @@ module maindec(input  [5:0] op,
       6'b001110: controls <= 12'b1010001001; //XORI
       6'b001111: controls <= 12'b1010011111; //LUI
       6'b000010: controls <= 12'b0000000100; //J
-      6'b000011: controls <= 12'b0000000100; //JAL
+      6'b000011: controls <= 12'b1100000100; //JAL
       6'b000100: controls <= 12'b0000001100; //BEQ
       6'b000101: controls <= 12'b0000001100; //BNE
       6'b000110: controls <= 12'b0000001100; //BLEZ
@@ -196,11 +199,11 @@ module branchdec(input  [5:0] op,
         endcase
       6'b000001: // Opcode 1
         case(rt)
-          6'b000000: controls <= 7'b0110000;  // BLTZ
-          6'b000001: controls <= 7'b0101100;  // BGEZ
-          6'b100000: controls <= 7'b0110001;  // BLTZAL
-          6'b100001: controls <= 7'b0101101;  // BGEZAL
-          default:   controls <= 7'bxxxxxxx;  // Error, unsupported instruction
+          5'b00000: controls <= 7'b0110000;   // BLTZ
+          5'b00001: controls <= 7'b0101100;   // BGEZ
+          5'b10000: controls <= 7'b0110001;   // BLTZAL
+          5'b10001: controls <= 7'b0101101;   // BGEZAL
+          default:  controls <= 7'bxxxxxxx;   // Error, unsupported instruction
         endcase
       6'b000100: controls <= 7'b0100110;      // BEQ
       6'b000101: controls <= 7'b0111010;      // BNE
@@ -399,7 +402,7 @@ module branchunit(input      [31:0] pc,
             pcbranch = branchtarget;
           end
         end else begin  // Compare a to zero
-          if((~eq | aeqz) & (~gt | agtz) & (~lt | altz)) begin
+          if((~eq & ~lt & ~gt) | (eq & aeqz) | (gt & agtz) | (lt & altz)) begin
             pcsrc = 1'b1;
             pcbranch = branchtarget;
           end else begin
