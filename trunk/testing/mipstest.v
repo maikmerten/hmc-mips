@@ -38,12 +38,14 @@ module testbench;
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
         reset <= 1; # 15; reset <= 0;
-        # 1985;
+        # 985;
         if(currentSuccess) begin
-          $display("Simulation %d succeeded %d", currentTest, counter);
+          $display("Simulation %d succeeded (start time %d)", currentTest, 
+            counter - 100);
           successfulTests = successfulTests + 1;
         end else begin
-          $display("Simulation %d failed %d", currentTest, counter);
+          $display("Simulation %d FAILED    (start time %d)", currentTest, 
+            counter - 100);
         end
       end
       $display("Test complete -- %d out of %d passed", successfulTests, 
