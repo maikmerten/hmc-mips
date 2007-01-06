@@ -21,57 +21,70 @@ module mips(input         clk, reset,
             input  [31:0] readdataM);
 
   wire [5:0]  opD, functD;
-  wire [4:0]  rtD;
+  wire [4:0]  rsD, rtD, rdD;
   wire        regdstE, alusrcE, 
               unsignedD, rdsrcD, pcsrcFD, linkD, linkE, luiE,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
-              aluoutsrcE,
               aeqzD, aeqbD, agtzD, altzD;
   wire [2:0]  alushcontrolE;
-  wire [1:0]  pcbranchsrcD;
+  wire [1:0]  pcbranchsrcD, aluoutsrcE;
   wire        flushE;
+  wire [31:0] cop0readD, writedataW;
+  wire [4:0]  writeregW;
+  wire        re, swc, isc;
 
-  controller c(clk, reset, opD, functD, rtD, flushE, aeqzD, aeqbD, agtzD, altzD,
-               memtoregE, memtoregM, memtoregW, memwriteM, branchD,
+  controller c(clk, reset, opD, functD, rsD, rtD, flushE, aeqzD, aeqbD, agtzD, 
+               altzD, memtoregE, memtoregM, memtoregW, memwriteM, branchD,
                alusrcE, unsignedD, unsignedE, regdstE, regwriteE, regwriteM, 
                regwriteW, jumpD, aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
-               rdsrcD, pcsrcFD, pcbranchsrcD);
+               rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, branchD, 
               unsignedD, unsignedE, alusrcE, regdstE, regwriteE, regwriteM, 
               regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
-              rdsrcD, pcsrcFD, pcbranchsrcD, alushcontrolE,
+              rdsrcD, pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readD,
               pcF, instrF,
               aluoutM, writedataM, readdataM,
-              opD, functD, rtD, aeqzD, aeqbD, agtzD, altzD, flushE);
+              opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, flushE, 
+              writedataW, writeregW);
+
+  // cop0 fields: cop0readD, cop0writeW, writedataW, writeregW, rdD
+  coprocessor0 cop0(clk, reset, cop0writeW, rdD, writeregW, writedataW, 
+                    cop0readD, re, swc, isc);
 endmodule
 
 module controller(input        clk, reset,
                   input  [5:0] opD, functD,
-                  input  [4:0] rtD,
+                  input  [4:0] rsD, rtD,
                   input        flushE,
                   input        aeqzD, aeqbD, agtzD, altzD,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
                   output       branchD, alusrcE, unsignedD, unsignedE,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
-                  output       jumpD, aluoutsrcE, 
+                  output       jumpD, 
+                  output [1:0] aluoutsrcE, 
                   output [2:0] alushcontrolE, 
                   output       linkD, linkE, luiE,
                   output       rdsrcD, pcsrcFD, 
-                  output [1:0] pcbranchsrcD);
+                  output [1:0] pcbranchsrcD,
+                  output       cop0writeW);
 
   wire       memtoregD, memwriteD, alusrcD, mainregwrite, luiD,
-             regdstD, regwriteD, alushmainoutsrcD, aluoutsrcD;
+             regdstD, regwriteD, maindecuseshifterD, maindecregdstD, 
+             useshifterD, cop0readD, cop0writeD, rfeD; 
+  reg  [1:0] aluoutsrcD;
   wire       ltD, gtD, eqD, brsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
+  wire       cop0writeE, cop0writeM;
 
-  assign #1 regwriteD = linkD | mainregwrite;
+  assign #1 regwriteD = mainregwrite | linkD | cop0readD;
+  assign #1 regdstD = maindecregdstD | cop0writeD;
 
   maindec md(opD, memtoregD, memwriteD,
-             alusrcD, regdstD, mainregwrite, unsignedD, luiD,
-             alushmainoutsrcD, alushcontmaindecD);
+             alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
+             maindecuseshifterD, alushcontmaindecD);
 
-  alushdec  ad(functD, alushmainoutsrcD, alushcontmaindecD, aluoutsrcD,
+  alushdec  ad(functD, maindecuseshifterD, alushcontmaindecD, useshifterD,
              alushcontrolD);
 
   branchdec bd(opD, rtD, functD, jumpD, branchD, ltD, gtD, eqD, brsrcD, linkD);
@@ -79,33 +92,47 @@ module controller(input        clk, reset,
   branchcontroller  bc(jumpD, branchD, linkD, aeqzD, aeqbD, agtzD, altzD, 
                        ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD);
   
+  cop0dec c0dec(opD, rsD, functD, cop0readD, cop0writeD, rfeD); 
+
+  // Chooses which component is selected as aluout
+  always @ ( * )
+    if(linkD)
+      aluoutsrcD <= 2'b10; // PC+8
+    else if (cop0readD)
+      aluoutsrcD <= 2'b11; // cop0 read
+    else if (useshifterD)
+      aluoutsrcD <= 2'b01; // shifter
+    else
+      aluoutsrcD <= 2'b00; // alu
+
   // pipeline registers
-  floprc #(12) regE(clk, reset, flushE,
+  floprc #(13) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
-                  aluoutsrcD, alushcontrolD, unsignedD, linkD, luiD}, 
+                  aluoutsrcD, alushcontrolD, unsignedD, luiD, cop0writeD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
-                  aluoutsrcE, alushcontrolE, unsignedE, linkE, luiE});
-  flopr #(3) regM(clk, reset, 
-                  {memtoregE, memwriteE, regwriteE},
-                  {memtoregM, memwriteM, regwriteM});
-  flopr #(2) regW(clk, reset, 
-                  {memtoregM, regwriteM},
-                  {memtoregW, regwriteW});
+                  aluoutsrcE, alushcontrolE, unsignedE, luiE, cop0writeE});
+  flopr #(4) regM(clk, reset, 
+                  {memtoregE, memwriteE, regwriteE, cop0writeE},
+                  {memtoregM, memwriteM, regwriteM, cop0writeM});
+  flopr #(3) regW(clk, reset, 
+                  {memtoregM, regwriteM, cop0writeM},
+                  {memtoregW, regwriteW, cop0writeW});
 endmodule
 
 module maindec(input  [5:0] op,
                output       memtoreg, memwrite,
                output       alusrc,
                output       regdst, regwrite, 
-               output       unsignedD, lui, aluoutsrc,
+               output       unsignedD, lui, useshift,
                output [2:0] alushcontrol);
 
   reg [10:0] controls;
   
-  assign {regwrite, /* regwrite is enabled by the controller on link commands */
-          regdst, alusrc,
+  assign {regwrite, /* regwrite is also enabled by branchdec and cop0dec */
+          regdst,   /* regdst is also enabled by cop0dec */ 
+          alusrc,
           memwrite,
-          memtoreg, aluoutsrc, alushcontrol /* 3 bits */,
+          memtoreg, useshift, alushcontrol /* 3 bits */,
           unsignedD, lui} = controls;
 
   always @ ( * )
@@ -128,6 +155,7 @@ module maindec(input  [5:0] op,
       6'b000101: controls <= 11'b00000011000; //BNE
       6'b000110: controls <= 11'b00000011000; //BLEZ
       6'b000111: controls <= 11'b00000011000; //BGTZ
+      6'b010000: controls <= 11'b00000001000; //MFC0, MTC0, RFE
       default:   controls <= 11'bxxxxxxxxxxx; //???
     endcase
 
@@ -135,9 +163,9 @@ endmodule
 
 // ALU and Shifter decoders
 module alushdec(input      [5:0] funct,
-                input            alushmainoutsrc, 
+                input            maindecuseshifter, 
                 input      [2:0] alushmaincontrol,
-                output           aluoutsrc, /* True when using shifts */
+                output           useshifter, /* True when using shifts */
                 output     [2:0] alushcontrol);
 
   reg [3:0] functcontrol;
@@ -145,10 +173,10 @@ module alushdec(input      [5:0] funct,
   // The pattern 0101 indicates that we have an R-type and should use the 
   // funct code (0101 is also the nor command, of which there is no immediate
   // equivalent; hence 0101 is available)
-  assign #1 {aluoutsrc, alushcontrol} = 
-    (({alushmainoutsrc, alushmaincontrol} == 4'b0101) 
+  assign #1 {useshifter, alushcontrol} = 
+    (({maindecuseshifter, alushmaincontrol} == 4'b0101) 
       ? functcontrol 
-      : {alushmainoutsrc, alushmaincontrol});
+      : {maindecuseshifter, alushmaincontrol});
 
   always @ ( * )
       case(funct)
@@ -218,35 +246,53 @@ module branchdec(input  [5:0] op,
     endcase
 endmodule
 
+module cop0dec(input [5:0] op,
+               input [4:0] rs,
+               input [5:0] funct,
+               output      cop0read, cop0write, rfe);
+
+  wire opcode16 = (op == 6'b010000);
+
+  assign #1 cop0read = (opcode16 & (rs == 5'b00000));                    // MFC0
+  assign #1 cop0write = (opcode16 & (rs == 5'b00100));                   // MTC0
+  assign #1 rfe = (opcode16 & (rs == 5'b10000) & (funct == 6'b010000));  // RFE
+
+endmodule
+
 module datapath(input         clk, reset,
                 input         memtoregE, memtoregM, memtoregW, 
                 input         branchD, unsignedD, unsignedE,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
-                input         jumpD, aluoutsrcE, linkD, linkE, luiE,
+                input         jumpD, 
+                input  [1:0]  aluoutsrcE, 
+                input         linkD, linkE, luiE,
                 input         rdsrcD, pcsrcFD, 
                 input  [1:0]  pcbranchsrcD,
                 input  [2:0]  alushcontrolE,
+                input  [31:0] cop0readD,
                 output [31:0] pcF,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedataM,
                 input  [31:0] readdataM,
                 output [5:0]  opD, functD,
-                output [4:0]  rtD,
+                output [4:0]  rsD, rtD, rdD,
                 output        aeqzD, aeqbD, agtzD, altzD,
-                output        flushE);
+                output        flushE,
+                output [31:0] writedataW,
+                output [4:0]  writeregW);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
   wire        stallF;
-  wire [4:0]  rsD, rdD, rd2D, rsE, rtE, rdE;
-  wire [4:0]  writeregE, writeregM, writeregW;
+  wire [4:0]  rd2D, rsE, rtE, rdE;
+  wire [4:0]  writeregE, writeregM;
   wire [31:0] pcnextFD, pcnextbrFD, pcplus4F;
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
   wire [31:0] pcD, pcplus4D, pcplus8D, pcplus8E, instrD, branchtargetD;
-  wire [31:0] aluresultE, shiftresultE, alushresultE;
+  wire [31:0] aluresultE, shiftresultE, cop0readE;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
 
@@ -297,10 +343,11 @@ module datapath(input         clk, reset,
   floprc #(32) r1E(clk, reset, flushE, srcaD, srcaE);
   floprc #(32) r2E(clk, reset, flushE, srcbD, srcbE);
   floprc #(32) r3E(clk, reset, flushE, signimmD, signimmE);
-  floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
   floprc #(5)  r4E(clk, reset, flushE, rsD, rsE);
   floprc #(5)  r5E(clk, reset, flushE, rtD, rtE);
   floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
+  floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
+  floprc #(32) r8E(clk, reset, flushE, cop0readD, cop0readE);
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
   mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
@@ -308,8 +355,8 @@ module datapath(input         clk, reset,
   alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE);
   shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
                       shiftresultE);
-  mux2 #(32)  alushmux(aluresultE, shiftresultE, aluoutsrcE, alushresultE);
-  mux2 #(32)  alulinkmux(alushresultE, pcplus8E, linkE, aluoutE);
+  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, cop0readE, 
+                        aluoutsrcE, aluoutE);
 
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
 
@@ -322,9 +369,78 @@ module datapath(input         clk, reset,
   flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
   flopr #(32) r2W(clk, reset, readdataM, readdataW);
   flopr #(5)  r3W(clk, reset, writeregM, writeregW);
+  flopr #(32) r4W(clk, reset, writedataM, writedataW);
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
 
 endmodule
+
+module coprocessor0(input             clk, reset,
+                    input             cop0writeW, 
+                    input      [4:0]  readaddress, writeaddress,
+                    input      [31:0] writecop0W,
+                    output reg [31:0] readvalue,
+                    output            re,   // reverse endianess
+                                      swc,  // swap caches
+                                      isc); // isolate cache
+
+  wire [31:0] reg12;
+  wire [7:0]  im;    // Interupt mask
+
+  statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), 
+                   writecop0W, reg12, re, im, swc, isc);
+
+  always @ ( * )
+    case(readaddress)
+      5'b01100: readvalue <= reg12;
+      default:  readvalue <= 32'hxxxxxxxx;
+    endcase
+endmodule 
+
+module statusregunit(input             clk, reset, writeenable,
+                     input      [31:0] writedata,
+                     output reg [31:0] statusreg,
+                     output            re, 
+                     output     [7:0]  im,
+                     output            swc, isc);
+
+
+
+wire cu1, bev, ts, pe, cm, pz, kuo, ieo, kup, iep, kuc, iec;
+
+assign cu1 = 0; // No floating point unit
+assign pe = 0;  // No parity checking
+assign cm = 0;  // Isolated cache feature, not yet implemented
+assign pz = 0;  // Archaic parity feature, not implemented
+
+assign re  = statusreg[25];  // reverse endianness
+assign bev = statusreg[22];  // not currently implemented
+assign ts  = statusreg[21];  // TLB not implemented
+assign {swc, isc, im} = statusreg[17:7];
+
+assign {kuo, ieo, kup, iep, kuc, iec} = 6'b0; // No user vs kernel mode
+
+
+always @ ( negedge clk )
+  begin
+    if(writeenable) begin
+      statusreg = writedata;
+      statusreg[31:30] = 0;
+      statusreg[29]    = cu1;
+      // bit 28 (cu0) will not effect the chip since we only run in kernel mode
+      statusreg[27:26] = 0;
+      // 25 is re
+      statusreg[24:23] = 0;
+      // 22 and 21 are bev and ts
+      statusreg[20] = pe;
+      statusreg[19] = cm;
+      statusreg[18] = pz;
+      // 17 to 8 are swc, isc, and im
+      statusreg[7:6] = 0;
+      statusreg[5:0] = {kuo, ieo, kup, iep, kuc, iec};
+    end
+  end
+endmodule
+
 
 module hazard(input  [4:0] rsD, rtD, rsE, rtE, 
               input  [4:0] writeregE, writeregM, writeregW,
@@ -566,3 +682,11 @@ module mux3 #(parameter WIDTH = 8)
   assign #1 y = s[1] ? d2 : (s[0] ? d1 : d0); 
 endmodule
 
+module mux4 #(parameter WIDTH = 8)
+             (input  [WIDTH-1:0] d0, d1, d2, d3,
+              input  [1:0]       s, 
+              output [WIDTH-1:0] y);
+
+  assign #1 y = s[1] ? (s[0] ? d3 : d2)
+                     : (s[0] ? d1 : d0); 
+endmodule
