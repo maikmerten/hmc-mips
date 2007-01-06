@@ -15,19 +15,19 @@ module imem(input  [5:0]  a,
     begin
       // TODO: Zero out memory each time
       $readmemh("testing/test_000.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_001.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_002.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_003.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_004.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_005.dat",RAM);
-      #2000;
+      #1000;
       $readmemh("testing/test_006.dat",RAM);
-      #2000;
+      #1000;
     end
 
   assign rd = RAM[a]; // word aligned

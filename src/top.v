@@ -11,25 +11,51 @@ module top(input         clk, reset,
            output        memwrite);
 
   wire [31:0] pc, instr, readdata;
+  wire instrack, dataack;
+  wire [3:0] byteen;
   
   // instantiate processor and memories
-  mips mips(clk, reset, pc, instr, memwrite, dataadr, writedata, readdata);
-  imem imem(pc[7:2], instr);
-  dmem dmem(clk, memwrite, dataadr, writedata, readdata);
+  mips mips(clk, reset, pc, instr, memwrite, byteen, dataadr, writedata, 
+            readdata, instrack, dataack);
+  imem imem(pc[7:2], instr); assign instrack = 1; // TODO: make imem a cache too
+  cache dcache(clk, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
 endmodule
 
-module dmem(input         clk, we,
-            input  [31:0] a, wd,
-            output [31:0] rd);
+// this is an ideal cache right now
+module cache(input         clk, writeenable,
+             input  [31:0] a, writedata,
+             input  [3:0]  byteen,
+             output [31:0] readdata,
+             output reg    ack);
 
   reg  [31:0] RAM[63:0];
+  reg fakedelay1, fakedelay2;
 
-  assign rd = RAM[a[31:2]]; // word aligned
+  assign readdata = RAM[a[31:2]]; // word aligned
 
+  // Assume ideal memory
+
+  // Assume big endien
   always @(posedge clk)
-    if (we)
-      RAM[a[31:2]] <= wd;
+    begin
+      fakedelay1 <= writeenable;
+      fakedelay2 <= fakedelay1;
+      ack <= fakedelay2;
+      if (writeenable)
+        begin
+          if(byteen[0])
+            RAM[a[31:2]][7:0] <= writedata[7:0];
+          if(byteen[1])
+            RAM[a[31:2]][15:8] <= writedata[15:8];
+          if(byteen[2])
+            RAM[a[31:2]][23:16] <= writedata[23:16];
+          if(byteen[3])
+            RAM[a[31:2]][31:24] <= writedata[31:24];
+        end
+    end
+
+          
 endmodule
 
 // imem may be created with CoreGen for Xilinx synthesis

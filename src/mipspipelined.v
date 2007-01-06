@@ -17,8 +17,10 @@ module mips(input         clk, reset,
             output [31:0] pcF,
             input  [31:0] instrF,
             output        memwriteM,
+            output [3:0]  byteenM,
             output [31:0] aluoutM, writedataM,
-            input  [31:0] readdataM);
+            input  [31:0] readdataM,
+            input         instrackF, dataackM);
 
   wire [5:0]  opD, functD;
   wire [4:0]  rsD, rtD, rdD;
@@ -34,7 +36,8 @@ module mips(input         clk, reset,
   wire        re, swc, isc;
 
   controller c(clk, reset, opD, functD, rsD, rtD, flushE, aeqzD, aeqbD, agtzD, 
-               altzD, memtoregE, memtoregM, memtoregW, memwriteM, branchD,
+               altzD, memtoregE, memtoregM, memtoregW, memwriteM, byteenM, 
+               branchD,
                alusrcE, unsignedD, unsignedE, regdstE, regwriteE, regwriteM, 
                regwriteW, jumpD, aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW);
@@ -43,8 +46,9 @@ module mips(input         clk, reset,
               regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
               rdsrcD, pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readD,
               pcF, instrF,
-              aluoutM, writedataM, readdataM,
-              opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, flushE, 
+              aluoutM, writedataM, readdataM, instrackF, dataackM,
+              opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, 
+              flushE, 
               writedataW, writeregW);
 
   // cop0 fields: cop0readD, cop0writeW, writedataW, writeregW, rdD
@@ -58,6 +62,7 @@ module controller(input        clk, reset,
                   input        flushE,
                   input        aeqzD, aeqbD, agtzD, altzD,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
+                  output [3:0] byteenM,
                   output       branchD, alusrcE, unsignedD, unsignedE,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
                   output       jumpD, 
@@ -79,6 +84,9 @@ module controller(input        clk, reset,
 
   assign #1 regwriteD = mainregwrite | linkD | cop0readD;
   assign #1 regdstD = maindecregdstD | cop0writeD;
+
+  // TODO: byte enable stuff
+  assign #1 byteenM = 4'b1111;
 
   maindec md(opD, memtoregD, memwriteD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
@@ -156,7 +164,11 @@ module maindec(input  [5:0] op,
       6'b000110: controls <= 11'b00000011000; //BLEZ
       6'b000111: controls <= 11'b00000011000; //BGTZ
       6'b010000: controls <= 11'b00000001000; //MFC0, MTC0, RFE
-      default:   controls <= 11'bxxxxxxxxxxx; //???
+      default:   
+        begin
+          controls <= 11'bxxxxxxxxxxx;  //???
+          $stop;
+        end
     endcase
 
 endmodule
@@ -274,7 +286,8 @@ module datapath(input         clk, reset,
                 output [31:0] pcF,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedataM,
-                input  [31:0] readdataM,
+                input  [31:0] readdataM, 
+                input         instrackF, dataackM,
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdD,
                 output        aeqzD, aeqbD, agtzD, altzD,
@@ -284,7 +297,7 @@ module datapath(input         clk, reset,
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
-  wire        stallF;
+  wire        stallF, flushD;
   wire [4:0]  rd2D, rsE, rtE, rdE;
   wire [4:0]  writeregE, writeregM;
   wire [31:0] pcnextFD, pcnextbrFD, pcplus4F;
@@ -301,8 +314,9 @@ module datapath(input         clk, reset,
   hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, branchD,
+              instrackF, dataackM,
               forwardaD, forwardbD, forwardaE, forwardbE,
-              stallF, stallD, flushE);
+              stallF, stallD, flushD, flushE);
 
   // next PC logic (operates in fetch and decode)
   mux2 #(32)  pcmux(pcplus4F, pcnextbrFD, pcsrcFD, pcnextFD);
@@ -318,7 +332,7 @@ module datapath(input         clk, reset,
   // Decode stage 
   flopenr #(32) r1D(clk, reset, ~stallD, pcplus4F, pcplus4D);
   flopenr #(32) r3D(clk, reset, ~stallD, pcF, pcD);
-  flopenr #(32) r2D(clk, reset, ~stallD, instrF, instrD);
+  flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
   signext     se(instrD[15:0], ~unsignedD, signimmD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
@@ -445,12 +459,13 @@ endmodule
 module hazard(input  [4:0] rsD, rtD, rsE, rtE, 
               input  [4:0] writeregE, writeregM, writeregW,
               input        regwriteE, regwriteM, regwriteW,
-              input        memtoregE, memtoregM, branchD,
+              input        memtoregE, memtoregM, branchD, 
+              input        instrackF, dataackM,
               output           forwardaD, forwardbD,
               output reg [1:0] forwardaE, forwardbE,
-              output       stallF, stallD, flushE);
+              output       stallF, stallD, flushD, flushE);
 
-  wire lwstallD, branchstallD;
+  wire lwstallD, branchstallD, instrmissF, datamissM;
 
   // forwarding sources to D stage (branch equality)
   assign forwardaD = (rsD !=0 & rsD == writeregM & regwriteM);
@@ -469,14 +484,28 @@ module hazard(input  [4:0] rsD, rtD, rsE, rtE,
     end
 
   // stalls  
-  assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
-  // TODO: Don't stall for $0
-  assign #1 branchstallD = branchD & 
-             (regwriteE & (writeregE == rsD | writeregE == rtD) |
-              memtoregM & (writeregM == rsD | writeregM == rtD));
 
-  assign #1 stallD = lwstallD | branchstallD;
-  assign #1 stallF = stallD; // stalling D stalls all previous stages
+  // (This stall was not implemented in R2000)
+  assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
+
+  // Cache miss delays
+  assign #1 datamissM = memtoregM & ~dataackM;
+
+  // This assumes we are reading an instruction every cycle
+  assign #1 instrmissF = ~instrackF;
+
+  assign #1 branchstallD = branchD & 
+             (regwriteE & ((rsD != 0 & writeregE == rsD) | 
+                          (rtD != 0 & writeregE == rtD)) |
+              memtoregM & ((rsD != 0 & writeregM == rsD) | 
+                          (rtD != 0 & writeregM == rtD)));
+
+  assign #1 stallD = lwstallD | branchstallD | datamissM;
+  assign #1 stallF =   stallD      // stalling D stalls all previous stages
+                     | instrmissF; // Stall on instruction cache miss
+
+  assign #1 flushD = instrmissF;   // Flush decoder if the instruction is not 
+                                   // yet available to enter the decode stage
   assign #1 flushE = stallD; // stalling D flushes next stage
 
   // *** not necessary to stall D stage on store if source comes from load;
