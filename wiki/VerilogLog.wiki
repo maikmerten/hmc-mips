@@ -6,6 +6,12 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/5/2007==
+
+I started work on coprocessor zero.  It is now possible to read and write to cop0 registers using the appropriate instructions.  I also did a basic status register.  Beyond that, the coprocessor does nothing.  Of course it will need to perform exceptions next.
+
+However, it is time to get basic caching and all the load and store ops working.  Prof Harris and I decided to keep things simple for now and have the cache development work be completed later on in the semester.  For now I am focusing on getting all the instructions functional.
+
 ==1/4/2007==
 
 I began to look at the cache and load/store operations, but I think i'm going to switch things around and work on CoP0 and exceptions first, since there are several exceptions that can happen with memory.
