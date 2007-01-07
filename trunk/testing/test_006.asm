@@ -11,9 +11,13 @@
 main:   addi  $3, $0, -1        # $3 = 0xffffffff
         mtc0  $3, $12           # set SR to all the ones we can
         nop                     # Let the assignment go through the pipeline
-        nop
+        nop                     # (This is acceptable, see See MIPS Run A.4.
         nop
         mfc0  $4, $12           # copy SR to $4
-b8:     sw    $0, 0($4)         # should write 0 to address (something)
+b8:     sw    $0, 0($4)         # should write 0 to address 0x1263ff00
+                                # (This is the value of the status register when
+                                # everything that can be switch is turned on, it
+                                # is subject to change though throuout
+                                # development.)
 end:    beq   $0, $0, end       # loop forever
         nop
