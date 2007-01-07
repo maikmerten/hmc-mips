@@ -25,8 +25,9 @@ module mips(input         clk, reset,
   wire [5:0]  opD, functD;
   wire [4:0]  rsD, rtD, rdD;
   wire        regdstE, alusrcE, 
-              unsignedD, rdsrcD, pcsrcFD, linkD, linkE, luiE,
+              unsignedD, loadsignedM, rdsrcD, pcsrcFD, linkD, linkE, luiE,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
+              byteM, hardwordM,
               aeqzD, aeqbD, agtzD, altzD;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE;
@@ -36,20 +37,22 @@ module mips(input         clk, reset,
   wire        re, swc, isc;
 
   controller c(clk, reset, opD, functD, rsD, rtD, flushE, aeqzD, aeqbD, agtzD, 
-               altzD, memtoregE, memtoregM, memtoregW, memwriteM, byteenM, 
-               branchD,
-               alusrcE, unsignedD, unsignedE, regdstE, regwriteE, regwriteM, 
+               altzD, memtoregE, memtoregM, memtoregW, memwriteM, 
+               byteM, halfwordM, branchD,
+               alusrcE, unsignedD, loadsignedM,
+               regdstE, regwriteE, regwriteM, 
                regwriteW, jumpD, aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW);
-  datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, branchD, 
-              unsignedD, unsignedE, alusrcE, regdstE, regwriteE, regwriteM, 
-              regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
+  datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
+              branchD, 
+              unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
+              regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
               rdsrcD, pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readD,
               pcF, instrF,
               aluoutM, writedataM, readdataM, instrackF, dataackM,
               opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, 
               flushE, 
-              writedataW, writeregW);
+              writedataW, writeregW, byteenM);
 
   // cop0 fields: cop0readD, cop0writeW, writedataW, writeregW, rdD
   coprocessor0 cop0(clk, reset, cop0writeW, rdD, writeregW, writedataW, 
@@ -62,8 +65,9 @@ module controller(input        clk, reset,
                   input        flushE,
                   input        aeqzD, aeqbD, agtzD, altzD,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
-                  output [3:0] byteenM,
-                  output       branchD, alusrcE, unsignedD, unsignedE,
+                  output       byteM, halfwordM,
+                  output       branchD, alusrcE, unsignedD, 
+                  output       loadsignedM,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
                   output       jumpD, 
                   output [1:0] aluoutsrcE, 
@@ -75,7 +79,9 @@ module controller(input        clk, reset,
 
   wire       memtoregD, memwriteD, alusrcD, mainregwrite, luiD,
              regdstD, regwriteD, maindecuseshifterD, maindecregdstD, 
-             useshifterD, cop0readD, cop0writeD, rfeD; 
+             useshifterD, cop0readD, cop0writeD, rfeD,
+             loadsignedD, loadsignedE;
+  wire       byteD, halfwordD, byteE, halfwordE;
   reg  [1:0] aluoutsrcD;
   wire       ltD, gtD, eqD, brsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
@@ -85,10 +91,7 @@ module controller(input        clk, reset,
   assign #1 regwriteD = mainregwrite | linkD | cop0readD;
   assign #1 regdstD = maindecregdstD | cop0writeD;
 
-  // TODO: byte enable stuff
-  assign #1 byteenM = 4'b1111;
-
-  maindec md(opD, memtoregD, memwriteD,
+  maindec md(opD, memtoregD, memwriteD, byteD, halfwordD, loadsignedD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
              maindecuseshifterD, alushcontmaindecD);
 
@@ -114,59 +117,70 @@ module controller(input        clk, reset,
       aluoutsrcD <= 2'b00; // alu
 
   // pipeline registers
-  floprc #(13) regE(clk, reset, flushE,
+  floprc #(15) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
-                  aluoutsrcD, alushcontrolD, unsignedD, luiD, cop0writeD}, 
+                  aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
+                  byteD, halfwordD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
-                  aluoutsrcE, alushcontrolE, unsignedE, luiE, cop0writeE});
-  flopr #(4) regM(clk, reset, 
-                  {memtoregE, memwriteE, regwriteE, cop0writeE},
-                  {memtoregM, memwriteM, regwriteM, cop0writeM});
+                  aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
+                  byteE, halfwordE});
+  flopr #(7) regM(clk, reset, 
+                  {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
+                  byteE, halfwordE},
+                  {memtoregM, memwriteM, regwriteM, cop0writeM, loadsignedM,
+                  byteM, halfwordM});
   flopr #(3) regW(clk, reset, 
                   {memtoregM, regwriteM, cop0writeM},
                   {memtoregW, regwriteW, cop0writeW});
 endmodule
 
 module maindec(input  [5:0] op,
-               output       memtoreg, memwrite,
+               output       memtoreg, memwrite, byte, halfword, loadsignedD,
                output       alusrc,
                output       regdst, regwrite, 
                output       unsignedD, lui, useshift,
                output [2:0] alushcontrol);
 
-  reg [10:0] controls;
+  reg [13:0] controls;
   
   assign {regwrite, /* regwrite is also enabled by branchdec and cop0dec */
           regdst,   /* regdst is also enabled by cop0dec */ 
           alusrc,
           memwrite,
-          memtoreg, useshift, alushcontrol /* 3 bits */,
+          memtoreg, byte, halfword, loadsignedD,
+          useshift, alushcontrol /* 3 bits */,
           unsignedD, lui} = controls;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 11'b11000010100; //R-type
-      6'b000001: controls <= 11'b01000010100; //Opcode 1 (branches)
-      6'b100011: controls <= 11'b10101001000; //LW
-      6'b101011: controls <= 11'b00110001000; //SW
-      6'b001000: controls <= 11'b10100001000; //ADDI (treated same as ADDIU)
-      6'b001001: controls <= 11'b10100001000; //ADDIU
-      6'b001010: controls <= 11'b10100011100; //SLTI
-      6'b001011: controls <= 11'b10100001100; //SLTIU (imm _IS_ sign extended)
-      6'b001100: controls <= 11'b10100000010; //ANDI
-      6'b001101: controls <= 11'b10100000110; //ORI
-      6'b001110: controls <= 11'b10100010010; //XORI
-      6'b001111: controls <= 11'b10100101011; //LUI
-      6'b000010: controls <= 11'b00000001000; //J
-      6'b000011: controls <= 11'b11000001000; //JAL
-      6'b000100: controls <= 11'b00000011000; //BEQ
-      6'b000101: controls <= 11'b00000011000; //BNE
-      6'b000110: controls <= 11'b00000011000; //BLEZ
-      6'b000111: controls <= 11'b00000011000; //BGTZ
-      6'b010000: controls <= 11'b00000001000; //MFC0, MTC0, RFE
+      6'b000000: controls <= 14'b11000000010100; //R-type
+      6'b000001: controls <= 14'b01000000010100; //Opcode 1 (branches)
+      6'b100000: controls <= 14'b10101101001000; //LB (assume big endian)
+      6'b100001: controls <= 14'b10101011001000; //LH
+      6'b100011: controls <= 14'b10101001001000; //LW
+      6'b100100: controls <= 14'b10101100001010; //LBU
+      6'b100101: controls <= 14'b10101010001010; //LHU
+      6'b101000: controls <= 14'b00110100001000; //SB
+      6'b101001: controls <= 14'b00110010001000; //SH
+      6'b101011: controls <= 14'b00110000001000; //SW
+      6'b001000: controls <= 14'b10100000001000; //ADDI (treated as ADDIU)
+      6'b001001: controls <= 14'b10100000001000; //ADDIU
+      6'b001010: controls <= 14'b10100000011100; //SLTI
+      6'b001011: controls <= 14'b10100000001100; //SLTIU 
+      6'b001100: controls <= 14'b10100000000010; //ANDI
+      6'b001101: controls <= 14'b10100000000110; //ORI
+      6'b001110: controls <= 14'b10100000010010; //XORI
+      6'b001111: controls <= 14'b10100000101011; //LUI
+      6'b000010: controls <= 14'b00000000001000; //J
+      6'b000011: controls <= 14'b11000000001000; //JAL
+      6'b000100: controls <= 14'b00000000011000; //BEQ
+      6'b000101: controls <= 14'b00000000011000; //BNE
+      6'b000110: controls <= 14'b00000000011000; //BLEZ
+      6'b000111: controls <= 14'b00000000011000; //BGTZ
+      6'b010000: controls <= 14'b00000000001000; //MFC0, MTC0, RFE
       default:   
         begin
-          controls <= 11'bxxxxxxxxxxx;  //???
+          controls <= 14'bxxxxxxxxxxxxxx;  //???
           $stop;
         end
     endcase
@@ -272,8 +286,8 @@ module cop0dec(input [5:0] op,
 endmodule
 
 module datapath(input         clk, reset,
-                input         memtoregE, memtoregM, memtoregW, 
-                input         branchD, unsignedD, unsignedE,
+                input         memtoregE, memtoregM, memtoregW, byteM, halfwordM,
+                input         branchD, unsignedD, loadsignedM,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
                 input         jumpD, 
@@ -285,7 +299,7 @@ module datapath(input         clk, reset,
                 input  [31:0] cop0readD,
                 output [31:0] pcF,
                 input  [31:0] instrF,
-                output [31:0] aluoutM, writedataM,
+                output [31:0] aluoutM, writedata2M,
                 input  [31:0] readdataM, 
                 input         instrackF, dataackM,
                 output [5:0]  opD, functD,
@@ -293,13 +307,19 @@ module datapath(input         clk, reset,
                 output        aeqzD, aeqbD, agtzD, altzD,
                 output        flushE,
                 output [31:0] writedataW,
-                output [4:0]  writeregW);
+                output [4:0]  writeregW,
+                output [3:0]  byteenM);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
   wire        stallF, flushD;
   wire [4:0]  rd2D, rsE, rtE, rdE;
   wire [4:0]  writeregE, writeregM;
+  wire [31:0] writedataM;
+  wire [7:0]  rbyteM;
+  wire [15:0] rhalfwordM;
+  wire [31:0] rbyteextM, rhalfwordextM, readdata2M;
+  wire [3:0]  bytebyteenM, halfwordbyteenM;
   wire [31:0] pcnextFD, pcnextbrFD, pcplus4F;
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
@@ -333,7 +353,7 @@ module datapath(input         clk, reset,
   flopenr #(32) r1D(clk, reset, ~stallD, pcplus4F, pcplus4D);
   flopenr #(32) r3D(clk, reset, ~stallD, pcF, pcD);
   flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
-  signext     se(instrD[15:0], ~unsignedD, signimmD);
+  signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
   eqcmp       comp(srca2D, srcb2D, equalD);
@@ -378,10 +398,28 @@ module datapath(input         clk, reset,
   flopr #(32) r1M(clk, reset, srcb2E, writedataM);
   flopr #(32) r2M(clk, reset, aluoutE, aluoutM);
   flopr #(5)  r3M(clk, reset, writeregE, writeregM);
+  mux3 #(32) wdatamux(writedataM, {writedataM[15:0], writedataM[15:0]}, 
+                      {writedataM[7:0], writedataM[7:0], writedataM[7:0], 
+                       writedataM[7:0]}, 
+                      {byteM, halfwordM}, writedata2M);
+  // Byte encoding logic for store operations
+  dec2 bytebyteendec(aluoutM[1:0], bytebyteenM);
+  mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutM[1], halfwordbyteenM);
+  mux3 #(4) byteenmux(4'b1111, halfwordbyteenM, bytebyteenM, 
+                      {byteM, halfwordM}, byteenM);
+  // Load conversionts
+  mux4 #(8) rbytemux(readdataM[7:0], readdataM[15:8], readdataM[23:16], 
+                        readdataM[31:24], aluoutM[1:0], rbyteM);
+  mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutM[1],
+                          rhalfwordM);
+  signext #(8, 32) rbytesignext(rbyteM, loadsignedM, rbyteextM);
+  signext #(16, 32) rhalfwsignext(rhalfwordM, loadsignedM, rhalfwordextM);
+  mux3 #(32) readmux(readdataM, rhalfwordextM, rbyteextM, {byteM, halfwordM},
+                     readdata2M);
 
   // Writeback stage
   flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
-  flopr #(32) r2W(clk, reset, readdataM, readdataW);
+  flopr #(32) r2W(clk, reset, readdata2M, readdataW);
   flopr #(5)  r3W(clk, reset, writeregM, writeregW);
   flopr #(32) r4W(clk, reset, writedataM, writedataW);
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
@@ -641,14 +679,15 @@ module sl2(input  [31:0] a,
 endmodule
 
 // When disabled, signext acts as a zero extender
-module signext(input  [15:0] a,
+module signext #(parameter INPUT = 16, OUTPUT = 32)
+               (input  [INPUT-1:0] a,
                input  enable,
-               output [31:0] y);
+               output [OUTPUT-1:0] y);
                
   wire extension;
   
-  assign #1 extension = (enable ? a[15] : 0);
-  assign #1 y = {{16{extension}}, a};
+  assign #1 extension = (enable ? a[INPUT-1] : 0);
+  assign #1 y = {{OUTPUT-INPUT{extension}}, a};
 endmodule
 
 module flopr #(parameter WIDTH = 8)
@@ -718,4 +757,18 @@ module mux4 #(parameter WIDTH = 8)
 
   assign #1 y = s[1] ? (s[0] ? d3 : d2)
                      : (s[0] ? d1 : d0); 
+endmodule
+
+// Basic decoders, eg b10 -> b0010
+module dec2 (input  [1:0] x,
+             output [3:0] y);
+
+  assign #1 y = (x[0] ? (x[1] ? 4'b1000 : 4'b0010)
+                      : (x[1] ? 4'b0100 : 4'b0001));
+endmodule
+
+module dec1 (input        x,
+             output [1:0] y);
+
+  assign #1 y = (x ? 2'b01 : 2'b10);
 endmodule

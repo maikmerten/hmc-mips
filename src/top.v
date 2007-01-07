@@ -24,7 +24,7 @@ endmodule
 
 // this is an ideal cache right now
 module cache(input         clk, writeenable,
-             input  [31:0] a, writedata,
+             input  [31:0] a, writedata, // TODO: Remove lower two bits of a
              input  [3:0]  byteen,
              output [31:0] readdata,
              output reg    ack);
