@@ -6,6 +6,22 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/6/2007==
+
+Today I implemented all the various load and store operations.  This went fairly smoothly.   I am truly grateful for the regression testing system; it has made this whole process so much easier and faster than it would have been without it.
+
+The interface for the cache is still not complete, but the processor now supports delaying until each cache acknowledges the data is available. 
+
+The features that remain to be completed are:
+
+  # Multiplication/Division
+  # Coprocessor 0 actually having any use
+  # Exceptions
+  # Caching
+  # Proper startup behavior, such as reset vectors, status vectors, etc
+
+Among these, exceptions should probably take priority because it will be good to know early on in the project how exceptions fit in.
+
 ==1/5/2007==
 
 I started work on coprocessor zero.  It is now possible to read and write to cop0 registers using the appropriate instructions.  I also did a basic status register.  Beyond that, the coprocessor does nothing.  Of course it will need to perform exceptions next.
