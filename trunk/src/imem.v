@@ -30,6 +30,8 @@ module imem(input  [5:0]  a,
       #1000;
       $readmemh("testing/test_007.dat",RAM);
       #1000;
+      $readmemh("testing/test_008.dat",RAM);
+      #1000;
     end
 
   assign rd = RAM[a]; // word aligned
