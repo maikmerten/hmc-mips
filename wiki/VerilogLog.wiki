@@ -6,6 +6,12 @@
 
 =Carl's Log for developing the hmc mips processor=
 
+==1/7/2007==
+
+Exceptions -- I'm starting exceptions.  There aer many different possible exceptions.  For now I'm planning on getting the basic functionality in place, then worry about supporting all the necessary exceptions later.
+
+I need to worry about the branch delay bit in the cause register.  It says whether the errant instruction was in a branch delay slot. (We can just look at the previous instruction's branch and jump bits.  This also requires setting EPC to PC - 4.)
+
 ==1/6/2007==
 
 Today I implemented all the various load and store operations.  This went fairly smoothly.   I am truly grateful for the regression testing system; it has made this whole process so much easier and faster than it would have been without it.
