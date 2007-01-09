@@ -12,6 +12,13 @@ I have a working but somewhat primitive exception unit that is able to trap arit
 
 A new question I've just realized is when the exception should happen.  Should the exception unit be expected to recognize an exception within the same clock cycle it happens, or should an extra cycle be allowed.  I believe the former is easier, although slower, because it allows the exception unit to look at the processor in its current state, rather than having to look back at the previous clock cycle. 
 
+There was a possible unhandled hazard I noticed in creating test_009.  In the following code snippet, the modified value is not reaching the jump.
+
+{{{
+        addi  $7, $7, 4
+        jr    $7
+}}}
+
 ==1/7/2007==
 
 Exceptions -- I'm starting exceptions.  There aer many different possible exceptions.  For now I'm planning on getting the basic functionality in place, then worry about supporting all the necessary exceptions later.
