@@ -17,7 +17,7 @@ module top(input         clk, reset,
   // instantiate processor and memories
   mips mips(clk, reset, pc, instr, memwrite, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
-  imem imem(pc[7:2], instr); assign instrack = 1; // TODO: make imem a cache too
+  imem imem(pc[12:2], instr); assign instrack = 1; // TODO: make imem a cache
   cache dcache(clk, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
 endmodule
@@ -29,7 +29,7 @@ module cache(input         clk, writeenable,
              output [31:0] readdata,
              output reg    ack);
 
-  reg  [31:0] RAM[63:0];
+  reg  [31:0] RAM[1023:0];
   reg fakedelay1, fakedelay2;
 
   assign readdata = RAM[a[31:2]]; // word aligned

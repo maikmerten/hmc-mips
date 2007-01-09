@@ -6,7 +6,7 @@
 #
 # Created: 1/5/07
 #
-#   Exceptions test.
+#   Coprocessor 0 status register test.
 
 main:   addi  $3, $0, -1        # $3 = 0xffffffff
         mtc0  $3, $12           # set SR to all the ones we can
