@@ -6,10 +6,11 @@
 
 `timescale 1 ns / 1 ps
 
-module imem(input  [5:0]  a,
+module imem(input  [10:0]  a,
             output [31:0] rd);
 
-  reg  [31:0] RAM[63:0];
+  // 0x200 = 2^10 = 124
+  reg  [31:0] RAM[1023:0];
 
   initial
     begin
@@ -31,6 +32,8 @@ module imem(input  [5:0]  a,
       $readmemh("testing/test_007.dat",RAM);
       #1000;
       $readmemh("testing/test_008.dat",RAM);
+      #1000;
+      $readmemh("testing/test_009.dat",RAM);
       #1000;
     end
 
