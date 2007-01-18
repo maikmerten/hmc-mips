@@ -66,12 +66,30 @@ VSIM 5>
 
 = Editing Environment =
 
+You may use ISE if you are more comfortable with it than other text editors.  Keep in mind you can work directly in Modelsim so you don't have to continually load and reload it.
+
 == 2 Space Tabs ==
 
-For the sake of consistent style, use two spaces for tabbing.  Change your settings as following in ISE:
+For the sake of consistent style, use two spaces for tabbing.  
+
+=== Editing in ISE ===
+Change your settings as following in ISE:
 
 http://hmc-mips.googlecode.com/svn/trunk/images/editor_options.jpg
+
+=== Editing in vim ===
+
+Add this to your vimrc file:
+
+{{{
+set tabstop=2
+set expandtab
+set shiftwidth=2
+set autoindent
+set textwidth=80
+}}}
 
 = Source Code Updates =
 
 Use SVN's update feature to load changes from the server.  Watch for new files being added to the source tree.  These will have to be added as non-copies to your project.  (If you don't notice the files being added, you'll probably get an error.)  Also, any conflicts will have to be resolved in the usual manner.  For more details on code management, [http://www.google.com/search?q=subversion+tutorial&ie=utf-8&oe=utf-8&rls=org.mozilla:en-US:official find a Subversion tutorial]. 
+
