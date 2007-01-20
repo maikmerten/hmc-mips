@@ -1,4 +1,4 @@
-#summary Microarchitecture Milestones and Schedule
+#summary Microarchitecture Team Milestones and Schedule
 #labels Phase-Design
 
 Refer to [http://docs.google.com/View?docid=df39snmn_10g5gbr3 this page] for the original project proposal.
@@ -77,9 +77,10 @@ Subtasks:
 Assigned to: ?
 
 Subtasks:
-    * Implement all remaining exceptions
-    * Shrink/simplify interface to exceptionunit (e.g. remove some/all the 32 bit buses)
-    * Separate out exception control from exception datapath
+  * Implement all remaining exceptions
+  * Implemented break, syscall, and rfe instructions
+  * Shrink/simplify interface to exceptionunit (e.g. remove some/all the 32 bit buses)
+  * Separate out exception control from exception datapath
 
 == CPU Function Complete ==
 
