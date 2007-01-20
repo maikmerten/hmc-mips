@@ -1,0 +1,44 @@
+#summary Microarchitecture Milestones and Schedule
+#labels Phase-Design
+
+Refer to 
+
+= Milestones & Deadlines =
+
+Initially taken from Professor Harris's Milestone Definitions.  The date given is the deadline for the given milestone.
+
+  # Microarchitecture Team Organization
+  # CPU Block Diagram
+  # Memory System Specification
+  # Test Plan
+  # CPU Function Complete
+  # RTL Function Complete
+  # RTL Tuning
+  # CPU Validated
+  # RTL Validated - Feb 13th
+  # Chip Report
+
+= Secondary, Desirable Tasks =
+
+  * Organization: Rework modules so they are more easy to implement.
+  * Optimization: Simplify and improve design wherever possible.
+  * GCC: check that code compiled in gcc only gives instructions supported by processor.
+
+= Milestone Subtasks/Assignments =
+
+== Team Organization ==
+
+Roles
+
+  * Chief Microachitect: Carl Nygaard
+  * Memory Microachitect: ?
+  * Architecture Validation: ?
+  * Misc: ?
+
+== CPU Block Diagram ==
+
+Assigned To: Carl Nygaard
+
+To be completed in Visio.  Any modifications to the design made by other team members must be compiled together and provided to Carl for modification to the block diagram.
+
+== Memory System Specification ==
