@@ -33,9 +33,8 @@ Initially taken from Professor Harris's Milestone Definitions.  The date given i
 Roles
 
   * Chief Microachitect: Carl Nygaard
-  * Memory Microachitect: ?
-  * Architecture Validation: ?
-  * Misc Tasks (Exception, multiply/div): ?
+  * Memory Microachitect: Nate Pinckney
+  * Architecture Validation & Misc Tasks (Exception, multiply/div): Thomas Barr & Matt Totino
 
 == CPU Block Diagram ==
 
@@ -45,7 +44,7 @@ To be completed in Visio.  Any modifications to the design made by other team me
 
 == Memory System Specification ==
 
-Assigned to: ?
+Assigned to: Nate Pinckney
 
 Subtasks:
   * Create (identical) direct-mapped write-back instruction and data caches
@@ -55,16 +54,16 @@ Subtasks:
 
 == Test Plan/Implementation ==
 
-Assigned to: ?
+Assigned to: multiple
 
 Subtasks:
-  * Develop test plan
-  * Develop tests for various instructions
-  * Develop tests for cache
+  * Develop test plan -- Assigned to Thomas and Matt
+  * Develop tests for various instructions (Corner case) -- Assigned to Thomas and Matt
+  * Develop tests for cache -- Assigned to Nate
 
 == Multiply/Division Instructions ==
 
-Assigned to: ?
+Assigned to: (Prof Harris)
 
 Subtasks:
   * Create HI/LO registers with accessors
@@ -74,7 +73,7 @@ Subtasks:
 
 == Exceptions ==
 
-Assigned to: ?
+Assigned to: Matt & Thomas
 
 Subtasks:
   * Implement all remaining exceptions
