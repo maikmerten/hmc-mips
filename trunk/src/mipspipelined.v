@@ -1,14 +1,12 @@
 //------------------------------------------------
 // mipspipelined.v
-// David_Harris@hmc.edu 3 November 2005
+//
+// Authors
+// David Harris David_Harris@hmc.edu 3 November 2005
+// Carl Nygaard carlpny@gmail.com 2007
+//
 // Pipelined MIPS processor
 //------------------------------------------------
-
-// files needed for simulation:
-//  mipsttest.v
-//  top.v
-//  imem.v
-//  mipspipelined.v
 
 `timescale 1 ns / 1 ps
 
@@ -386,7 +384,7 @@ module datapath(input         clk, reset,
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
   eqcmp       comp(srca2D, srcb2D, equalD);
   adder       pcadd2(pcplus4D, 32'b100, pcplus8D);
-  adder btadd(pcD, {{14{instrD[15]}}, instrD[15:0], 2'b00}, branchtargetD);
+  adder btadd(pcD, {signimmD[29:0], 2'b00}, branchtargetD);
   // TODO: Make these into individual modules
   assign #1 {aeqzD, aeqbD, agtzD, altzD} = {srca2D == 0, srca2D == srcb2D, 
                                             ~srca2D[31] & (srca2D[30:0] !== 0),
