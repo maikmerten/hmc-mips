@@ -1,0 +1,10 @@
+#summary Exceptions to be implemented, and plans for doing so.
+
+= Introduction =
+
+The hmc-MIPS CPU requires implementation of ten exceptions. These must be implemented, and tested, before 27 January.
+
+
+= Details =
+
+Details to come.
