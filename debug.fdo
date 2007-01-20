@@ -13,7 +13,6 @@ vlog  "src/top.v"
 vlog  "testing/mipstest.v"
 vlog  "C:/Xilinx/verilog/src/glbl.v"
 vsim -t 1ps   -L xilinxcorelib_ver -L unisims_ver -lib work testbench glbl
-do {testbench.udo}
 view wave
 vopt +acc=rn testbench -o testbench_debug
 vsim testbench_debug
