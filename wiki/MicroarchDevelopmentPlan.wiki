@@ -10,7 +10,9 @@ Initially taken from Professor Harris's Milestone Definitions.  The date given i
   # Microarchitecture Team Organization
   # CPU Block Diagram
   # Memory System Specification
-  # Test Plan
+  # Test Plan/Implementation
+  # Multiply/Division Instructions
+  # 
   # CPU Function Complete
   # RTL Function Complete
   # RTL Tuning
@@ -50,3 +52,39 @@ Subtasks:
   * Support cache bypassing (via upper bits of memory address)
   * Support cache swapping (using the swc bit available in the status register)
   * Support cache isolation (using the isc bit available in the status register)
+
+== Test Plan/Implementation ==
+
+Assigned to: ?
+
+Subtasks:
+  * Develop test plan
+  * Develop tests for various instructions
+  * Develop tests for cache
+
+== Multiply/Division Instructions ==
+
+Assigned to: ?
+
+Subtasks:
+  * Create HI/LO registers with accessors
+  * Create separate unit for multiplication and division
+  * Stall the processor when a HI/LO read wants unavailable results
+
+
+== Exceptions ==
+
+Assigned to: ?
+
+Subtasks:
+    * Implement all remaining exceptions
+    * Shrink/simplify interface to exceptionunit (e.g. remove some/all the 32 bit buses)
+    * Separate out exception control from exception datapath
+
+== CPU Function Complete ==
+
+Assigned to: whole team
+
+== RTL Function Complete ==
+
+Assigned to: whole team
