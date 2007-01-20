@@ -7,18 +7,18 @@ Refer to
 
 Initially taken from Professor Harris's Milestone Definitions.  The date given is the deadline for the given milestone.
 
-  # Microarchitecture Team Organization
-  # CPU Block Diagram
-  # Memory System Specification
-  # Test Plan/Implementation
-  # Multiply/Division Instructions
-  # Exceptions
-  # CPU Function Complete
-  # RTL Function Complete
-  # RTL Tuning
-  # CPU Validated
-  # RTL Validated - Feb 13th
-  # Chip Report
+  # Microarchitecture Team Organization - Sat. Jan 20
+  # CPU Block Diagram - Thur. Feb 1
+  # Memory System Specification - Sat. Jan 27
+  # Test Plan/Implementation - Sat. Jan 27
+  # Multiply/Division Instructions - Sat. Jan 27
+  # Exceptions - Sat. Jan 27
+  # CPU Function Complete - Sat. Jan 27
+  # RTL Function Complete - Thur. Feb 1
+  # RTL Tuning - Thur. Feb 8th
+  # CPU Validated - Sat. Feb 10th
+  # RTL Validated - Tue. Feb 13th
+  # Chip Report - Thur. Feb 15th
 
 = Secondary, Desirable Tasks =
 
@@ -35,7 +35,7 @@ Roles
   * Chief Microachitect: Carl Nygaard
   * Memory Microachitect: ?
   * Architecture Validation: ?
-  * Misc: ?
+  * Misc Tasks (Exception, multiply/div): ?
 
 == CPU Block Diagram ==
 
