@@ -12,7 +12,7 @@ Initially taken from Professor Harris's Milestone Definitions.  The date given i
   # Memory System Specification
   # Test Plan/Implementation
   # Multiply/Division Instructions
-  # 
+  # Exceptions
   # CPU Function Complete
   # RTL Function Complete
   # RTL Tuning
@@ -88,3 +88,17 @@ Assigned to: whole team
 == RTL Function Complete ==
 
 Assigned to: whole team
+
+== RTL Tuning ==
+
+Assigned to: whole team (broken down by subtask)
+
+Subtasks:
+  * High Level repartitioning - To be assigned
+    * Where appropriate, add modules or change modules to facilitate circuit design
+  * Datapath - To be assigned
+    * Repartition to make datapath more modular 
+    * Separate 32 bit and 5 bit lines.  
+    * Datapath optimization 
+  * Control - To be assigned
+    * Separate PLA control from random control and turn random control into PLA control where appropriate. 
