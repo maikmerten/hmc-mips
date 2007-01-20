@@ -2,8 +2,9 @@
 // mipspipelined.v
 //
 // Authors
-// David Harris David_Harris@hmc.edu 3 November 2005
-// Carl Nygaard carlpny@gmail.com 2007
+// David Harris David_Harris at hmc dot edu 3 November 2005
+// Carl Nygaard carlpny at gmail dot com 2007
+// Thomas Barr tbarr at hmc do edu 2007
 //
 // Pipelined MIPS processor
 //------------------------------------------------
