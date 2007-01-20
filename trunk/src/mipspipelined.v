@@ -5,6 +5,8 @@
 // David Harris David_Harris at hmc dot edu 3 November 2005
 // Carl Nygaard carlpny at gmail dot com 2007
 // Thomas Barr tbarr at hmc do edu 2007
+// Matt Totino mtotino at hmc.edu 2007
+// Nathaniel Pinckney npinckney at gmail dot com
 //
 // Pipelined MIPS processor
 //------------------------------------------------
