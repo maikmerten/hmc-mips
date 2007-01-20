@@ -196,7 +196,7 @@ module maindec(input  [5:0] op,
       6'b010000: controls <= 15'b000000000001000; //MFC0, MTC0, RFE
       default:   
         begin
-          // TODO: unknown opcodes should thrown an exception
+          // TODO: unknown opcodes should throw an exception
           controls <= 15'bxxxxxxxxxxxxxxx;  //???
           //$stop;
         end
@@ -297,6 +297,7 @@ module cop0dec(input [5:0] op,
                input [5:0] funct,
                output      cop0read, cop0write, rfe);
 
+  // TODO: move signals like this to the main decoder            
   wire opcode16 = (op == 6'b010000);
 
   assign #1 cop0read = (opcode16 & (rs == 5'b00000));                    // MFC0
