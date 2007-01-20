@@ -42,3 +42,11 @@ Assigned To: Carl Nygaard
 To be completed in Visio.  Any modifications to the design made by other team members must be compiled together and provided to Carl for modification to the block diagram.
 
 == Memory System Specification ==
+
+Assigned to: ?
+
+Subtasks:
+  * Create (identical) direct-mapped write-back instruction and data caches
+  * Support cache bypassing (via upper bits of memory address)
+  * Support cache swapping (using the swc bit available in the status register)
+  * Support cache isolation (using the isc bit available in the status register)
