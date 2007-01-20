@@ -47,6 +47,7 @@ To be completed in Visio.  Any modifications to the design made by other team me
 Assigned to: Nate Pinckney
 
 Subtasks:
+  * Write detailed [MemorySystemSpecifications]
   * Create (identical) direct-mapped write-back instruction and data caches
   * Support cache bypassing (via upper bits of memory address)
   * Support cache swapping (using the swc bit available in the status register)
