@@ -1,7 +1,7 @@
 #summary Microarchitecture Milestones and Schedule
 #labels Phase-Design
 
-Refer to 
+Refer to [http://docs.google.com/View?docid=df39snmn_10g5gbr3 this page] for the original project proposal.
 
 = Milestones & Deadlines =
 
