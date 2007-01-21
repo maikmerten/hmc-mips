@@ -24,7 +24,7 @@ except: mfc0  $4, $13           # get the cause register
         andi  $4, 0xff          # mask out the exception code
         srl   $4, $4, 2         # align the exception code
         addi  $5, $0, 12        # $5 = 12
-        bne   $4, $5, end       # fail if the exception code is not 4
+        bne   $4, $5, end       # fail if the exception code is not 12 (stored in $4)
         addi  $7, $7, 4         # Point to one past the errant instruction
                                 # (to avoid an infinite exception loop)
         nop

@@ -92,7 +92,11 @@ module controller(input        clk, reset, exception,
              regdstD, regwriteD, maindecuseshifterD, maindecregdstD, 
              alushdecoverflowableD, maindecoverflowableD, overflowableD,
              useshifterD, cop0readD, cop0writeD, rfeD,
-             loadsignedD, loadsignedE;
+             loadsignedD, loadsignedE,
+	     syscallD, breakD, riD, fpuD,
+             adesableD, adelableD, adesthrownD,
+	     syscallE, breakE, riE, fpuE,
+             adesableE, adelableE, adesthrownE;
   wire       byteD, halfwordD, byteE, halfwordE;
   reg  [1:0] aluoutsrcD;
   wire       ltD, gtD, eqD, brsrcD;
@@ -107,7 +111,8 @@ module controller(input        clk, reset, exception,
 
   maindec md(opD, memtoregD, memwriteD, byteD, halfwordD, loadsignedD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
-             maindecuseshifterD, maindecoverflowableD, alushcontmaindecD);
+             maindecuseshifterD, maindecoverflowableD, alushcontmaindecD,
+             syscallD, breakD, riD, fpuD, adesableD, adelableD);
 
   alushdec  ad(functD, maindecuseshifterD, alushcontmaindecD, useshifterD,
              alushcontrolD, alushdecoverflowableD);
@@ -133,13 +138,17 @@ module controller(input        clk, reset, exception,
 
   // pipeline registers
   floprc #(1) regD(clk, reset, flushE, {bdsF}, {bdsD});
-  floprc #(17) regE(clk, reset, flushE,
+  floprc #(24) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
-                  byteD, halfwordD, overflowableD, bdsD}, 
+                  byteD, halfwordD, overflowableD, bdsD,
+		  syscallD, breakD, riD, fpuD,
+		  adesableD, adelableD, adesthrownD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
-                  byteE, halfwordE, overflowableE, bdsE});
+                  byteE, halfwordE, overflowableE, bdsE,
+		  syscallE, breakE, riE, fpuE,
+		  adesableE, adelableE, adesthrownE});
   floprc #(8) regM(clk, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE, bdsE},
@@ -155,7 +164,9 @@ module maindec(input  [5:0] op,
                output       alusrc,
                output       regdst, regwrite, 
                output       unsignedD, lui, useshift, overflowable,
-               output [2:0] alushcontrol);
+               output [2:0] alushcontrol,
+               output       syscallD, breakD, riD, fpuD,
+               output       adesableD, adelableD);
 
   reg [14:0] controls;
  
@@ -167,6 +178,9 @@ module maindec(input  [5:0] op,
           memtoreg, byte, halfword, loadsignedD,
           useshift, alushcontrol /* 3 bits */,
           unsignedD, lui} = controls;
+
+  // we're just wiring it together for now.	  
+  assign { syscallD, breakD, riD, fpuD, adesableD, adelableD } = 6'b000000;
 
   always @ ( * )
     case(op)
