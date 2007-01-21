@@ -5,6 +5,26 @@
 The hmc-MIPS CPU requires implementation of ten exceptions. These must be implemented, and tested, before 27 January.
 
 
-= Details =
+= Interrupts to implement =
 
-Details to come.
+ * 0 - Interrupt
+ * 4 - AdEL (thrown on misaligned doubleword, word or halfword load)
+ * 5 - AdES (thrown on misaligned doubleword, word or halfword store)
+ * 6 - IBE - Instruction Bus Error
+ * 7 - DBE - Data Bus Error
+ * 8 - Syscall
+ * 9 - Breakpoint
+ * 10 - RI (invalid opcode)
+ * 11 - CpU - thrown on attempt to use CP1-3 (FPU)
+ * 12 - Ov - Arithmetic overflow
+
+= Details =
+Ov is already implemented. 
+
+I'm somewhat skeptical about the necessity of 6 and 7. Will our busses really be smart enough to detect errors? I think this is probably a parity thing, which means we may be able to ignore it.
+
+For the memory alignment exceptions, we should check to see if we're misaligned in right by the memory interface for optimization (low two bits of the address ANDed), and have AdELenable and AdESenable pins coming out of the controller. From there, it's pretty much just like it was for the overflow instruction (though we may get our branchdelay from bdsW instead of bdsE. I'd need the diagram first, though)
+
+Interrupts happen immediately, and we can just use bdsE for branchdelay, which oughta ensure that we can jump right back and pick up where we left off.
+
+Syscall, Breakpoint, RI and CpU are all detected during decode, however I think we can't just interrupt right then and there if we want to be able to get back and have the CPU pick up where we left off. We should probably decide what exception we are at the decode stage, and bubble that down the pipeline until we get to the exec stage, and run that back up to the exception handler, where we'll actually handle the exception. Again, the diagram will be helpful;-)
