@@ -2,12 +2,12 @@
 
 = Introduction =
 
-Add your content here.
+This specifies the memory subsystem, including the data and instruction cache.
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+  * Create (identical) direct-mapped write-back instruction and data caches
+  * Support cache bypassing (via upper bits of memory address)
+  * Support cache swapping (using the swc bit available in the status register)
+  * Support cache isolation (using the isc bit available in the status register) 
