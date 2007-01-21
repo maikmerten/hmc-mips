@@ -2,7 +2,7 @@
 
 = Introduction =
 
-The hmc-MIPS CPU requires implementation of ten exceptions. These must be implemented, and tested, before 27 January.
+The hmc-MIPS CPU requires implementation of eight exceptions. These must be implemented, and tested, before 27 January.
 
 
 = Exceptions to implement =
