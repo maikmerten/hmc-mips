@@ -509,7 +509,10 @@ module coprocessor0(input             clk, reset,
 
 
   exceptionunit excu(clk, reset, overflowableE, overflowE, 
-                     bdsF, bdsD, bdsE, bdsM, exception, branchdelay, exccode, 
+                     bdsF, bdsD, bdsE, bdsM,
+                     syscallE, breakE, riI, fpuE,
+                     adesableE, adelableE, adesthrownE, misaligned,
+                     exception, branchdelay, exccode, 
                      excstage);
   epcunit       epcu(clk, exception, branchdelay, excstage, pcF, pcD, pcE, pcM,
                      pcW, epc);
@@ -532,6 +535,8 @@ endmodule
 module exceptionunit(input            clk, reset,
                      input            overflowableE, overflowE,
                      input            bdsF, bdsD, bdsE, bdsM,
+                     input            syscallE, breakE, riI, fpuE,
+                     input            adesableE, adelableE, adesthrownE, misaligned,
                      output reg       exception, branchdelay,
                      output reg [4:0] exccode, 
                      output reg [1:0] excstage);
