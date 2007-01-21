@@ -31,7 +31,9 @@ module mips(input         clk, reset,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
               byteM, hardwordM,
               aeqzD, aeqbD, agtzD, altzD,
-              bdsF, bdsD, bdsE, bdsM;
+              bdsF, bdsD, bdsE, bdsM,
+              syscallE, breakE, riI, fpu,
+              adesableE, adelableE, adesthrownE, misaligned;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD, excstage;
   wire        flushE, flushM;
@@ -51,7 +53,9 @@ module mips(input         clk, reset,
                regwriteW, jumpD, overflowableE,
                aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
-               bdsF, bdsD, bdsE, bdsM);
+               bdsF, bdsD, bdsE, bdsM,
+               syscallE, breakE, riI, fpuE,
+               adesableE, adelableE, adesthrownE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
               branchD, 
               unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
@@ -62,12 +66,15 @@ module mips(input         clk, reset,
               exception, excstage,
               opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, 
               flushE, flushM, overflowE,
-              writedataW, writeregW, byteenM);
+              writedataW, writeregW, byteenM, misaligned);
 
   coprocessor0 cop0(clk, reset, cop0writeW, rdD, writeregW, writedataW, 
                     overflowableE, overflowE, pcF, pcD, pcE, pcM, pcW,
                     bdsF, bdsD, bdsE, bdsM,
-                    cop0readD, re, swc, isc, exception, excstage);
+                    syscallE, breakE, riI, fpuE,
+                    adesableE, adelableE, adesthrownE, misaligned, 
+                    cop0readD, re, swc, isc, exception, excstage
+                    );
 endmodule
 
 module controller(input        clk, reset, exception,
@@ -86,17 +93,17 @@ module controller(input        clk, reset, exception,
                   output       linkD, linkE, luiE,
                   output       rdsrcD, 
                   output [1:0] pcsrcFD, pcbranchsrcD,
-                  output       cop0writeW, bdsF, bdsD, bdsE, bdsM);
+                  output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
+                  output       syscallE, breakE, riI, fpuE,
+                  output       adesableE, adelableE, adesthrownE);
 
   wire       memtoregD, memwriteD, alusrcD, mainregwrite, luiD,
              regdstD, regwriteD, maindecuseshifterD, maindecregdstD, 
              alushdecoverflowableD, maindecoverflowableD, overflowableD,
              useshifterD, cop0readD, cop0writeD, rfeD,
              loadsignedD, loadsignedE,
-	     syscallD, breakD, riD, fpuD,
-             adesableD, adelableD, adesthrownD,
-	     syscallE, breakE, riE, fpuE,
-             adesableE, adelableE, adesthrownE;
+	           syscallD, breakD, riD, fpuD,
+             adesableD, adelableD, adesthrownD;
   wire       byteD, halfwordD, byteE, halfwordE;
   reg  [1:0] aluoutsrcD;
   wire       ltD, gtD, eqD, brsrcD;
@@ -142,13 +149,13 @@ module controller(input        clk, reset, exception,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
-		  syscallD, breakD, riD, fpuD,
-		  adesableD, adelableD, adesthrownD}, 
+		              syscallD, breakD, riD, fpuD,
+		              adesableD, adelableD, adesthrownD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
-		  syscallE, breakE, riE, fpuE,
-		  adesableE, adelableE, adesthrownE});
+		              syscallE, breakE, riE, fpuE,
+		              adesableE, adelableE, adesthrownE});
   floprc #(8) regM(clk, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE, bdsE},
@@ -345,7 +352,8 @@ module datapath(input         clk, reset,
                 output        flushE, flushM, overflowE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
-                output [3:0]  byteenM);
+                output [3:0]  byteenM,
+                output        misaligned);
 
   parameter RESETVECTORUNCACHED = 32'hbfc00000;
   parameter EXCEPTIONVECTORUNCACHED = 32'hbfc00100;
@@ -437,6 +445,7 @@ module datapath(input         clk, reset,
                         aluoutsrcE, aluoutE);
 
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
+  assign misaligned = aluoutE[1] | aluoutE[0];
 
   // Memory stage
   floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
@@ -479,12 +488,15 @@ module coprocessor0(input             clk, reset,
                     input             overflowableE, overflowE,
                     input      [31:0] pcF, pcD, pcE, pcM, pcW,
                     input             bdsF, bdsD, bdsE, bdsM,
+                    input             syscallE, breakE, riI, fpuE,
+                    input             adesableE, adelableE, adesthrownE, misaligned,  
                     output reg [31:0] readvalue,
                     output            re,   // reverse endianess
                                       swc,  // swap caches
                                       isc,  // isolate cache
                                       exception,
-                    output     [1:0]  excstage);
+                    output     [1:0]  excstage
+                    );
 
   wire [31:0] statusreg, causereg, epc;
   wire [7:0]  im;    // Interupt mask
