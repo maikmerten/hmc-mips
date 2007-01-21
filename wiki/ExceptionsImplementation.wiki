@@ -32,3 +32,5 @@ Interrupts are handled entirely within the exception handler. We see that an int
 AdES is only applicable on store doubleword, word or halfword. In decode, we'll have another control line (bubbled down the pipeline) for adesable, if we're dealing with that type of instruction. We'll route this signal, along with aluoutE[0] AND aluoutE[1] to the exception unit, where we detect the exception, and process accordingly.
 
 Finally, AdEL can be thrown from memwrites of dwords, words and halfwords. We set a similar adelable control, and handle identically to adesable (we check our location with aluoutE[0] AND aluoutE[1], I believe). We also need to check that we're I-fetching from a valid address. In the fetch stage, we'll check to see if we're aligned, and if not, we set a adesifetchthrown line, which we route into the exception handler at the execute stage.
+
+In terms of physical implementation, by only handling excepting instructions at the execute stage, we vastly simplify the layout, because the exception unit only has to interface with the execute stage.
