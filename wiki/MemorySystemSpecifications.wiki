@@ -13,3 +13,6 @@ Two 4kB caches, one for data and one for instructions.
   * Support cache bypassing (via upper bits of memory address)
   * Support cache swapping (using the swc bit available in the status register)
   * Support cache isolation (using the isc bit available in the status register) 
+
+For discussion:
+  * write-through or write-buffer?
