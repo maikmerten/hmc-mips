@@ -7,6 +7,8 @@ This specifies the memory subsystem, including the data and instruction cache.
 
 = Details =
 
+Two 4kB caches, one for data and one for instructions.  
+
   * Create (identical) direct-mapped write-back instruction and data caches
   * Support cache bypassing (via upper bits of memory address)
   * Support cache swapping (using the swc bit available in the status register)
