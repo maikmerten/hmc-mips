@@ -175,7 +175,7 @@ module maindec(input  [5:0] op,
                output       syscallD, breakD, riD, fpuD,
                output       adesableD, adelableD);
 
-  reg [14:0] controls;
+  reg [16:0] controls;
  
   assign {regwrite, /* regwrite is also enabled by branchdec and cop0dec */
           regdst,   /* regdst is also enabled by cop0dec */ 
@@ -184,42 +184,42 @@ module maindec(input  [5:0] op,
           memwrite,
           memtoreg, byte, halfword, loadsignedD,
           useshift, alushcontrol /* 3 bits */,
-          unsignedD, lui} = controls;
+          unsignedD, lui, adesableD, adelableD} = controls;
 
   // we're just wiring it together for now.	  
-  assign { syscallD, breakD, riD, fpuD, adesableD, adelableD } = 6'b000000;
+  assign { syscallD, breakD, riD, fpuD } = 4'b0000;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 15'b110000000010100; //R-type
-      6'b000001: controls <= 15'b010000000010100; //Opcode 1 (branches)
-      6'b100000: controls <= 15'b100101101001000; //LB (assume big endian)
-      6'b100001: controls <= 15'b100101011001000; //LH
-      6'b100011: controls <= 15'b100101001001000; //LW
-      6'b100100: controls <= 15'b100101100001010; //LBU
-      6'b100101: controls <= 15'b100101010001010; //LHU
-      6'b101000: controls <= 15'b000110100001000; //SB
-      6'b101001: controls <= 15'b000110010001000; //SH
-      6'b101011: controls <= 15'b000110000001000; //SW
-      6'b001000: controls <= 15'b101100000001000; //ADDI (treated as ADDIU)
-      6'b001001: controls <= 15'b100100000001000; //ADDIU
-      6'b001010: controls <= 15'b100100000011100; //SLTI
-      6'b001011: controls <= 15'b100100000001100; //SLTIU 
-      6'b001100: controls <= 15'b100100000000010; //ANDI
-      6'b001101: controls <= 15'b100100000000110; //ORI
-      6'b001110: controls <= 15'b100100000010010; //XORI
-      6'b001111: controls <= 15'b100100000101011; //LUI
-      6'b000010: controls <= 15'b000000000001000; //J
-      6'b000011: controls <= 15'b110000000001000; //JAL
-      6'b000100: controls <= 15'b000000000011000; //BEQ
-      6'b000101: controls <= 15'b000000000011000; //BNE
-      6'b000110: controls <= 15'b000000000011000; //BLEZ
-      6'b000111: controls <= 15'b000000000011000; //BGTZ
-      6'b010000: controls <= 15'b000000000001000; //MFC0, MTC0, RFE
+      6'b000000: controls <= 17'b11000000001010000; //R-type
+      6'b000001: controls <= 17'b01000000001010000; //Opcode 1 (branches)
+      6'b100000: controls <= 17'b10010110100100000; //LB (assume big endian)
+      6'b100001: controls <= 17'b10010101100100001; //LH
+      6'b100011: controls <= 17'b10010100100100001; //LW
+      6'b100100: controls <= 17'b10010110000101000; //LBU
+      6'b100101: controls <= 17'b10010101000101000; //LHU
+      6'b101000: controls <= 17'b00011010000100000; //SB
+      6'b101001: controls <= 17'b00011001000100010; //SH
+      6'b101011: controls <= 17'b00011000000100010; //SW
+      6'b001000: controls <= 17'b10110000000100000; //ADDI (treated as ADDIU)
+      6'b001001: controls <= 17'b10010000000100000; //ADDIU
+      6'b001010: controls <= 17'b10010000001110000; //SLTI
+      6'b001011: controls <= 17'b10010000000110000; //SLTIU 
+      6'b001100: controls <= 17'b10010000000001000; //ANDI
+      6'b001101: controls <= 17'b10010000000011000; //ORI
+      6'b001110: controls <= 17'b10010000001001000; //XORI
+      6'b001111: controls <= 17'b10010000010101100; //LUI
+      6'b000010: controls <= 17'b00000000000100000; //J
+      6'b000011: controls <= 17'b11000000000100000; //JAL
+      6'b000100: controls <= 17'b00000000001100000; //BEQ
+      6'b000101: controls <= 17'b00000000001100000; //BNE
+      6'b000110: controls <= 17'b00000000001100000; //BLEZ
+      6'b000111: controls <= 17'b00000000001100000; //BGTZ
+      6'b010000: controls <= 17'b00000000000100000; //MFC0, MTC0, RFE
       default:   
         begin
           // TODO: unknown opcodes should throw an exception
-          controls <= 15'bxxxxxxxxxxxxxxx;  //???
+          controls <= 17'bxxxxxxxxxxxxxxxxx;  //???
           //$stop;
         end
     endcase
@@ -519,7 +519,7 @@ module coprocessor0(input             clk, reset,
                    writecop0W, statusreg, re, im, swc, isc);
   causeregunit  cr(clk, branchdelay, pendinginterupts, exccode, 
                    exception, /* write enable determined by exception */
-                   causereg);
+                   causereg);                   
    
   // All cop0 registers can be read
   always @ ( * )
