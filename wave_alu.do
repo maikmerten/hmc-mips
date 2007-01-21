@@ -15,7 +15,6 @@ add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/dp/pcn
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/pcF
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/instrF
 add wave -noupdate -format Logic /testbench/dut/mips/jumpD
-add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/dp/pcplus4D
 add wave -noupdate -format Logic /testbench/dut/mips/dp/flushE
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/dp/srca2D
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/dp/srcb2D

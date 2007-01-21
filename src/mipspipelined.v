@@ -374,7 +374,7 @@ module datapath(input         clk, reset,
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
-  wire [31:0] pcplus4D, pcplus8D, pcplus8E, instrD, branchtargetD;
+  wire [31:0] pcplus8D, pcplus8E, instrD, branchtargetD;
   wire [31:0] aluresultE, shiftresultE, cop0readE;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
@@ -401,14 +401,13 @@ module datapath(input         clk, reset,
   adder       pcadd1(pcF, 32'b100, pcplus4F);
 
   // Decode stage 
-  flopenr #(32) r1D(clk, reset, ~stallD, pcplus4F, pcplus4D);
   flopenr #(32) r3D(clk, reset, ~stallD, pcF, pcD);
   flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
   signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
   eqcmp       comp(srca2D, srcb2D, equalD);
-  adder       pcadd2(pcplus4D, 32'b100, pcplus8D);
+  adder       pcadd2(pcD, 32'b1000, pcplus8D);
   adder btadd(pcD, {signimmD[29:0], 2'b00}, branchtargetD);
   // TODO: Make these into individual modules
   assign #1 {aeqzD, aeqbD, agtzD, altzD} = {srca2D == 0, srca2D == srcb2D, 
