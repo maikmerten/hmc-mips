@@ -20,7 +20,7 @@ The hmc-MIPS CPU requires implementation of eight exceptions. These must be impl
  * 6 - IBE - Instruction Bus Error
  * 7 - DBE - Data Bus Error
 
-I don't see any way of detecting bus errors with an error-checking bus, which we aren't building. Therefore, we won't be doing these.
+Since the hmc-mips CPU won't have an error-checking bus, these exceptions will never be fired, and thus, will not be implemented.
 
 = Details =
 The framework for exception handling is already present. Ov checks to see if the ALU is overflowing and that the bubbled-through overflowableE is high. The actual exception occurs when the offending instruction is in the execute stage. To simplify the design of the processor, this will necessarily be true for all exceptions (that it will be thrown when the offending instruction is in the execute stage).
@@ -34,3 +34,11 @@ AdES is only applicable on store doubleword, word or halfword. In decode, we'll 
 Finally, AdEL can be thrown from memwrites of dwords, words and halfwords. We set a similar adelable control, and handle identically to adesable (we check our location with aluoutE[0] AND aluoutE[1], I believe). We also need to check that we're I-fetching from a valid address. In the fetch stage, we'll check to see if we're aligned, and if not, we set a adesifetchthrown line, which we route into the exception handler at the execute stage.
 
 In terms of physical implementation, by only handling excepting instructions at the execute stage, we vastly simplify the layout, because the exception unit only has to interface with the execute stage.
+
+= Excepting instructions =
+Four of the eight exceptions are caused by specific instructions, and therefore are caught in the decode stage (though not thrown until the execute stage).
+
+ * syscall code: {6'b00000 code 6'b001100}
+ * break code: {6'b000000 code 6'b001110}
+ * any FPU operation
+ * any other, unimplemented instruction
