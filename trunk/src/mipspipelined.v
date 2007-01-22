@@ -563,6 +563,21 @@ module exceptionunit(input            clk, reset,
         excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
+      
+      if(syscallE) begin
+        exception = 1;
+        exccode = 8;       // Syscall
+        excstage = 2;       // Stage E
+        branchdelay = bdsE;
+      end
+      
+      if(breakE) begin
+        exception = 1;
+        exccode = 9;       // Break
+        excstage = 2;       // Stage E
+        branchdelay = bdsE;
+      end
+      
     end
 endmodule
 
