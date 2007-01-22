@@ -119,10 +119,10 @@ module controller(input        clk, reset, exception,
   maindec md(opD, memtoregD, memwriteD, byteD, halfwordD, loadsignedD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
              maindecuseshifterD, maindecoverflowableD, alushcontmaindecD,
-             syscallD, breakD, riD, fpuD, adesableD, adelableD);
+             riD, fpuD, adesableD, adelableD);
 
   alushdec  ad(functD, maindecuseshifterD, alushcontmaindecD, useshifterD,
-             alushcontrolD, alushdecoverflowableD);
+             alushcontrolD, alushdecoverflowableD, syscallD, breakD);
 
   branchdec bd(opD, rtD, functD, jumpD, branchD, ltD, gtD, eqD, brsrcD, linkD);
 
@@ -172,7 +172,7 @@ module maindec(input  [5:0] op,
                output       regdst, regwrite, 
                output       unsignedD, lui, useshift, overflowable,
                output [2:0] alushcontrol,
-               output       syscallD, breakD, riD, fpuD,
+               output       riD, fpuD,
                output       adesableD, adelableD);
 
   reg [16:0] controls;
@@ -187,7 +187,7 @@ module maindec(input  [5:0] op,
           unsignedD, lui, adesableD, adelableD} = controls;
 
   // we're just wiring it together for now.	  
-  assign { syscallD, breakD, riD, fpuD } = 4'b0000;
+  assign { riD, fpuD } = 4'b00;
 
   always @ ( * )
     case(op)
@@ -232,7 +232,7 @@ module alushdec(input      [5:0] funct,
                 input      [2:0] alushmaincontrol,
                 output           useshifter, /* True when using shifts */
                 output     [2:0] alushcontrol,
-                output           overflowable);
+                output           overflowable, syscallD, breakD);
 
   reg [3:0] functcontrol;
   wire usefunct;
@@ -246,6 +246,10 @@ module alushdec(input      [5:0] funct,
 
   assign #1 overflowable = (usefunct &   (funct == 6'b100000)   // ADD
                                        | (funct == 6'b100010)); // SUB
+                                       
+  assign #1 syscallD = (usefunct & funct == 6'b001100);
+  assign #1 breakD = (usefunct & funct == 6'b001100);
+  
   always @ ( * )
       case(funct)
           // ALU Ops
