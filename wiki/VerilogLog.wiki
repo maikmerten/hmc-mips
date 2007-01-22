@@ -1,10 +1,14 @@
-#summary Verilog Development Worklog
+#summary Microarchitecture Development Worklog
 
 =Instruction Log=
 
 [http://docs.google.com/View?docid=df39snmn_12g57j46 Click here] to see the current status of the various instructions.
 
-=Carl's Log for developing the hmc mips processor=
+=Carl Nygaard's Log for developing the hmc mips processor=
+
+==1/16/2007 and beyond==
+
+At this point, the semester began and development transfered to the entire microarchitecture team: Carl Nygaard, Matt Totino, Nate Pinckney, & Thomas Barr.
 
 ==1/8/2007==
 
