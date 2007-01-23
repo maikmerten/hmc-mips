@@ -9,12 +9,19 @@ This page covers the testing status of all of the operations availible to the MI
 *Operation Tests*
 
 Operation   Test where checked
-Shifts	
+
+Shifts
+
 sll         004
+
 srl         004
+
 sra         004
+
 sllv        004
+
 srlv        004
+
 srav        004
 
 Moves	
@@ -91,4 +98,3 @@ Other
 nop        -
 
 *Exception Tests*
-
