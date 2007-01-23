@@ -8,93 +8,86 @@ This page covers the testing status of all of the operations availible to the MI
 
 *Operation Tests*
 
-Operation   Test where checked
+|| *Operation* || *Test where checked* ||
 
-Shifts
+|| Shifts ||  ||
+|| sll || 004 ||
+|| srl || 004 ||
+|| sra || 004 ||
+|| sllv || 004 ||
+|| srlv || 004 ||
+|| srav || 004 ||
 
-sll         004
+|| Moves || ||
+|| mfhi ||       not yet implemented ||
+|| mthi ||       not yet implemented ||
+|| mflo ||       not yet implemented ||
+|| mtlo ||       not yet implemented ||
 
-srl         004
+|| Arithmetic || ||
+|| mult ||       not yet implemented ||
+|| multu ||      not yet implemented ||
+|| div ||        not yet implemented ||
+|| divu ||       not yet implemented ||
+|| add ||        000 ||
+|| addu ||       002 ||
+|| sub ||        001 ||
+|| subu ||       not yet tested (add to 003) ||
+|| and         001 ||
+|| or          001 ||
+|| xor         003 ||
+|| nor         003 ||
+|| slt         001 ||
+|| sltu        003 ||
 
-sra         004
+|| Arithmetic Immediate || ||
+|| addi    ||    000 ||
+|| addiu   ||    002 ||
+|| slti    ||    002 ||
+|| sltiu   ||    002 ||
+|| andi    ||    not yet tested (add to 002) ||
+|| ori     ||    002 ||
+|| xori    ||    002 ||
+|| lui     ||    002 ||
 
-sllv        004
+|| Jump/Branch || ||
+|| j     ||      001 ||
+|| jal   ||      005 ||
+|| beq   ||      000 ||
+|| bne   ||      005 ||
+|| blez  ||      005 ||
+|| bgtz  ||      005 ||
+|| bltz   ||     005 ||
+|| bgez  ||      005 ||
+|| jr    ||      005 ||
+|| jalr  ||      005 ||
 
-srlv        004
+|| Branch and Link || ||
+|| bltzal  ||    005 ||
+|| bgezal  ||    005 ||
 
-srav        004
-
-Moves	
-mfhi        not yet implemented
-mthi        not yet implemented
-mflo        not yet implemented
-mtlo        not yet implemented
-
-Arithmetic	
-mult        not yet implemented
-multu       not yet implemented
-div         not yet implemented
-divu        not yet implemented
-add         000
-addu        002
-sub         001
-subu        not yet tested (add to 003)
-
-and         001
-or          001
-xor         003
-nor         003
-slt         001
-sltu        003
-
-Arithmetic Immediate	
-addi        000
-addiu       002
-slti        002
-sltiu       002
-andi        not yet tested (add to 002)
-ori         002
-xori        002
-lui         002
-
-Jump/Branch	
-j           001
-jal         005
-beq         000
-bne         005
-blez        005
-bgtz        005
-bltz        005
-bgez        005
-jr          005
-jalr        005
-
-Branch and Link	
-bltzal      005
-bgezal      005
-
-Coprocessor	
-mfc0        006
-mtc0        006
+|| Coprocessor || ||
+|| mfc0    ||    006 ||
+|| mtc0    ||    006 ||
 	
-Load Operations	
-lb         008
-lh         008
-lw         001
-lbu        008
-lhu        008
+|| Load Operations || ||
+|| lb    ||     008 ||
+|| lh     ||    008 ||
+|| lw     ||    001 ||
+|| lbu    ||    008 ||
+|| lhu    ||    008 ||
 
-Store Operations	
-sb         007
-sh         007
-sw         000
+|| Store Operations ||
+|| sb    ||     007 ||
+|| sh    ||     007 ||
+|| sw    ||     000 ||
 
-Traps	
-syscall    not yet tested
-break      not yet tested
-rfe        not yet implemented
+|| Traps || ||
+|| syscall  ||  not yet tested ||
+|| break   ||   not yet tested ||
+|| rfe   ||     not yet implemented ||
 
-Other	
-nop        -
+|| Other ||  ||
+|| nop ||       - ||
 
 *Exception Tests*
