@@ -30,12 +30,12 @@ This page covers the testing status of all of the operations availible to the MI
 || addu ||       002 ||
 || sub ||        001 ||
 || subu ||       not yet tested (add to 003) ||
-|| and         001 ||
-|| or          001 ||
-|| xor         003 ||
-|| nor         003 ||
-|| slt         001 ||
-|| sltu        003 ||
+|| and    ||     001 ||
+|| or     ||     001 ||
+|| xor    ||     003 ||
+|| nor    ||     003 ||
+|| slt    ||     001 ||
+|| sltu   ||     003 ||
 || *Arithmetic Immediate* || ||
 || addi    ||    000 ||
 || addiu   ||    002 ||
