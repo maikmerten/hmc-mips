@@ -42,3 +42,6 @@ Four of the eight exceptions are caused by specific instructions, and therefore 
  * break code: {6'b000000 code 6'b001110}
  * any FPU operation
  * any other, unimplemented instruction
+
+= Unimplemented memory =
+Professor Harris suggested that we might consider implementing an unimplemented memory exception if software made an attempt to access memory that was not physically attached to the machine. Since all commercial MIPS implementations (to my knowledge) use the TLB, and therefore support virtual memory, any implementation of this would have to be non-standard. It would be possible to emit the TLB miss exception when an attempt to access unimplemented memory was made, however this would not be a per-spec use of that exception, and would likely end up being confusing. Since no compiler would recognize the non-standard use of the exception, I see no overwhelming benefit in implementing this feature at this time, though any comments would be welcome.
