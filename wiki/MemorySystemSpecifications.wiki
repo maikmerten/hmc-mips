@@ -29,8 +29,8 @@ Each cache will be 4kB in size.  The cache will be of the following type:
 
 Program Memory:
 
-* kseg0 (cached program memory):  0x8000 0000 - 0x9FFF FFFF 
-* kseg1 (uncached program memory):  0x0000 0000 - 0xBFFF FFFF
+  * kseg0 (cached program memory):  0x8000 0000 - 0x9FFF FFFF 
+  * kseg1 (uncached program memory):  0x0000 0000 - 0xBFFF FFFF
 
 Data Memory:
 
