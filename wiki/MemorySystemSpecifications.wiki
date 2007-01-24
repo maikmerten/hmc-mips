@@ -20,7 +20,7 @@ Each cache will be 4kB in size.  The cache will be of the following type:
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
-  * _Direct-mapped_: The lower bits (how many bits?***) of the memory address will be used as the tag in the cache memory.
+  * _Direct-mapped_: The lower bits (how many bits?) of the memory address will be used as the tag in the cache memory.
   * _Physically addressed_: The memory address the cache uses is based upon the physical address, the actual address in RAM, not a program address which is translated.
 
 = Cache Interface =
