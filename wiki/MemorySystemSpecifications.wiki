@@ -39,5 +39,3 @@ For simplicity, data memory and shared with program memory, with the same mappin
 = Startup Procedures =
 
 Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.
-
-The start address of programs, as given by default with PCSpim, is 0x0040 0000
