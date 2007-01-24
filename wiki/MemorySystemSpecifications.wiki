@@ -29,8 +29,8 @@ Each cache will be 4kB in size.  The cache will be of the following type:
 
 Program Memory:
 
-kseg0 (cached program memory):  0x8000 0000 - 0x9FFF FFFF 
-kseg1 (uncached program memory):  0x0000 0000 - 0xBFFF FFFF
+* kseg0 (cached program memory):  0x8000 0000 - 0x9FFF FFFF 
+* kseg1 (uncached program memory):  0x0000 0000 - 0xBFFF FFFF
 
 Data Memory:
 
@@ -41,5 +41,3 @@ For simplicity, data memory and shared with program memory, with the same mappin
 Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.
 
 The start address of programs, as given by default with PCSpim, is 0x0x0040 0000
-
-The start address is 0x00400000
