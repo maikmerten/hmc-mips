@@ -175,7 +175,7 @@ module maindec(input  [5:0] op,
                output       riD, fpuD,
                output       adesableD, adelableD);
 
-  reg [16:0] controls;
+  reg [18:0] controls;
  
   assign {regwrite, /* regwrite is also enabled by branchdec and cop0dec */
           regdst,   /* regdst is also enabled by cop0dec */ 
@@ -184,42 +184,39 @@ module maindec(input  [5:0] op,
           memwrite,
           memtoreg, byte, halfword, loadsignedD,
           useshift, alushcontrol /* 3 bits */,
-          unsignedD, lui, adesableD, adelableD} = controls;
-
-  // we're just wiring it together for now.	  
-  assign { riD, fpuD } = 4'b00;
+          unsignedD, lui, adesableD, adelableD, fpuD, riD} = controls;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 17'b11000000001010000; //R-type
-      6'b000001: controls <= 17'b01000000001010000; //Opcode 1 (branches)
-      6'b100000: controls <= 17'b10010110100100000; //LB (assume big endian)
-      6'b100001: controls <= 17'b10010101100100001; //LH
-      6'b100011: controls <= 17'b10010100100100001; //LW
-      6'b100100: controls <= 17'b10010110000101000; //LBU
-      6'b100101: controls <= 17'b10010101000101000; //LHU
-      6'b101000: controls <= 17'b00011010000100000; //SB
-      6'b101001: controls <= 17'b00011001000100010; //SH
-      6'b101011: controls <= 17'b00011000000100010; //SW
-      6'b001000: controls <= 17'b10110000000100000; //ADDI (treated as ADDIU)
-      6'b001001: controls <= 17'b10010000000100000; //ADDIU
-      6'b001010: controls <= 17'b10010000001110000; //SLTI
-      6'b001011: controls <= 17'b10010000000110000; //SLTIU 
-      6'b001100: controls <= 17'b10010000000001000; //ANDI
-      6'b001101: controls <= 17'b10010000000011000; //ORI
-      6'b001110: controls <= 17'b10010000001001000; //XORI
-      6'b001111: controls <= 17'b10010000010101100; //LUI
-      6'b000010: controls <= 17'b00000000000100000; //J
-      6'b000011: controls <= 17'b11000000000100000; //JAL
-      6'b000100: controls <= 17'b00000000001100000; //BEQ
-      6'b000101: controls <= 17'b00000000001100000; //BNE
-      6'b000110: controls <= 17'b00000000001100000; //BLEZ
-      6'b000111: controls <= 17'b00000000001100000; //BGTZ
-      6'b010000: controls <= 17'b00000000000100000; //MFC0, MTC0, RFE
+      6'b000000: controls <= 19'b1100000000101000000; //R-type
+      6'b000001: controls <= 19'b0100000000101000000; //Opcode 1 (branches)
+      6'b100000: controls <= 19'b1001011010010000000; //LB (assume big endian)
+      6'b100001: controls <= 19'b1001010110010000100; //LH
+      6'b100011: controls <= 19'b1001010010010000100; //LW
+      6'b100100: controls <= 19'b1001011000010100000; //LBU
+      6'b100101: controls <= 19'b1001010100010100000; //LHU
+      6'b101000: controls <= 19'b0001101000010000000; //SB
+      6'b101001: controls <= 19'b0001100100010001000; //SH
+      6'b101011: controls <= 19'b0001100000010001000; //SW
+      6'b001000: controls <= 19'b1011000000010000000; //ADDI (treated as ADDIU)
+      6'b001001: controls <= 19'b1001000000010000000; //ADDIU
+      6'b001010: controls <= 19'b1001000000111000000; //SLTI
+      6'b001011: controls <= 19'b1001000000011000000; //SLTIU 
+      6'b001100: controls <= 19'b1001000000000100000; //ANDI
+      6'b001101: controls <= 19'b1001000000001100000; //ORI
+      6'b001110: controls <= 19'b1001000000100100000; //XORI
+      6'b001111: controls <= 19'b1001000001010110000; //LUI
+      6'b000010: controls <= 19'b0000000000010000000; //J
+      6'b000011: controls <= 19'b1100000000010000000; //JAL
+      6'b000100: controls <= 19'b0000000000110000000; //BEQ
+      6'b000101: controls <= 19'b0000000000110000000; //BNE
+      6'b000110: controls <= 19'b0000000000110000000; //BLEZ
+      6'b000111: controls <= 19'b0000000000110000000; //BGTZ
+      6'b010000: controls <= 19'b0000000000010000000; //MFC0, MTC0, RFE
+      6'b010001: controls <= 19'b0000000000000000010; //fpu
       default:   
         begin
-          // TODO: unknown opcodes should throw an exception
-          controls <= 17'bxxxxxxxxxxxxxxxxx;  //???
+          controls <= 19'bxxxxxxxxxxxxxxxxxx1;  //???
           //$stop;
         end
     endcase
@@ -247,8 +244,8 @@ module alushdec(input      [5:0] funct,
   assign #1 overflowable = (usefunct &   (funct == 6'b100000)   // ADD
                                        | (funct == 6'b100010)); // SUB
                                        
-  assign #1 syscallD = (usefunct & funct == 6'b001100);
-  assign #1 breakD = (usefunct & funct == 6'b001100);
+  assign #1 syscallD = (usefunct & (funct == 6'b001100));
+  assign #1 breakD = (usefunct & (funct == 6'b001110));
   
   always @ ( * )
       case(funct)
@@ -519,7 +516,7 @@ module coprocessor0(input             clk, reset,
                      excstage);
   epcunit       epcu(clk, exception, branchdelay, excstage, pcF, pcD, pcE, pcM,
                      pcW, epc);
-  statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), 
+  statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, statusreg, re, im, swc, isc);
   causeregunit  cr(clk, branchdelay, pendinginterupts, exccode, 
                    exception, /* write enable determined by exception */
@@ -581,7 +578,7 @@ module exceptionunit(input            clk, reset,
     end
 endmodule
 
-module statusregunit(input             clk, reset, writeenable,
+module statusregunit(input             clk, reset, writeenable, exception, 
                      input      [31:0] writedata,
                      output reg [31:0] statusreg,
                      output            re, 
@@ -602,9 +599,22 @@ module statusregunit(input             clk, reset, writeenable,
   assign ts  = statusreg[21];  // TLB not implemented
   assign {swc, isc, im} = statusreg[17:7];
 
-  assign {kuo, ieo, kup, iep, kuc, iec} = 6'b0; // No user vs kernel mode
+  assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode
 
+  always @ ( posedge clk )
+    begin
+      if(exception) begin
+        // if we're handling an exception, ignore interrupts.
+        statusreg[0] = 0;
+      end
+    end
 
+  always @ ( negedge reset )
+    begin
+      // listen for interrupts on start
+      statusreg[0] = 1;
+    end
+    
   always @ ( negedge clk )
     begin
       if(writeenable) begin
@@ -621,7 +631,7 @@ module statusregunit(input             clk, reset, writeenable,
         statusreg[18] = pz;
         // 17 to 8 are swc, isc, and im
         statusreg[7:6] = 0;
-        statusreg[5:0] = {kuo, ieo, kup, iep, kuc, iec};
+        statusreg[5:1] = {kuo, ieo, kup, iep, kuc};
       end
     end
 endmodule
