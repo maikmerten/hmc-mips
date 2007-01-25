@@ -10,12 +10,15 @@ For the Spring, 2007 semester, the VLSI class plans to develop a MIPS microproce
 
 The original proposal is available [http://docs.google.com/View?docid=df39snmn_10g5gbr3 here].
 
+= Instruction Set =
 
-= Schedule =
-
-See the design proposal.
+The list of implemented instructions and their development status is available [http://docs.google.com/View?docid=df39snmn_12g57j46 here].
 
 = Development Documentation =
 
-DevelopmentEnvironmentGuide
+  * MicroarchDevelopmentPlan
+  * DevelopmentEnvironmentGuide
 
+= Drawings =
+
+  * DesignSketches
