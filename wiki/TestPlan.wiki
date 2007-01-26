@@ -29,7 +29,7 @@ This page covers the testing status of all of the operations availible to the MI
 || add ||        000 ||
 || addu ||       002 ||
 || sub ||        001 ||
-|| subu ||       not yet tested (add to 003) ||
+|| subu ||       003 ||
 || and    ||     001 ||
 || or     ||     001 ||
 || xor    ||     003 ||
@@ -41,7 +41,7 @@ This page covers the testing status of all of the operations availible to the MI
 || addiu   ||    002 ||
 || slti    ||    002 ||
 || sltiu   ||    002 ||
-|| andi    ||    not yet tested (add to 002) ||
+|| andi    ||    003 ||
 || ori     ||    002 ||
 || xori    ||    002 ||
 || lui     ||    002 ||
