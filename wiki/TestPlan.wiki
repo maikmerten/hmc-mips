@@ -105,7 +105,6 @@ Stalls:
 Branch Delays:
   *  Test branches in branch delay slots
   *  Test stalls in branch delay slots
-  *  Test exceptions in branch delay slots 
-     (make sure returns from exceptions work properly)
+  *  Test exceptions in branch delay slots
+  (make sure returns from exceptions work properly)
   
-
