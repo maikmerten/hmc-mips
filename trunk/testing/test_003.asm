@@ -10,7 +10,9 @@
 #   Tests R-Type Arithmetic instructions (besides mult and div)  
 
 main:   addiu $2, $0, -10       # $2 = -10
-        addiu $3, $0, 10        # $3 = 10
+        addiu $3, $0, 10        # $3 = 10 
+	subu  $5, $3, $3	# $5 = 10 - 10 *added 1/25/07 to test subu
+	bne   $5, $0, end	# jump out if subu didn't work, should cause fail
         addu  $2, $2, $3        # $2 = $2 + $3 = -10 + 10 = 0
         addiu $4, $0, 100       # $4 = 100
         addu  $4, $2, 100       # $4 = $2 + 100 = 0 + 10 = 100
@@ -18,6 +20,7 @@ main:   addiu $2, $0, -10       # $2 = -10
         slt   $3, $2, $5        # $3 = ($2 < $5) = (0 < -100) = 0
         and   $2, $2, $3        # $2 = $2 & $3 = 0 & 0 = 0
         ori   $5, $0, 0x7fff    # $5 = 0x7fff
+	andi  $5, $5, 0x7fff	# $5 = 0x7fff still *added 1/25/07
         sltu  $3, $2, $5        # $3 = (0 < 0x7fff (unsigned)) = 1
         lui   $4, 0x70f0        # $4 = 0x70f00000
         ori   $5, $0, 0xf000    # $5 = 0xf000
