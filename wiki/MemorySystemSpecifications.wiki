@@ -2,40 +2,83 @@
 
 = Introduction =
 
-This specifies the memory subsystem, including the data and instruction cache.
-
+This specifies the memory subsystem, including the data and instruction cache, main memory, and the cache controller.
 
 = Overview =
 
-Two 4kB caches, one for data and one for instructions.  
+The memory subsystem is composed of the following subunits:
 
-  * Create (identical) direct-mapped write-back instruction and data caches
-  * Support cache bypassing (via upper bits of memory address)
-  * Support cache swapping (using the swc bit available in the status register)
-  * Support cache isolation (using the isc bit available in the status register) 
+  * Two identical 4kB caches, one for data and one for instructions.
+  * A cache controller, to interface the process with the cache and main memory.
+  * A write buffer to reduce number of stalls when writing to main memory.
+  * The main system memory.
+
+A memory read or write is selected and started, via the cache controller, with the rwb (read/write bar) bit and en (enable) bit, respectively.  The cache controller signals a completed operation by asserting the done bit.  The interface to external memory is similar, where the cache controller expects external memory to haverwb, en, and done bits.  
+
+NEED: block diagram... instruction/data reading same time.
+
+= Cache Controller =
+
+The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping and coordination with the write buffer.  The interface is as follows (controller's point of view):
+
+            output [31:0] pcF,
+            input  [31:0] instrF,
+            output        memwriteM,
+            output [3:0]  byteenM,    // The byte mask, for writing sb/sh (and reading? lb/lh)
+            output [31:0] aluoutM, writedataM,
+            input  [31:0] readdataM,
+            input         instrackF, dataackM
 
 = Cache Specifications =
 
-Each cache will be 4kB in size.  The cache will be of the following type:
+here will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
   * _Direct-mapped_: The lower bits (how many bits?) of the memory address will be used as the tag in the cache memory.
   * _Physically addressed_: The memory address the cache uses is based upon the physical address, the actual address in RAM, not a program address which is translated.
+  * Support cache bypassing (via upper bits of memory address).  This is explained in the memory map below.
+  * Support cache swapping (using the swc bit available in the status register).  This swaps the instruction and data cache so that the instruction cache can be invalidated.
 
-= Cache Interface =
+Since each cache is 4kB and a word (32-bit) is 4 bytes, each cache can hold 1024 words.  A tag must be associated with each word, representing the lower bits of the address. 1024 = 2^10, so each tag is 10-bits long.  The tag has to hold the upper bits of the address, and all addresses should word aligned, hence 32 - 10 - 2 = 20 bits.  Additionally, a "valid" bit must be associated with each tag.  The total width of each cache slot is then 20 + 1 + 32 = 53 bits.
+
+Each cache communicates through the following interface (from the cache's pov):
+
+    input  [31:0]  adr,    // Address bus
+    inout [31:0] data,    // Bi-directional databus
+    input rwb,               // R/Wb.  1 = Read, 0 = Write
+    input en                  // Start of read/write.
+    output done,           // Asserted when read/write is done.
+    input invalidate      // Asserted when the memory address should be invalidated.
+
+The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of thecpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
+
+When a word write is requested to an address that is cachable, but not currently in the cache, the cache is updated and the write is added to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Note that the cache does not have abyteen mask as above, but instead has a single invalidate bit, because a half-word or byte store will never modify cached data.  This isprimarily to retain compatibility with R2000 MIPS processors.
+
+= Main Memory =
+
+
+output [31:0] address,
+output [3:0] byteen,
+inout [31:0] data,
+output rwb,
+output en,  // Enable
+input done // Acknowledge read/write
+
+= Write Buffer = 
+
+The write buffer is a four entry deep (as suggested by See MIPS Run) FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall thecpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
 
 = Memory Maps =
 
-Program Memory:
+For simplicity, data memory is mapped identical to program memory.  Note that the program memory and data memory share identical physical addresses.  No mechanism is in place to protect program memory from accidental overwriting. 
 
-  * kseg0 (cached program memory):  0x8000 0000 - 0x9FFF FFFF 
-  * kseg1 (uncached program memory):  0x0000 0000 - 0xBFFF FFFF
+  * kseg0 (cached program/data memory): 0x8000 0000 - 0x9FFF FFFF
+  * kseg1 (uncached program/data memory):  0x0000 0000 - 0xBFFF FFFF
 
-Data Memory:
-
-For simplicity, data memory and shared with program memory, with the same mappings as above.  No mechanism is in place to protect program memory from accidental overwriting.
+Hence, if the msb of the address is high memory is cached, otherwise is bypasses the cache.
 
 = Startup Procedures =
+Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
 
-Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.
+(do we even need to write?  Or just read from unused memory locations?  Check this from book)
