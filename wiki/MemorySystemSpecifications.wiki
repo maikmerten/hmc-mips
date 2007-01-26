@@ -79,7 +79,13 @@ For simplicity, data memory is mapped identical to program memory.  Note that th
 
 Hence, if the msb of the address is high memory is cached, otherwise is bypasses the cache.
 
-= Startup Procedures =
+= Programming Guidelines =
+
+== Startup Procedures ==
 Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
 
 (do we even need to write?  Or just read from unused memory locations?  Check this from book)
+
+== Cache Invalidation Procedures ==
+
+= Test Plan =
