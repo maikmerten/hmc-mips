@@ -1,4 +1,4 @@
-#Plans for testing all operations and exceptions and list of those completed.
+Plans for testing all operations and exceptions and list of those completed.
 
 = Introduction =
 
@@ -95,18 +95,17 @@ This page covers the testing status of all of the operations availible to the MI
 *Corner Case Tests*
 
 Overflows:
-  *Largest positve and negative numbers allowed do not overflow
-  *Largest positive/negative numbers plus/minus 1 do overflow
-  *Test for commands add, sub, addi
+  *  Largest positve and negative numbers allowed do not overflow
+  *  Largest positive/negative numbers plus/minus 1 do overflow
+  *  Test for commands add, sub, addi
 
 Stalls:
-  *Test for proper stalls (lw in particular, also mult/div)
+  *  Test for proper stalls (lw in particular, also mult/div)
 
 Branch Delays:
-  *Test branches in branch delay slots
-  *Test stalls in branch delay slots
-  *Test exceptions in branch delay slots 
-   (make sure returns from exceptions work properly)
+  *  Test branches in branch delay slots
+  *  Test stalls in branch delay slots
+  *  Test exceptions in branch delay slots 
+     (make sure returns from exceptions work properly)
   
-
 
