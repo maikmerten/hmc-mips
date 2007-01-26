@@ -20,7 +20,7 @@ module multdivtest();
   reg [31:0]  x, y;
   reg         multdivb, signedop;
   wire [31:0] prodh, prodl;
-  wire        dividebyzero;
+  wire        run, dividebyzero;
 
   reg [31:0]  vectornum, errors;
   reg [129:0] testvectors[10000:0];
@@ -29,7 +29,7 @@ module multdivtest();
   reg         start;
 
   // device under test
-  multdiv dut(clk, reset, start, multdivb, signedop, x, y, prodh, prodl, done, dividebyzero);
+  multdiv dut(clk, reset, start, multdivb, signedop, x, y, prodh, prodl, run, dividebyzero);
 
   // generate clock
   always begin
@@ -46,7 +46,7 @@ module multdivtest();
   // load testvectors
   initial
     begin
-      $readmemh("multdiv.tv", testvectors);
+      $readmemh("testing/moduletests/multdiv.tv", testvectors);
       vectornum = 0;
       errors = 0;
     end
@@ -62,7 +62,7 @@ module multdivtest();
     end
 
   always @(negedge clk)
-    if (done & ~start) begin
+    if (~run & ~start & ~reset) begin
       #1 ready = 1;
       if (testvectors[vectornum][0] === 1'bx) begin
         $display("Finished %d test vectors with %d errors\n", vectornum, errors);

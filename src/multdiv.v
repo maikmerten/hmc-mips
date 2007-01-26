@@ -5,12 +5,12 @@
 // handling signed and unsigned operands
 //
 // Apply inputs and assert start for one cycle.
-// Outputs are in prodh and prodl when done is asserted for a cycle
+// Outputs are in prodh and prodl when run becomes low for a cycle
 //  Mult: {PRODH, PRODL} = X * Y
 //  Div:  PRODH = X % Y ; PRODL = X/Y
 //
-// The unit has a 2N-bit product register and an N-bit Y register.
-// Initially, Y is loaded in the Y register, Y is loaded in PRODL,
+// The unit has a 2N-bit product register, an N-bit Y register.
+// Initially, Y is loaded in the Y register, X is loaded in PRODL,
 // and PRODH is cleared.  The unit also has an N-bit ALU and an
 // Y mux.  On each cycle, the unit chooses {2Y, Y, 0, -Y, -2Y}, adds
 // it to a shifted PRODH, and puts the result back in PRODH.
@@ -56,10 +56,10 @@ module multdiv(input         clk,
                input  [31:0] y,
                output [31:0] prodh,
                output [31:0] prodl,
-               output        done,
+               output        run,
                output        dividebyzero);
 
-  wire run, init;
+  wire done, init, muldivbsaved, signedopsaved;
   wire qi, srchinv;
   wire yzero;
   wire [1:0] prodhsel, prodlsel;
@@ -72,16 +72,16 @@ module multdiv(input         clk,
   // control logic
   mdcontroller mdcont(clk, reset, start, run, done, init, muldivb, signedop, 
                       cout, prodl[1:0], x[31], y[31], ysaved[31], srch1[31], srchplusyy[33], yzero, 
-                      ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero);
+                      ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero, muldivbsaved, signedopsaved);
 
   // Y register and Booth mux
   flopenr        yreg(clk, reset, start, y, ysaved);
-  boothsel       ybooth(ysaved, ysel, signedop, yy, cin);
+  boothsel       ybooth(ysaved, ysel, signedopsaved, yy, cin);
   zerodetect     yzdetect(ysaved, yzero);
 
   // PRODH
   // keep one extra bit in high part to accomdate 2x Booth multiples and another bit to keep sign
-  shl1r2   #(34) prodhshlr(muldivb, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
+  shl1r2   #(34) prodhshlr(muldivbsaved, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
   mux3     #(34) srchmux(prodhsh, {prodhextra, prodh}, {2'b0, prodl}, srchsel, srch1);  // only necessary for signed division
   xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for signed division
   adder    #(34) addh(srch, yy, cin, srchplusyy, cout);
@@ -89,7 +89,7 @@ module multdiv(input         clk,
   flopenr  #(34) prodhreg(clk, init, run, nextprodh, {prodhextra, prodh});
 
   // PRODL
-  shl1r2         prodlshlr(muldivb, prodl, prodh[1:0], qi, prodlsh);
+  shl1r2         prodlshlr(muldivbsaved, prodl, prodh[1:0], qi, prodlsh);
   mux4           prodlmux(prodlsh, srchplusyy[31:0], prodl, x, prodlsel, nextprodl); // d1 and d2 for signed division only
   flopenr        prodlreg(clk, reset, run, nextprodl, prodl); // probably doesnt' need reset
 endmodule
@@ -119,24 +119,32 @@ module mdcontroller(input            clk,
                     input            ysavedsign,
                     input            srchsign,
                     input            addsign,
-		    input            yzero,
+                    input            yzero,
                     output reg [2:0] ysel,
                     output reg [1:0] srchsel,
                     output reg       srchinv,
                     output reg [1:0] prodhsel,
                     output reg [1:0] prodlsel,
                     output           qi,
-		    output           dividebyzero);
+                    output           dividebyzero,
+                    output           muldivbsaved, signedopsaved);
 
   wire [5:0] nextcount, count;
   wire       nccout, oldrun;
-  wire       oldx;
+  wire       oldx, muldivbreg, signedopreg;
   reg [1:0] x2;
   wire       signsdisagree;
 
   // count and run registers
   flopenr #(6) countreg(clk, init, run, nextcount, count);
   flopr #(1)   runreg(clk, reset, run, oldrun);
+
+  // remember whether we are multiplying or dividing and whether we are using
+  // a signed op, the value must also be available while start is high
+  flopen #(2) controlreg(clk, start, {muldivb, signedop}, {muldivbreg, signedopreg});
+
+  assign {muldivbsaved, signedopsaved} = start ? {muldivb, signedop}
+                                               : {muldivbreg, signedopreg};
 
   // combinational logic for run and count
   assign init = reset | start;
@@ -150,7 +158,7 @@ module mdcontroller(input            clk,
   assign qi = ~addsign; // sign of result for division
 
   // check for division by zero
-  assign dividebyzero = yzero & ~muldivb;
+  assign dividebyzero = yzero & ~muldivbsaved;
 
   // keep previous x msb for Booth encoding
   flopr #(1) xoldreg(clk, init, x[1], oldx);
@@ -170,10 +178,10 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // multiplication
     ///////////////////////////////////////////////////////
-    if (muldivb) begin 
+    if (muldivbsaved) begin 
       prodhsel = 1; // take adder result
       x2 = x;
-      if (count == 16) x2 = signedop ? {2{oldx}} : 2'b0;  // zero or sign extend final two bits
+      if (count == 16) x2 = signedopsaved ? {2{oldx}} : 2'b0;  // zero or sign extend final two bits
       if (count == 17) done = 1;
       case ({x2, oldx}) // Booth encode for multiplication
         3'b000: ysel = 4; // select 0
@@ -190,7 +198,7 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // unsigned division
     ///////////////////////////////////////////////////////
-    else if (~signedop) begin  
+    else if (~signedopsaved) begin  
       ysel = 2; // select -Y
       if (qi) prodhsel = 1; // if quotient digit is true, take ALU result
       if (count == 32) done = 1; // cycle 32: finished with unsigned division
@@ -199,7 +207,7 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // signed division
     ///////////////////////////////////////////////////////
-    else if (signedop) begin 
+    else if (signedopsaved) begin 
       if (count == 'd0) begin // cycle 0: ensure X is positive
         srchsel = 2; // select PRODL, containing X
         prodhsel = 2; // freeze PRODH register
@@ -274,14 +282,14 @@ endmodule
 
 module boothsel(input  [31:0] a,
                 input  [2:0]  boothsel,
-                input         signedop,
+                input         signedopsaved,
                 output [33:0] y,
                 output        cin);
 
   wire [33:0] yp2, yp1, ym1, ym2, yb;
 
-  assign yp2 = {a[31] & signedop, a, 1'b0};
-  assign yp1 = {{2{a[31] & signedop}}, a};
+  assign yp2 = {a[31] & signedopsaved, a, 1'b0};
+  assign yp1 = {{2{a[31] & signedopsaved}}, a};
   assign ym1 = ~yp1;
   assign ym2 = ~yp2;
 
