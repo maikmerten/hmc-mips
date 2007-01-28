@@ -55,7 +55,7 @@ module mips(input         clk, reset,
                aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
                bdsF, bdsD, bdsE, bdsM,
-               syscallE, breakE, riI, fpuE,
+               syscallE, breakE, riE, fpuE,
                adesableE, adelableE, halfwordE, specialregsrcE, hilodisableE,
                hiloaccessD, mdstartE, hilosrcE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
@@ -100,7 +100,7 @@ module controller(input        clk, reset, exception,
                   output       rdsrcD, 
                   output [1:0] pcsrcFD, pcbranchsrcD,
                   output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
-                  output       syscallE, breakE, riI, fpuE,
+                  output       syscallE, breakE, riE, fpuE,
                   output       adesableE, adelableE, halfwordE,
                   output [1:0] specialregsrcE, hilodisableE,
                   output       hiloaccessD, mdstartE, hilosrcE);
@@ -598,7 +598,7 @@ module coprocessor0(input             clk, reset,
                    writecop0W, statusreg, re, im, swc, isc);
   causeregunit  cr(clk, branchdelay, pendinginterupts, exccode, 
                    exception, /* write enable determined by exception */
-                   causereg);                   
+                   causereg);
    
   // All cop0 registers can be read
   always @ ( * )
@@ -668,18 +668,18 @@ module exceptionunit(input            clk, reset,
         branchdelay = bdsE;
       end
       
-      if(adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
-        //$display("ades:%d, hwE:%d, malh:$d, malw:$d", adesableE, halfwordE, misalignedh, misalignedw);
-        exception = 1;
-        exccode = 5;       // ADeS
-        excstage = 2;       // Stage E
-        branchdelay = bdsE;
-      end
-      
       if(adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
         //$display("adel:%d, hwE:%d, malh:$d, malw:$d", adelableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 4;       // ADeL
+        excstage = 2;       // Stage E
+        branchdelay = bdsE;
+      end
+      
+      if(adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
+        //$display("ades:%d, hwE:%d, malh:$d, malw:$d", adesableE, halfwordE, misalignedh, misalignedw);
+        exception = 1;
+        exccode = 5;       // ADeS
         excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
