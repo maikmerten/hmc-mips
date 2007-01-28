@@ -6,15 +6,18 @@
 #
 # Created: 1/20/07
 #
-#   Decode stage exception tests.
+#   Additional exception tests.
+#   Just throws exceptions one after the other, and makes sure that we gather
+#   the proper number of exceptions. Not terribly rigorous, but ought to be 
+#   enough for now.
 
 # Start code 0x1FC00000
 main:   addi $3, $0, 0
-        nop         # run syscall
+        nop               # run syscall (SPIM doesn't support this)
         break 0		        # run the break call
-        nop               # modified in source code to be a malformed opcode
-        nop		            # add floating point test later.
-
+        nop               # modified in source code to be a malformed opcode (ffffffff)
+        add.s  $f2,$f2,$f4 	# floating point test        
+        
         sw    $3, 0($0)         # should write 4 to address 0
 end:    beq   $0, $0, end       # loop forever
         nop
