@@ -33,6 +33,6 @@ main:   addiu $2, $0, -10       # $2 = -10
         sltu  $2, $4, $5        # $2 = (0x70f00ff0 < 0xffffffff) = 1
         addu  $2, $2, $3        # $2 = $2 + $3 = 1 + 1 = 2
         nor   $4, $4, $2        # $4 = ~(0x70f00ff0 | 0x2) = 0x8f0ff00d
-write:  sw    $2, 0($4)         # should write 2 to address 0x8f0ff00d
+write:  sw    $2, 3($4)         # should write 2 to 0x8f0ff00d + 3 0x8f0ff010
 end:    beq   $0, $0, end       # loop forever
         nop
