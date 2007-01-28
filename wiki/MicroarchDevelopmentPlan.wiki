@@ -34,7 +34,8 @@ Roles
 
   * Chief Microachitect: Carl Nygaard
   * Memory Microachitect: Nate Pinckney
-  * Architecture Validation & Misc Tasks (Exception, multiply/div): Thomas Barr & Matt Totino
+  * Exception Microarchitect: Thomas Barr
+  * Testing, validation: Matt Totino
 
 == CPU Block Diagram ==
 
@@ -58,8 +59,8 @@ Subtasks:
 Assigned to: multiple
 
 Subtasks:
-  * Develop test plan -- Assigned to Thomas and Matt
-  * Develop tests for various instructions (Corner case) -- Assigned to Thomas and Matt
+  * Develop test plan -- Assigned to Matt
+  * Develop tests for various instructions (Corner case) -- Assigned to Matt
   * Develop tests for cache -- Assigned to Nate
 
 == Multiply/Division Instructions ==
@@ -74,7 +75,7 @@ Subtasks:
 
 == Exceptions ==
 
-Assigned to: Matt & Thomas
+Assigned to: Thomas
 
 Subtasks:
   * Implement all remaining exceptions
