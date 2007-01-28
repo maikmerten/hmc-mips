@@ -10,10 +10,10 @@ The hmc-MIPS CPU requires implementation of eight exceptions. These must be impl
  * 0 - Interrupt
  * 4 - AdEL (thrown on misaligned doubleword, word or halfword load) - Implemented
  * 5 - AdES (thrown on misaligned doubleword, word or halfword store) - Implemented
- * 8 - Syscall - Implemented.
- * 9 - Breakpoint - Implemented.
- * 10 - RI (invalid opcode) - Implemented
- * 11 - CpU - thrown on attempt to use CP1-3 (FPU) - Implemented
+ * 8 - Syscall - Implemented, tested.
+ * 9 - Breakpoint - Implemented, tested.
+ * 10 - RI (invalid opcode) - Implemented, tested.
+ * 11 - CpU - thrown on attempt to use CP1-3 (FPU) - Implemented, tested.
  * 12 - Ov - Arithmetic overflow - Implemented, tested.
 
 = Exceptions that will remain unimplemented =
@@ -42,6 +42,9 @@ Four of the eight exceptions are caused by specific instructions, and therefore 
  * break code: {6'b000000 code 6'b001110}
  * any FPU operation
  * any other, unimplemented instruction
+
+= `rfe` - Return from exception =
+The `rfe` instruction must reenable interrupt handling. It must do nothing else.
 
 = Unimplemented memory =
 Professor Harris suggested that we might consider implementing an unimplemented memory exception if software made an attempt to access memory that was not physically attached to the machine. Since all commercial MIPS implementations (to my knowledge) use the TLB, and therefore support virtual memory, any implementation of this would have to be non-standard. It would be possible to emit the TLB miss exception when an attempt to access unimplemented memory was made, however this would not be a per-spec use of that exception, and would likely end up being confusing. Since no compiler would recognize the non-standard use of the exception, I see no overwhelming benefit in implementing this feature at this time, though any comments would be welcome.
