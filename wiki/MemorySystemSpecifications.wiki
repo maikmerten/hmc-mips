@@ -4,7 +4,7 @@
 
 This specifies the memory subsystem, including the data and instruction cache, main memory, and the cache controller.
 
-= Overview =
+== Overview ==
 
 The memory subsystem is composed of the following subunits:
 
@@ -17,7 +17,7 @@ A memory read or write is selected and started, via the cache controller, with t
 
 NEED: block diagram... instruction/data reading same time.
 
-= Cache Controller =
+== Cache Controller ==
 
 The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping and coordination with the write buffer.  The interface is as follows (controller's point of view):
 {{{
@@ -29,7 +29,14 @@ The cache controller interfaces the processor, cache, and main memory.  Addition
             input  [31:0] readdataM,
             input         instrackF, dataackM
 }}}
-= Cache Specifications =
+
+Since the main memory only has one data and address bus, the cache controller is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
+  #  Write buffer write
+  #  Data cache read
+  #  Instruction cache read
+The precedence is implemented using combinational logic and a multiplexer.
+  
+== Cache Specifications ==
 
 here will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
 
@@ -44,33 +51,59 @@ Since each cache is 4kB and a word (32-bit) is 4 bytes, each cache can hold 1024
 
 Each cache communicates through the following interface (from the cache's pov):
 {{{
-    input  [31:0]  adr,    // Address bus
-    inout [31:0] data,    // Bi-directional databus
-    input rwb,               // R/Wb.  1 = Read, 0 = Write
-    input en                  // Start of read/write.
-    output done,           // Asserted when read/write is done.
-    input invalidate      // Asserted when the memory address should be invalidated.
+input clk, reset,
+input [29:0] adr,
+inout [31:0] data,
+input [3:0] byteen,
+input rwb, en,
+output done,
+output [29:0] memadr, 
+inout [31:0] memdata,
+output [3:0] byteen,
+output memen,
+input memdone
 }}}
+
 The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of thecpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
 
-When a word write is requested to an address that is cachable, but not currently in the cache, the cache is updated and the write is added to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Note that the cache does not have abyteen mask as above, but instead has a single invalidate bit, because a half-word or byte store will never modify cached data.  This isprimarily to retain compatibility with R2000 MIPS processors.
+When a word write is requested to an address that is cachable, but not currently in the cache, the cache is updated and the write is added to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Note that the cache does not have abyteen mask as above, but instead has a single invalidate bit, because a half-word or byte store will never modify cached data.  This is primarily to retain compatibility with R2000 MIPS processors.
 
-= Main Memory =
+== Main Memory ==
+
+The memory subsystem expects a single main memory interface.  The exact timings of the main memory are very flexible.  The main memory should expect an EN (enable) input when the cache system requests a read/write.  Once the main memory has performed the operation, and driven any necessary output ports with the correct value, it asserts done.
+
+The interface from the main memory view is:
 
 {{{
-output [31:0] address,
-output [3:0] byteen,
+input clk, reset,
+input [29:0] adr,
 inout [31:0] data,
-output rwb,
-output en,  // Enable
-input done // Acknowledge read/write
+input [3:0] byteen,
+input rwb, en,
+output reg done
 }}}
 
-= Write Buffer = 
+If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.
+
+==Write Buffer==
 
 The write buffer is a four entry deep (as suggested by See MIPS Run) FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall thecpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
 
-= Memory Maps =
+The interface is:
+{{{
+input clk, reset,
+input [29:0] adr,
+input [31:0] data,
+input [3:0] byteen,
+input en, output done,
+output reg [29:0] memadr,
+output reg [31:0] memdata,
+output reg [3:0] membyteen,
+output reg memen,
+input memdone
+}}}
+
+=Memory Maps=
 
 For simplicity, data memory is mapped identical to program memory.  Note that the program memory and data memory share identical physical addresses.  No mechanism is in place to protect program memory from accidental overwriting. 
 
@@ -89,3 +122,10 @@ Since the cache will be full of garbage when the CPU starts, the cache must be i
 == Cache Invalidation Procedures ==
 
 = Test Plan =
+
+
+
+
+
+
+
