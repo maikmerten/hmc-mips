@@ -22,6 +22,6 @@ loop:   add  $4, $2, $3         # $4 <= $2 + $3
         nop
         beq  $0, $0, loop       # loop (beq is easier to assemble than jump)
         nop
-write:  sw   $4, 5($2)          # should write 21 @ 5 + 13 = 18 = 0x12
+write:  sw   $4, 7($2)          # should write 21 @ 7 + 13 = 20 = 0x14
 end:    beq  $0, $0, end        # loop forever
         nop

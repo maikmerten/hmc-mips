@@ -65,7 +65,7 @@ module testbench;
       case (currentTest)
         0:
           if(memwrite) begin
-            if(dataadr === 18 & writedata === 21) begin
+            if(dataadr === 32'h14 & writedata === 21) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
@@ -73,7 +73,7 @@ module testbench;
           end
         1:
           if(memwrite) begin
-            if(dataadr === 84 & writedata === 7) begin
+            if(dataadr === 32'h54 & writedata === 7) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
@@ -89,7 +89,7 @@ module testbench;
           end
         3:
           if(memwrite) begin
-            if(dataadr === 32'h8f0ff00d & writedata === 2) begin
+            if(dataadr === 32'h8f0ff010 & writedata === 2) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
@@ -113,7 +113,7 @@ module testbench;
           end
         6:
           if(memwrite) begin
-            if(dataadr === 32'h1263ff01 & writedata === 32'h0) begin
+            if(dataadr === 32'h1263ff00 & writedata === 32'h0) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
@@ -144,7 +144,7 @@ module testbench;
           
         10:
           if(memwrite) begin
-            if(dataadr === 32'h12 & writedata === 32'hff) begin
+            if(dataadr === 32'h0 & writedata === 32'h2) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
