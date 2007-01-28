@@ -38,7 +38,7 @@ The precedence is implemented using combinational logic and a multiplexer.
   
 == Cache Specifications ==
 
-here will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
+There will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
@@ -122,7 +122,6 @@ Since the cache will be full of garbage when the CPU starts, the cache must be i
 == Cache Invalidation Procedures ==
 
 = Test Plan =
-
 
 
 
