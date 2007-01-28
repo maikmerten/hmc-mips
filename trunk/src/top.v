@@ -6,7 +6,8 @@
 
 `timescale 1 ns / 1 ps
 
-module top(input         clk, reset, 
+module top(input         clk, reset,
+           input  [7:0]        interrupts,
            output [31:0] writedata, dataadr, 
            output        memwrite);
 
@@ -15,7 +16,7 @@ module top(input         clk, reset,
   wire [3:0] byteen;
   
   // instantiate processor and memories
-  mips mips(clk, reset, pc, instr, memwrite, byteen, dataadr, writedata, 
+  mips mips(clk, reset, pc, instr, interrupts, memwrite, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
   imem imem(pc[12:2], instr); assign instrack = 1; // TODO: make imem a cache
   cache dcache(clk, memwrite, dataadr, writedata, byteen, readdata, dataack);

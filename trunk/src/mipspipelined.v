@@ -17,6 +17,7 @@
 module mips(input         clk, reset,
             output [31:0] pcF,
             input  [31:0] instrF,
+            input  [7:0]  interrupts,
             output        memwriteM,
             output [3:0]  byteenM,
             output [31:0] aluoutM, writedataM,
@@ -56,7 +57,8 @@ module mips(input         clk, reset,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
                bdsF, bdsD, bdsE, bdsM,
                syscallE, breakE, riE, fpuE,
-               adesableE, adelableE, halfwordE, specialregsrcE, hilodisableE,
+               adesableE, adelableE, halfwordE, rfeE,
+               specialregsrcE, hilodisableE,
                hiloaccessD, mdstartE, hilosrcE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
               branchD, 
@@ -78,7 +80,7 @@ module mips(input         clk, reset,
                     bdsF, bdsD, bdsE, bdsM,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
-                    halfwordE, 
+                    halfwordE, rfeE, interrupts, 
                     cop0readdataE, re, swc, isc, exception, excstage
                     );
 endmodule
@@ -101,7 +103,7 @@ module controller(input        clk, reset, exception,
                   output [1:0] pcsrcFD, pcbranchsrcD,
                   output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
                   output       syscallE, breakE, riE, fpuE,
-                  output       adesableE, adelableE, halfwordE,
+                  output       adesableE, adelableE, halfwordE, rfeE,
                   output [1:0] specialregsrcE, hilodisableE,
                   output       hiloaccessD, mdstartE, hilosrcE);
 
@@ -178,21 +180,21 @@ module controller(input        clk, reset, exception,
 
   // pipeline registers
   floprc #(1) regD(clk, reset, flushE, {bdsF}, {bdsD});
-  floprc #(31) regE(clk, reset, flushE,
+  floprc #(32) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
 		              syscallD, breakD, riD, fpuD,
 		              adesableD, adelableD, adelthrownD,
                   mdstartD, hilosrcD, hiloselD, hilodisablealushD, 
-                  specialregsrcD}, 
+                  specialregsrcD, rfeD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
 		              syscallE, breakE, riE, fpuE,
 		              adesableE, adelableE, adelthrownE,
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
-                  specialregsrcE});
+                  specialregsrcE, rfeE});
   floprc #(8) regM(clk, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE, bdsE},
@@ -475,8 +477,9 @@ module datapath(input         clk, reset,
   assign     adelthrownF = pcF[0] | pcF[1];
 
   // Decode stage 
-  flopenr #(32) r3D(clk, reset, ~stallD, pcF, pcD);
+  flopenr #(32) r1D(clk, reset, ~stallD, pcF, pcD);
   flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
+  flopenrc #(1) r3D(clk, reset, ~stallD, flushD, adelthrownF, adelthrownD);
   signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
@@ -507,6 +510,8 @@ module datapath(input         clk, reset,
   floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
   floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
   floprc #(32) r9E(clk, reset, flushE, pcD, pcE);
+  floprc #(1)  r10E(clk, reset, flushE, adelthrownD, adelthrownE);
+  
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
   mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
@@ -567,7 +572,8 @@ module coprocessor0(input             clk, reset,
                     input             bdsF, bdsD, bdsE, bdsM,
                     input             syscallE, breakE, riE, fpuE,
                     input             adesableE, adelableE, adelthrownE, 
-                    input             misalignedh, misalignedw, halfwordE, 
+                    input             misalignedh, misalignedw, halfwordE, rfeE,
+                    input      [7:0]  interrupts,
                     output reg [31:0] readvalue,
                     output            re,   // reverse endianess
                                       swc,  // swap caches
@@ -581,23 +587,19 @@ module coprocessor0(input             clk, reset,
   wire [4:0]  exccode;
   wire        branchdelay; 
 
-  // To become inputs some time:
-  wire [7:0]  pendinginterupts;
-  assign #1 pendinginterupts = 0;
-
 
   exceptionunit excu(clk, reset, overflowableE, overflowE, 
                      bdsF, bdsD, bdsE, bdsM,
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
-                     halfwordE, 
+                     halfwordE, iec, interrupts, im,
                      exception, branchdelay, exccode, 
                      excstage);
   epcunit       epcu(clk, exception, branchdelay, excstage, pcF, pcD, pcE, pcM,
                      pcW, epc);
   statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
-                   writecop0W, statusreg, re, im, swc, isc);
-  causeregunit  cr(clk, branchdelay, pendinginterupts, exccode, 
+                   writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
+  causeregunit  cr(clk, branchdelay, interrupts, exccode, 
                    exception, /* write enable determined by exception */
                    causereg);
    
@@ -617,6 +619,8 @@ module exceptionunit(input            clk, reset,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
                      input            misalignedh, misalignedw, halfwordE,
+                     input            intenabled, //SR(IEc)
+                     input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
                      output reg       exception, branchdelay,
                      output reg [4:0] exccode, 
                      output reg [1:0] excstage);
@@ -629,7 +633,7 @@ module exceptionunit(input            clk, reset,
 
   always @ ( * ) // Using posedge clk would add extra clock sycle and likely 
                  // offset everything by one, rendering some of the
-                 // subsequent logic incorrect.  Check me on this though.
+                 // subsequent logic incorrect.
     begin
       exception = 0;
       branchdelay = 0;
@@ -669,7 +673,7 @@ module exceptionunit(input            clk, reset,
         branchdelay = bdsE;
       end
       
-      if(adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
+      if((adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE) begin
         //$display("adel:%d, hwE:%d, malh:$d, malw:$d", adelableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 4;       // ADeL
@@ -685,19 +689,24 @@ module exceptionunit(input            clk, reset,
         branchdelay = bdsE;
       end
       
+      if(intenabled & ( &(im & interrupts))) begin
+        exccode = 1;       // Interrupt
+        excstage = 2;       // Stage E
+        branchdelay = bdsE;
+      end
+      
     end
 endmodule
 
 module statusregunit(input             clk, reset, writeenable, exception, 
-                     input      [31:0] writedata,
+                     input      [31:0] writedata, 
+                     input             rfeE,
                      output reg [31:0] statusreg,
                      output            re, 
                      output     [7:0]  im,
-                     output            swc, isc);
+                     output            swc, isc, iec);
 
-
-
-  wire cu1, bev, ts, pe, cm, pz, kuo, ieo, kup, iep, kuc, iec;
+  wire cu1, bev, ts, pe, cm, pz, kuo, ieo, kup, iep, kuc;
 
   assign cu1 = 0; // No floating point unit
   assign pe = 0;  // No parity checking
@@ -708,12 +717,14 @@ module statusregunit(input             clk, reset, writeenable, exception,
   assign bev = statusreg[22];  // not currently implemented
   assign ts  = statusreg[21];  // TLB not implemented
   assign {swc, isc, im} = statusreg[17:7];
+  
+  assign iec = statusreg[0];
 
   assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode
 
   always @ ( posedge clk )
     begin
-      if (reset) begin
+      if (reset | rfeE) begin
         statusreg[0] = 1;
       end
       
@@ -745,7 +756,7 @@ module statusregunit(input             clk, reset, writeenable, exception,
 endmodule
 
 module causeregunit(input             clk, branchdelay,
-                    input      [7:0]  pendinginterupts,
+                    input      [7:0]  interrupts,
                     input      [4:0]  exccode,
                     input             writeenable,
                     output reg [31:0] causereg);
@@ -756,7 +767,7 @@ module causeregunit(input             clk, branchdelay,
       causereg[30] = 0;
       causereg[29:28] = 0; // Coprocessor error -- not sure what's good for
       causereg[27:16] = 0;
-      causereg[15:8] = pendinginterupts;
+      causereg[15:8] = interrupts;
       causereg[7] = 0;
       causereg[6:2] = exccode;
       causereg[1:0] = 0;
