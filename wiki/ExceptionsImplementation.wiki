@@ -7,7 +7,7 @@ The hmc-MIPS CPU requires implementation of eight exceptions. These must be impl
 
 = Exceptions to implement =
 
- * 0 - Interrupt
+ * 0 - Interrupt - Implemented
  * 4 - AdEL (thrown on misaligned doubleword, word or halfword load) - Implemented, tested. (misaligned fetch not implemented)
  * 5 - AdES (thrown on misaligned doubleword, word or halfword store) - Implemented, tested.
  * 8 - Syscall - Implemented, tested.
