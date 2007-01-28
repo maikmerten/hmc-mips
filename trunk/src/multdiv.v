@@ -47,6 +47,8 @@
 // unsigned multiplication and division (mult when multdivb = 1).
 /////////////////////////////////////////////////////////////////////////////////
 
+`timescale 1 ns / 1 ps
+
 module multdiv(input         clk,
                input         reset,
                input         start,
@@ -84,7 +86,7 @@ module multdiv(input         clk,
   shl1r2   #(34) prodhshlr(muldivbsaved, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
   mux3     #(34) srchmux(prodhsh, {prodhextra, prodh}, {2'b0, prodl}, srchsel, srch1);  // only necessary for signed division
   xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for signed division
-  adder    #(34) addh(srch, yy, cin, srchplusyy, cout);
+  adderc   #(34) addh(srch, yy, cin, srchplusyy, cout);
   mux3     #(34) prodhmux(prodhsh, srchplusyy, {prodhextra, prodh}, prodhsel, nextprodh); // d2 for signed division only
   flopenr  #(34) prodhreg(clk, init, run, nextprodh, {prodhextra, prodh});
 
@@ -299,112 +301,3 @@ module boothsel(input  [31:0] a,
   and2 #(34) boothzero(yb, ~{34{boothsel[2]}}, y);
 endmodule
 
-/////////////////////////////////////////////////////////////////////////////////
-// The remainder of this file contains standard parameterized gates and registers.
-/////////////////////////////////////////////////////////////////////////////////
-
-module and2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              output [WIDTH-1:0] y);
-
-  assign #1 y = a & b;
-endmodule
-
-module xor2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              output [WIDTH-1:0] y);
-
-  assign #1 y = a ^ b;
-endmodule
-
-module mux3 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2,
-             input   [1:0]  s,
-             output  [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? d2
-                     : (s[0] ? d1 : d0);
-endmodule
-
-module mux4 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2, d3,
-             input   [1:0]  s,
-             output  [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? (s[0] ? d3 : d2)
-                     : (s[0] ? d1 : d0);
-endmodule
-
-module mux5 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2, d3, d4,
-             input   [2:0]  s,
-                output  [WIDTH-1:0] y);
-
-  // 101 = d4; 100 = d3; 010 = d2; 001 = d1; 000 = d0
-
-  assign #1 y = s[2] ? (s[0] ? d4 : d3)
-                     : (s[1] ? d2 : (s[0] ? d1 : d0));
-endmodule
-
-module inc #(parameter WIDTH = 32)
-            (input  [WIDTH-1:0] a,
-             output [WIDTH-1:0] y,
-             output             cout);
- 
-  assign #1 {cout, y} = a + 1'b1;
-endmodule
-
-module flopenr #(parameter WIDTH = 32)
-                (input                  clk, reset,
-                 input                  en,
-                 input      [WIDTH-1:0] d, 
-                 output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if      (reset) #1 q <= 0;
-    else if (en)    #1 q <= d;
-endmodule
-
-module flopen #(parameter WIDTH = 32)
-               (input                  clk,
-                input                  en,
-                input      [WIDTH-1:0] d, 
-                output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if (en)    #1 q <= d;
-endmodule
-
-module flopr #(parameter WIDTH = 32)
-              (input                  clk, reset,
-               input      [WIDTH-1:0] d, 
-               output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if      (reset) #1 q <= 0;
-    else            #1 q <= d;
-endmodule
-
-module mux2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, 
-              input              s, 
-              output [WIDTH-1:0] y);
-
-  assign #1 y = s ? d1 : d0; 
-endmodule
-
-module adder #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              input              cin,
-              output [WIDTH-1:0] y,
-              output             cout);
- 
-  assign #1 {cout, y} = a + b + cin;
-endmodule
-
-module zerodetect #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a,
-              output             y);
- 
-  assign #1 y = ~|a;
-endmodule

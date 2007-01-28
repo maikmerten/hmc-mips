@@ -445,7 +445,7 @@ module datapath(input         clk, reset,
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
-  wire [31:0] hiE, loE;
+  wire [31:0] hiE, loE, specialregE;
   wire [31:0] pcplus8D, pcplus8E, instrD, branchtargetD;
   wire [31:0] aluresultE, shiftresultE;
   wire [31:0] aluoutE, aluoutW;
@@ -513,15 +513,16 @@ module datapath(input         clk, reset,
   alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE, overflowE);
   shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
                       shiftresultE);
-  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, cop0readdataE, 
-                        aluoutsrcE, aluoutE);
-
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
   assign misalignedw = aluoutE[1] | aluoutE[0];
   assign misalignedh = aluoutE[0];
-  
-  mdunit md(srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
+  mdunit md(clk, reset,
+            srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
             hiE, loE, mdrunE);
+  mux3 #(32)  specialregmux(cop0readdataE, hiE, loE, specialregsrcE, 
+                            specialregE);
+  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, specialregE, 
+                        aluoutsrcE, aluoutE);
 
   // Memory stage
   floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
@@ -947,13 +948,27 @@ module shifter(input signed [31:0] a, b,
                       shiftresult);
 endmodule
 
-module mdunit(input  [31:0] srca, srcb,
+module mdunit(input         clk, reset,
+              input  [31:0] srca, srcb,
               input  [2:0]  alushcontrol,
               input         mdstart, hilosrc, 
               input  [1:0]  hilodisable,
               output [31:0] hi, lo,
               output        mdrun);
 
+  wire [31:0] prodh, prodl, hinext, lonext;
+  wire        dividebyzero; // MIPS does not support divide by zero exceptions
+
+  multdiv multdiv(clk, reset, mdstart, alushcontrol[0], alushcontrol[1],
+                  srca, srcb, prodh, prodl, mdrun, dividebyzero);
+  mux2 #(32) losrcmux(prodl, srca, hilosrc, lonext);
+  mux2 #(32) hisrcmux(prodh, srca, hilosrc, hinext);
+
+  // The HI and LO registers:
+  // These don't really need the reset
+  flopenr #(32) loreg(clk, reset, ~hilodisable[0], lonext, lo);
+  flopenr #(32) hireg(clk, reset, ~hilodisable[1], hinext, hi);
+    
 endmodule
 
 module regfile(input         clk, 
@@ -976,116 +991,3 @@ module regfile(input         clk,
   assign #1 rd2 = (ra2 != 0) ? rf[ra2] : 0;
 endmodule
 
-module adder(input  [31:0] a, b,
-             output [31:0] y);
-
-  assign #1 y = a + b;
-endmodule
-
-module eqcmp(input [31:0] a, b,
-             output        eq);
-
-  assign #1 eq = (a == b);
-endmodule
-
-module sl2(input  [31:0] a,
-           output [31:0] y);
-
-  // shift left by 2
-  assign #1 y = {a[29:0], 2'b00};
-endmodule
-
-// When disabled, signext acts as a zero extender
-module signext #(parameter INPUT = 16, OUTPUT = 32)
-               (input  [INPUT-1:0] a,
-               input  enable,
-               output [OUTPUT-1:0] y);
-               
-  wire extension;
-  
-  assign #1 extension = (enable ? a[INPUT-1] : 0);
-  assign #1 y = {{OUTPUT-INPUT{extension}}, a};
-endmodule
-
-module flopr #(parameter WIDTH = 8)
-              (input                  clk, reset,
-               input      [WIDTH-1:0] d, 
-               output reg [WIDTH-1:0] q);
-
-  always @(posedge clk, posedge reset)
-    if (reset) q <= #1 0;
-    else       q <= #1 d;
-endmodule
-
-module floprc #(parameter WIDTH = 8)
-              (input                  clk, reset, clear,
-               input      [WIDTH-1:0] d, 
-               output reg [WIDTH-1:0] q);
-
-  always @(posedge clk, posedge reset)
-    if (reset)      q <= #1 0;
-    else if (clear) q <= #1 0;
-    else            q <= #1 d;
-endmodule
-
-module flopenr #(parameter WIDTH = 8)
-                (input                  clk, reset,
-                 input                  en,
-                 input      [WIDTH-1:0] d, 
-                 output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk, posedge reset)
-    if      (reset) q <= #1 0;
-    else if (en)    q <= #1 d;
-endmodule
-
-module flopenrc #(parameter WIDTH = 8)
-                 (input                  clk, reset,
-                  input                  en, clear,
-                  input      [WIDTH-1:0] d, 
-                  output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk, posedge reset)
-    if      (reset) q <= #1 0;
-    else if (clear) q <= #1 0;
-    else if (en)    q <= #1 d;
-endmodule
-
-module mux2 #(parameter WIDTH = 8)
-             (input  [WIDTH-1:0] d0, d1, 
-              input              s, 
-              output [WIDTH-1:0] y);
-
-  assign #1 y = s ? d1 : d0; 
-endmodule
-
-module mux3 #(parameter WIDTH = 8)
-             (input  [WIDTH-1:0] d0, d1, d2,
-              input  [1:0]       s, 
-              output [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? d2 : (s[0] ? d1 : d0); 
-endmodule
-
-module mux4 #(parameter WIDTH = 8)
-             (input  [WIDTH-1:0] d0, d1, d2, d3,
-              input  [1:0]       s, 
-              output [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? (s[0] ? d3 : d2)
-                     : (s[0] ? d1 : d0); 
-endmodule
-
-// Basic one hot decoders, eg b10 -> b0100
-module dec2 (input  [1:0] x,
-             output [3:0] y);
-
-  assign #1 y = (x[0] ? (x[1] ? 4'b1000 : 4'b0010)
-                      : (x[1] ? 4'b0100 : 4'b0001));
-endmodule
-
-module dec1 (input        x,
-             output [1:0] y);
-
-  assign #1 y = (x ? 2'b01 : 2'b10);
-endmodule

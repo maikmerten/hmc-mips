@@ -14,6 +14,8 @@
 //  0, 1, 2, 7FFFFFFF, 80000000, FFFFFFFE, FFFFFFFF, ABCDEF01, 23456789
 /////////////////////////////////////////////////////////////////////////////////
 
+`timescale 1 ns / 1 ps
+
 module multdivtest();
   reg         clk;
   reg         reset;

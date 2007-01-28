@@ -7,6 +7,8 @@
 ## Sample:
 ## do testbench.fdo;do debug.fdo; run 10000ns
 vlib work
+vlog  "src/components.v"
+vlog  "src/multdiv.v"
 vlog  "src/mipspipelined.v"
 vlog  "src/imem.v"
 vlog  "src/top.v"
