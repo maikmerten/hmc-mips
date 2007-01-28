@@ -69,7 +69,7 @@ output done,
 output [29:0] memadr, 
 inout [31:0] memdata,
 output [3:0] membyteen,
-output memen,
+output memrwb, memen,
 input memdone
 }}}
 
@@ -131,5 +131,4 @@ Since the cache will be full of garbage when the CPU starts, the cache must be i
 == Cache Invalidation Procedures ==
 
 = Test Plan =
-
 
