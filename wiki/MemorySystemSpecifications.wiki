@@ -21,14 +21,23 @@ NEED: block diagram... instruction/data reading same time.
 
 The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping and coordination with the write buffer.  The interface is as follows (controller's point of view):
 {{{
-output [31:0] pcF,
-input  [31:0] instrF,
-output        memwriteM,
-output [3:0]  byteenM,    // The byte mask, for writing sb/sh (and reading? lb/lh)
-output [31:0] aluoutM, writedataM,
-input  [31:0] readdataM,
-input         instrackF, dataackM
+input clk, reset,
+input [31:0] pcF,
+output [31:0] instrF,
+input enF,
+output instrackF,
+                       
+input [29:0] adrM, 
+input [31:0] writedataM,
+input [3:0] byteenM,
+output [31:0] readdataM,
+input memwriteM, enM,
+output dataackM,
+                       
+input swc
 }}}
+
+Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary to for the data and instruction caches to both have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
 
 Since the main memory only has one data and address bus, the cache controller is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
   #  Write buffer write
@@ -122,6 +131,5 @@ Since the cache will be full of garbage when the CPU starts, the cache must be i
 == Cache Invalidation Procedures ==
 
 = Test Plan =
-
 
 
