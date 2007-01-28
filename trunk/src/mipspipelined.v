@@ -24,28 +24,29 @@ module mips(input         clk, reset,
             input         instrackF, dataackM);
 
   wire [5:0]  opD, functD;
-  wire [4:0]  rsD, rtD, rdD;
+  wire [4:0]  rsD, rtD, rdE;
   wire        regdstE, alusrcE, 
               unsignedD, loadsignedM, rdsrcD, linkD, linkE, luiE,
               overflowableE, overflowE,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
               byteM, hardwordM,
-              aeqzD, aeqbD, agtzD, altzD,
+              aeqzD, aeqbD, agtzD, altzD, mdrunE,
               bdsF, bdsD, bdsE, bdsM,
               syscallE, breakE, riE, fpu,
               adesableE, adelableE, adelthrownE, misaligned;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD, excstage;
   wire        flushE, flushM;
-  wire [31:0] cop0readD, writedataW;
+  wire [31:0] cop0readdataE, writedataW;
   wire [31:0] pcD, pcE, pcM, pcW;
   wire [4:0]  writeregW;
-
+  wire [1:0]  specialregsrcE, hilodisableE;
+  wire        hiloaccessD, mdstartE, hilosrcE;
   // Globals
   wire        re, swc, isc, exception;
 
   controller c(clk, reset, exception, opD, functD, rsD, rtD, flushE, flushM,
-               aeqzD, aeqbD, agtzD, altzD, 
+               aeqzD, aeqbD, agtzD, altzD, mdrunE,
                memtoregE, memtoregM, memtoregW, memwriteM, 
                byteM, halfwordM, branchD,
                alusrcE, unsignedD, loadsignedM,
@@ -54,27 +55,31 @@ module mips(input         clk, reset,
                aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
                bdsF, bdsD, bdsE, bdsM,
-               syscallE, breakE, riE, fpuE,
-               adesableE, adelableE, halfwordE);
+               syscallE, breakE, riI, fpuE,
+               adesableE, adelableE, halfwordE, specialregsrcE, hilodisableE,
+               hiloaccessD, mdstartE, hilosrcE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
               branchD, 
               unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
               regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
-              rdsrcD, pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readD,
+              rdsrcD, 
+              specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
+              pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readdataE,
               pcF, pcD, pcE, pcM, pcW, instrF,
               aluoutM, writedataM, readdataM, instrackF, dataackM, 
               exception, excstage,
-              opD, functD, rsD, rtD, rdD, aeqzD, aeqbD, agtzD, altzD, 
+              opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
               flushE, flushM, overflowE,
-              writedataW, writeregW, byteenM, misalignedh, misalignedw, adelthrownE);
+              writedataW, writeregW, byteenM, misalignedh, misalignedw, 
+              adelthrownE, mdrunE);
 
-  coprocessor0 cop0(clk, reset, cop0writeW, rdD, writeregW, writedataW, 
+  coprocessor0 cop0(clk, reset, cop0writeW, rdE, writeregW, writedataW, 
                     overflowableE, overflowE, pcF, pcD, pcE, pcM, pcW,
                     bdsF, bdsD, bdsE, bdsM,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                     halfwordE, 
-                    cop0readD, re, swc, isc, exception, excstage
+                    cop0readdataE, re, swc, isc, exception, excstage
                     );
 endmodule
 
@@ -82,7 +87,7 @@ module controller(input        clk, reset, exception,
                   input  [5:0] opD, functD,
                   input  [4:0] rsD, rtD,
                   input        flushE, flushM,
-                  input        aeqzD, aeqbD, agtzD, altzD,
+                  input        aeqzD, aeqbD, agtzD, altzD, mdrunE,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
                   output       byteM, halfwordM,
                   output       branchD, alusrcE, unsignedD, 
@@ -95,8 +100,10 @@ module controller(input        clk, reset, exception,
                   output       rdsrcD, 
                   output [1:0] pcsrcFD, pcbranchsrcD,
                   output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
-                  output       syscallE, breakE, riE, fpuE,
-                  output       adesableE, adelableE, halfwordE);
+                  output       syscallE, breakE, riI, fpuE,
+                  output       adesableE, adelableE, halfwordE,
+                  output [1:0] specialregsrcE, hilodisableE,
+                  output       hiloaccessD, mdstartE, hilosrcE);
 
   wire       memtoregD, memwriteD, alusrcD, mainregwrite, luiD,
              regdstD, regwriteD, maindecuseshifterD, maindecregdstD, 
@@ -104,9 +111,12 @@ module controller(input        clk, reset, exception,
              useshifterD, cop0readD, cop0writeD, rfeD,
              loadsignedD, loadsignedE,
 	           syscallD, breakD, riD, fpuD,
-             adesableD, adelableD;
+             adesableD, adelableD, adesthrownD,
+             mdstartD, hilosrcD,
+             hiloreadD, hiloselD;
   wire       byteD, halfwordD, byteE;
-  reg  [1:0] aluoutsrcD;
+  reg  [1:0] aluoutsrcD, specialregsrcD;
+  wire [1:0] hilodisablealushD, hilodisablealushE;
   wire       ltD, gtD, eqD, brsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
@@ -116,6 +126,8 @@ module controller(input        clk, reset, exception,
   assign #1 regdstD = maindecregdstD | cop0writeD;
   assign #1 overflowableD = maindecoverflowableD | alushdecoverflowableD;
   assign #1 bdsF = branchD | jumpD;
+  // The instruction in register D needs to access/change HI or LO
+  assign #1 hiloaccessD = mdstartD | hiloreadD;
 
   maindec md(opD, memtoregD, memwriteD, byteD, halfwordD, loadsignedD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
@@ -123,7 +135,9 @@ module controller(input        clk, reset, exception,
              riD, fpuD, adesableD, adelableD);
 
   alushdec  ad(functD, maindecuseshifterD, alushcontmaindecD, useshifterD,
-             alushcontrolD, alushdecoverflowableD, syscallD, breakD);
+               alushcontrolD, alushdecoverflowableD, syscallD, breakD,
+               mdstartD, hilosrcD, hiloreadD, hiloselD, 
+               hilodisablealushD);
 
   branchdec bd(opD, rtD, functD, jumpD, branchD, ltD, gtD, eqD, brsrcD, linkD);
 
@@ -137,26 +151,48 @@ module controller(input        clk, reset, exception,
   always @ ( * )
     if(linkD)
       aluoutsrcD <= 2'b10; // PC+8
-    else if (cop0readD)
-      aluoutsrcD <= 2'b11; // cop0 read
+    else if (cop0readD | hiloreadD)
+      aluoutsrcD <= 2'b11; // special register
     else if (useshifterD)
       aluoutsrcD <= 2'b01; // shifter
     else
       aluoutsrcD <= 2'b00; // alu
 
+
+  // Chooses which special register is used
+  always @ ( * ) 
+    if(hiloreadD)
+      if(hiloselD)
+        // Use LO
+        specialregsrcD <= 2'b10;
+      else
+        // Use HI
+        specialregsrcD <= 2'b01;
+    else // implied if cop0readD
+      // Read from coprocessor0
+      specialregsrcD <= 2'b00;
+
+  // Choose which HI or LO register(s) should be written to
+  hilocontrol hiloc(mdrunE, hilodisablealushE, hilodisableE);
+
+
   // pipeline registers
   floprc #(1) regD(clk, reset, flushE, {bdsF}, {bdsD});
-  floprc #(24) regE(clk, reset, flushE,
+  floprc #(31) regE(clk, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
 		              syscallD, breakD, riD, fpuD,
-		              adesableD, adelableD, adelthrownD}, 
+		              adesableD, adelableD, adelthrownD,
+                  mdstartD, hilosrcD, hiloselD, hilodisablealushD, 
+                  specialregsrcD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
 		              syscallE, breakE, riE, fpuE,
-		              adesableE, adelableE, adelthrownE});
+		              adesableE, adelableE, adelthrownE,
+                  mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
+                  specialregsrcE});
   floprc #(8) regM(clk, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE, bdsE},
@@ -199,7 +235,7 @@ module maindec(input  [5:0] op,
       6'b101000: controls <= 19'b0001101000010000000; //SB
       6'b101001: controls <= 19'b0001100100010001000; //SH
       6'b101011: controls <= 19'b0001100000010001000; //SW
-      6'b001000: controls <= 19'b1011000000010000000; //ADDI (treated as ADDIU)
+      6'b001000: controls <= 19'b1011000000010000000; //ADDI
       6'b001001: controls <= 19'b1001000000010000000; //ADDIU
       6'b001010: controls <= 19'b1001000000111000000; //SLTI
       6'b001011: controls <= 19'b1001000000011000000; //SLTIU 
@@ -221,7 +257,6 @@ module maindec(input  [5:0] op,
           //$stop;
         end
     endcase
-
 endmodule
 
 // ALU and Shifter decoders
@@ -230,50 +265,74 @@ module alushdec(input      [5:0] funct,
                 input      [2:0] alushmaincontrol,
                 output           useshifter, /* True when using shifts */
                 output     [2:0] alushcontrol,
-                output           overflowable, syscallD, breakD);
+                output           overflowable, syscallD, breakD, 
+                                 mdstart, hilosrc, hiloread, hilosel,
+                output     [1:0] hilodisable);
 
-  reg [3:0] functcontrol;
+  reg [5:0] functcontrol;
   wire usefunct;
 
   // The pattern 0101 indicates that we have an R-type and should use the 
   // funct code (0101 is also the nor command, of which there is no immediate
   // equivalent; hence 0101 is available)
   assign #1 usefunct = ({maindecuseshifter, alushmaincontrol} == 4'b0101);
-  assign #1 {useshifter, alushcontrol} = 
-    (usefunct ? functcontrol : {maindecuseshifter, alushmaincontrol});
+  assign #1 {mdstart, hilosrc, useshifter, alushcontrol} = 
+    (usefunct ? functcontrol : {2'b0, maindecuseshifter, alushmaincontrol});
 
-  assign #1 overflowable = (usefunct &   (funct == 6'b100000)   // ADD
-                                       | (funct == 6'b100010)); // SUB
-                                       
+  // TODO: Put all this random logic into the PLA below to make everyone's life
+  // easier later on.
+  assign #1 overflowable = (usefunct & (  (funct == 6'b100000)    // ADD
+                                        | (funct == 6'b100010))); // SUB
+ 
   assign #1 syscallD = (usefunct & (funct == 6'hc));
   assign #1 breakD = (usefunct & (funct == 6'hd));
-  
+  assign #1 hiloread = (usefunct & (  (funct == 6'b010000)   // MFHI
+                                    | (funct == 6'b010010))); // MFLO
+
+  // hilosel could be tied directly to funct[1]
+  assign #1 hilosel = (funct == 6'b010010);   // True for MFLO
+  assign #1 hilodisable = {usefunct & (funct == 6'b010001),  // MTHI
+                           usefunct & (funct == 6'b010011)}; // MTLO
+
   always @ ( * )
       case(funct)
           // ALU Ops
-          6'b100000: functcontrol <= 4'b0010; // ADD (same as ADDU)
-          6'b100001: functcontrol <= 4'b0010; // ADDU
-          6'b100010: functcontrol <= 4'b0110; // SUB (same as SUBU)
-          6'b100011: functcontrol <= 4'b0110; // SUBU
-          6'b100100: functcontrol <= 4'b0000; // AND
-          6'b100101: functcontrol <= 4'b0001; // OR
-          6'b100110: functcontrol <= 4'b0100; // XOR
-          6'b100111: functcontrol <= 4'b0101; // NOR
-          6'b101010: functcontrol <= 4'b0111; // SLT
-          6'b101011: functcontrol <= 4'b0011; // SLTU
+          6'b100000: functcontrol <= 6'b000010; // ADD 
+          6'b100001: functcontrol <= 6'b000010; // ADDU
+          6'b100010: functcontrol <= 6'b000110; // SUB 
+          6'b100011: functcontrol <= 6'b000110; // SUBU
+          6'b100100: functcontrol <= 6'b000000; // AND
+          6'b100101: functcontrol <= 6'b000001; // OR
+          6'b100110: functcontrol <= 6'b000100; // XOR
+          6'b100111: functcontrol <= 6'b000101; // NOR
+          6'b101010: functcontrol <= 6'b000111; // SLT
+          6'b101011: functcontrol <= 6'b000011; // SLTU
 
           // Shift Ops
           // The lower 3 bits are: {constant, left, rightassociative}
-          6'b000000: functcontrol <= 4'b1110; // SLL
-          6'b000010: functcontrol <= 4'b1100; // SRL
-          6'b000011: functcontrol <= 4'b1101; // SRA
-          6'b000100: functcontrol <= 4'b1010; // SLLV
-          6'b000110: functcontrol <= 4'b1000; // SRLV
-          6'b000111: functcontrol <= 4'b1001; // SRAV
+          6'b000000: functcontrol <= 6'b001110; // SLL
+          6'b000010: functcontrol <= 6'b001100; // SRL
+          6'b000011: functcontrol <= 6'b001101; // SRA
+          6'b000100: functcontrol <= 6'b001010; // SLLV
+          6'b000110: functcontrol <= 6'b001000; // SRLV
+          6'b000111: functcontrol <= 6'b001001; // SRAV
 
           // Branch Ops (These are all don't cares)
+          
+          // Mult/div/HI/LO Ops
+          // The lower 3 bits are {dontcare, signedop, muldivb}
+          
+          6'b010000: functcontrol <= 6'b000000; // MFHI
+          6'b010001: functcontrol <= 6'b010000; // MTHI
+          6'b010010: functcontrol <= 6'b000000; // MFLO
+          6'b010011: functcontrol <= 6'b010000; // MTLO
 
-          default:   functcontrol <= 4'bxxxx; // ???
+          6'b011000: functcontrol <= 6'b100011; // MULT
+          6'b011001: functcontrol <= 6'b100001; // MULTU
+          6'b011010: functcontrol <= 6'b100010; // DIV
+          6'b011011: functcontrol <= 6'b100000; // DIVU
+
+          default:   functcontrol <= 6'b000xxx; // ???
       endcase
 endmodule
 
@@ -316,6 +375,14 @@ module branchdec(input  [5:0] op,
     endcase
 endmodule
 
+module hilocontrol(input        mdrunE,
+                   input  [1:0] hilodisablealushE,
+                   output [1:0] hilodisableE);
+
+  assign hilodisableE = mdrunE ? 2'b00 : hilodisablealushE;
+
+endmodule
+
 module cop0dec(input [5:0] op,
                input [4:0] rs,
                input [5:0] funct,
@@ -339,9 +406,11 @@ module datapath(input         clk, reset,
                 input  [1:0]  aluoutsrcE, 
                 input         linkD, linkE, luiE,
                 input         rdsrcD, 
+                input  [1:0]  specialregsrcE, hilodisableE,
+                input         hiloaccessD, mdstartE, hilosrcE,
                 input  [1:0]  pcsrcFD, pcbranchsrcD,
                 input  [2:0]  alushcontrolE,
-                input  [31:0] cop0readD,
+                input  [31:0] cop0readdataE,
                 output [31:0] pcF, pcD, pcE, pcM, pcW,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedata2M,
@@ -349,13 +418,13 @@ module datapath(input         clk, reset,
                 input         instrackF, dataackM, exception,
                 input  [1:0]  excstage,
                 output [5:0]  opD, functD,
-                output [4:0]  rsD, rtD, rdD,
+                output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
                 output        flushE, flushM, overflowE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
                 output [3:0]  byteenM,
-                output        misalignedh, misalignedw, adelthrownE);
+                output        misalignedh, misalignedw, adelthrownE, mdrunE);
 
   parameter RESETVECTORUNCACHED = 32'hbfc00000;
   parameter EXCEPTIONVECTORUNCACHED = 32'hbfc00100;
@@ -365,7 +434,7 @@ module datapath(input         clk, reset,
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
   wire        stallF, flushD;
-  wire [4:0]  rd2D, rsE, rtE, rdE;
+  wire [4:0]  rd2D, rsE, rtE, rdD;
   wire [4:0]  writeregE, writeregM;
   wire [31:0] writedataM;
   wire [7:0]  rbyteM;
@@ -376,18 +445,18 @@ module datapath(input         clk, reset,
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
+  wire [31:0] hiE, loE;
   wire [31:0] pcplus8D, pcplus8E, instrD, branchtargetD;
-  wire [31:0] aluresultE, shiftresultE, cop0readE;
+  wire [31:0] aluresultE, shiftresultE;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
   wire        adelthrownF, adelthrownD;
-
 
   // hazard detection
   hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, branchD,
-              instrackF, dataackM, exception, excstage,
+              instrackF, dataackM, exception, hiloaccessD, mdrunE, excstage,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, flushD, flushE, flushM);
 
@@ -437,7 +506,6 @@ module datapath(input         clk, reset,
   floprc #(5)  r5E(clk, reset, flushE, rtD, rtE);
   floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
   floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
-  floprc #(32) r8E(clk, reset, flushE, cop0readD, cop0readE);
   floprc #(32) r9E(clk, reset, flushE, pcD, pcE);
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
@@ -445,12 +513,15 @@ module datapath(input         clk, reset,
   alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE, overflowE);
   shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
                       shiftresultE);
-  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, cop0readE, 
+  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, cop0readdataE, 
                         aluoutsrcE, aluoutE);
 
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
   assign misalignedw = aluoutE[1] | aluoutE[0];
   assign misalignedh = aluoutE[0];
+  
+  mdunit md(srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
+            hiE, loE, mdrunE);
 
   // Memory stage
   floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
@@ -713,12 +784,15 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               input            regwriteE, regwriteM, regwriteW,
               input            memtoregE, memtoregM, branchD, 
               input            instrackF, dataackM, exception,
-              input  [1:0]     excstage,
+              input            hiloaccessD, mdrunE,
+              input  [1:0]     excstage, // TODO (Thomas): Remove and make 
+                                         //   everything execution stage
+                                         //   (simplify this excstage mess)
               output           forwardaD, forwardbD,
               output reg [1:0] forwardaE, forwardbE,
               output           stallF, stallD, flushD, flushE, flushM);
 
-  wire lwstallD, branchstallD, instrmissF, datamissM;
+  wire lwstallD, branchstallD, instrmissF, datamissM, multdivDE;
 
   // forwarding sources to D stage (branch equality)
   assign forwardaD = (rsD !=0 & rsD == writeregM & regwriteM);
@@ -744,6 +818,9 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
   // Cache miss delays
   assign #1 datamissM = memtoregM & ~dataackM;
 
+  // Accessing HI and LO cannot happen during a multiply
+  assign #1 multdivDE = hiloaccessD & mdrunE;
+
   // This assumes we are reading an instruction every cycle
   assign #1 instrmissF = ~instrackF;
 
@@ -753,7 +830,7 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               memtoregM & ((rsD != 0 & writeregM == rsD) | 
                           (rtD != 0 & writeregM == rtD)));
 
-  assign #1 stallD = lwstallD | branchstallD | datamissM;
+  assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE;
   assign #1 stallF =   stallD      // stalling D stalls all previous stages
                      | instrmissF; // Stall on instruction cache miss
 
@@ -868,6 +945,15 @@ module shifter(input signed [31:0] a, b,
 
   mux3 #(32) shresmux(rightlogical, rightassociative, leftlogical, control[1:0],
                       shiftresult);
+endmodule
+
+module mdunit(input  [31:0] srca, srcb,
+              input  [2:0]  alushcontrol,
+              input         mdstart, hilosrc, 
+              input  [1:0]  hilodisable,
+              output [31:0] hi, lo,
+              output        mdrun);
+
 endmodule
 
 module regfile(input         clk, 
