@@ -13,12 +13,17 @@
 
 # Start code 0x1FC00000
 main:   addi $3, $0, 0
-        nop               # run syscall (SPIM doesn't support this)
-        break 0		        # run the break call
-        nop               # modified in source code to be a malformed opcode (ffffffff)
-        add.s  $f2,$f2,$f4 	# floating point test        
+        sh $0 3($0)             # misaligned halfword write (should fail)
+        lh $4 3($0)             # misaligned halfword write (should fail)
         
-        sw    $3, 0($0)         # should write 4 to address 0
+        sw $0 2($0)             # misaligned word write
+        lw $4 2($0)             # misaligned word read
+        
+        sh $0 2($0)             # halfaligned halfword write (should succeed)
+        lh $4 2($0)             # halfaligned halfword write (should succeed)
+                                # beware the load delay slot!
+        
+        sw    $3, 0($0)         # should write 1 to address 0
 end:    beq   $0, $0, end       # loop forever
         nop
 
