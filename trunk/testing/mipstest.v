@@ -11,11 +11,13 @@ module testbench;
   reg         clk;
   reg         reset;
 
+  reg [7:0] interrupts;
+  
   wire [31:0] writedata, dataadr;
   wire memwrite;
 
   // instantiate device to be tested
-  top dut(clk, reset, writedata, dataadr, memwrite);
+  top dut(clk, reset, interrupts, writedata, dataadr, memwrite);
   
   integer currentTest;
   integer numTests;
