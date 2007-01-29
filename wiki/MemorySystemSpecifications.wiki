@@ -140,16 +140,14 @@ If the memory does not have these specifications, then a memory controller will 
 For simplicity, data and program memory are mapped the same.  Note that the program memory and data memory share identical physical addresses.  No mechanism is in place to protect program memory from accidental overwriting. 
 
   * kseg0 (cached program/data memory): 0x8000 0000 - 0x9FFF FFFF
-  * kseg1 (uncached program/data memory):  0x0000 0000 - 0x1FFF FFFF
+  * kseg1 (uncached program/data memory):  0xA000 0000 - 0xBFFF FFFF
 
-Hence, if the msb of the address is high, memory is cached, otherwise it bypasses the cache.
-
-TODO: check this memory map with SMR.
+Hence, if the 3rd most significant bit of the address is high, memory is cached, otherwise it bypasses the cache.  The address is physically mapped by removing the top three bits.
 
 = Programming Guidelines =
 
 == Startup Procedures ==
-Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
+The processor starts from 0xBFC0 0000 (508MB physically mapped;kseg1/uncached).  Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
 
 == Cache Invalidation Procedures ==
 Cache regions can be invalidated using:
