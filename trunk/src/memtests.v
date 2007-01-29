@@ -367,6 +367,7 @@ module testbenchc;
      memadr,memdata,membyteen,memrwb,memen,memdone);
 endmodule
 
+
 // Test code for cache controller.
 module testbenchccontroller;
   reg         clk;
@@ -409,7 +410,7 @@ module testbenchccontroller;
        $display("%d", counter);
        case (counter)
          0: begin
-            pcF <= 32'h800012B4;
+            pcF <= 32'hA00012B4;
             enF <= 1;
          //   adrM <= 32'h200004Ad;
          //   memwriteM <= 0;
