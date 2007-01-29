@@ -4,6 +4,8 @@
 
 This specifies the memory subsystem, including the data and instruction cache, main memory, and the cache controller.
 
+= Specifications =
+
 == Overview ==
 
 The memory subsystem is composed of the following subunits:
@@ -15,7 +17,20 @@ The memory subsystem is composed of the following subunits:
 
 A memory read or write is selected and started, via the cache controller, with the rwb (read/write bar) bit and en (enable) bit, respectively.  The cache controller signals a completed operation by asserting the done bit.  The interface to external memory is similar, where the cache controller expects external memory to haverwb, en, and done bits.  
 
-NEED: block diagram... instruction/data reading same time.
+== Interface ==
+
+Most of the subcomponents interface using:
+
+adr (address)
+data (bi-direction data)
+byteen (a byte mask for writing data less than a word in length)
+rwb (read/write bar.  0 = write, 1 = read)
+en (enable read/write)
+done (signifies that memory operation is complete)
+
+We'll call the module requesting a memory operation the _master_ and the module executing the operation the _slave_.  For example, normally the mips processor is the master and the cache the slave.  When a cache is writing to the write buffer, the cache is the master and the write buffer is the slave.
+
+When the slaves input pins (adr, data if necessary, rwb, etc..) are valid, the master asserts enable.  Enable must be asserted for the entire duration of the operation (Todo: this may no longer be true. check this).  The slave will execute the operation and after completion, when the output pins have valid data, the slave asserts done.  There will always be at least a one cycle latency between the master asserting enable and the slave asserting done, except between the nips processor and the cache (for reading).  This is to complete a valid cached memory read within one cycle.
 
 == Cache Controller ==
 
@@ -37,13 +52,13 @@ output dataackM,
 input swc
 }}}
 
-Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary to for the data and instruction caches to both have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
+Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary for the data and instruction caches to both have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
 
 Since the main memory only has one data and address bus, the cache controller is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
   #  Write buffer write
   #  Data cache read
   #  Instruction cache read
-The precedence is implemented using combinational logic and a multiplexer.
+The precedence is implemented using combinational logic and a multiplexer.  The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write.
   
 == Cache ==
 
@@ -75,13 +90,13 @@ output memen,
 input memdone
 }}}
 
-The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of thecpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
+The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of the cpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
 
-When a word write is requested to an address that is cachable, but not currently in the cache, the cache is updated and the write is added to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Note that the cache does not have abyteen mask as above, but instead has a single invalidate bit, because a half-word or byte store will never modify cached data.  This is primarily to retain compatibility with R2000 MIPS processors.
+When a word write is requested to an address that is cachable, but not currently in the cache, data is written to both the cache and to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Hence, a store other than word length will never write to the cache, just invalidate.  This is primarily to retain compatibility with R2000 MIPS processors, to allow invalidation of cache lines.
 
 ==Write Buffer==
 
-The write buffer is a four entry deep (as suggested by See MIPS Run) FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall thecpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
+The write buffer is a four entry deep (not including data currently being written), as suggested by See MIPS Run, FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall the cpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
 
 The interface is:
 {{{
@@ -120,21 +135,22 @@ If the memory does not have these specifications, then a memory controller will 
 
 =Memory Maps=
 
-For simplicity, data memory is mapped identical to program memory.  Note that the program memory and data memory share identical physical addresses.  No mechanism is in place to protect program memory from accidental overwriting. 
+For simplicity, data and program memory are mapped the same.  Note that the program memory and data memory share identical physical addresses.  No mechanism is in place to protect program memory from accidental overwriting. 
 
   * kseg0 (cached program/data memory): 0x8000 0000 - 0x9FFF FFFF
-  * kseg1 (uncached program/data memory):  0x0000 0000 - 0xBFFF FFFF
+  * kseg1 (uncached program/data memory):  0x0000 0000 - 0x1FFF FFFF
 
-Hence, if the msb of the address is high memory is cached, otherwise is bypasses the cache.
+Hence, if the msb of the address is high, memory is cached, otherwise it bypasses the cache.
+
+TODO: check this memory map with SMR.
 
 = Programming Guidelines =
 
 == Startup Procedures ==
 Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
 
-(do we even need to write?  Or just read from unused memory locations?  Check this from book)
-
 == Cache Invalidation Procedures ==
+Cache regions can be invalidated using:
 
 = Test Plan =
 
