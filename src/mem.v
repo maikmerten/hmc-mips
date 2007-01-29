@@ -50,7 +50,7 @@ module testbenchccontroller;
        $display("%d", counter);
        case (counter)
          0: begin
-            pcF <= 32'h800012B4;
+            pcF <= 32'hA00012B4;
             enF <= 1;
          //   adrM <= 32'h200004Ad;
          //   memwriteM <= 0;
@@ -391,7 +391,7 @@ module cache(input clk, reset,
             assign tag = adr[9:0];
             assign adrmsb = adr[29:10];
             assign incache = (tagdata[tag] == adrmsb) & valid[tag];
-            assign bypass = adr[29];
+            assign bypass = adr[29] & adr[27];
             
             assign data = (rwb) ? ((bypass) ? bypassdata : cacheline[tag]) : 32'bz;
             // We're automatically done only if it is in cache,
@@ -425,7 +425,7 @@ module cache(input clk, reset,
                           tagdata[tag] <= (& byteen) ? adrmsb : 20'b0;
                           valid[tag] <= (& byteen) ? 1'b1 : 1'b0; // If less than a word, invalidate.
                         end
-                        memadr <= adr[28:0];
+                        memadr <= adr[26:0];
                         memdataf <= data;
                         membyteen <= byteen;
                         memrwb <= 1'b0;   // Writing
@@ -434,7 +434,7 @@ module cache(input clk, reset,
                     // If the entry is not in cache,
                     // we must read it from main memory.
                     if(rwb) begin
-                        memadr <= adr[28:0];
+                        memadr <= adr[26:0];
                         membyteen <= 4'b1; // We'll always read in all.
                         memrwb <= 1'b1;    // Reading
                         memen <= 1'b1;
