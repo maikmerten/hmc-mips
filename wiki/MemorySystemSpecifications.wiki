@@ -147,7 +147,11 @@ Hence, if the 3rd most significant bit of the address is high, memory is cached,
 = Programming Guidelines =
 
 == Startup Procedures ==
-The processor starts from 0xBFC0 0000 (508MB physically mapped;kseg1/uncached).  Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  This can be accomplished using the algorithm outlined below:
+The processor starts from 0xBFC0 0000 (508MB physically mapped;kseg1/uncached).  Since the cache will be full of garbage when the CPU starts, the cache must be initialized before use.  Entries in both I- and D-cache must be invalidated, by writing half-word or byte values to unused memory locations for all cache lines.  After invalidation, the I- and D-cache can be used.  This can be accomplished using the algorithm outlined below:
 
-== Cache Invalidation Procedures ==
-Cache regions can be invalidated using:
+  # Start in an uncached memory region
+  # Set swc high in the status register to swap the cache (instruction cache is now the data cache)
+  # For each cache line, invalidate by writing a byte or half-word value
+  # Set swc low to swap instruction and data cache to normal arrangement
+  # Repeat step 3
+  # Jump to a cached instruction address
