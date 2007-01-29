@@ -34,7 +34,7 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 14;
+      numTests = 15;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
@@ -192,6 +192,14 @@ module testbench;
         13:
           if(memwrite) begin
             if(dataadr === 32'h4 & writedata === 2) begin
+              currentSuccess <= 1;
+            end else begin
+              $display("Writing value %d to address %h", writedata, dataadr);
+            end
+          end
+		  14:
+          if(memwrite) begin
+            if(dataadr === 32'h4 & writedata === 32'h4) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
