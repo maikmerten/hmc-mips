@@ -19,7 +19,7 @@ NEED: block diagram... instruction/data reading same time.
 
 == Cache Controller ==
 
-The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping and coordination with the write buffer.  The interface is as follows (controller's point of view):
+The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping.  The interface is as follows (controller's point of view):
 {{{
 input clk, reset,
 input [31:0] pcF,
@@ -45,7 +45,7 @@ Since the main memory only has one data and address bus, the cache controller is
   #  Instruction cache read
 The precedence is implemented using combinational logic and a multiplexer.
   
-== Cache Specifications ==
+== Cache ==
 
 There will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
 
@@ -66,16 +66,39 @@ inout [31:0] data,
 input [3:0] byteen,
 input rwb, en,
 output done,
+             
 output [29:0] memadr, 
-inout [31:0] memdata,
+inout  [31:0] memdata,
 output [3:0] membyteen,
-output memrwb, memen,
+output memrwb,
+output memen,
 input memdone
 }}}
 
 The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of thecpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
 
 When a word write is requested to an address that is cachable, but not currently in the cache, the cache is updated and the write is added to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Note that the cache does not have abyteen mask as above, but instead has a single invalidate bit, because a half-word or byte store will never modify cached data.  This is primarily to retain compatibility with R2000 MIPS processors.
+
+==Write Buffer==
+
+The write buffer is a four entry deep (as suggested by See MIPS Run) FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall thecpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
+
+The interface is:
+{{{
+input clk, reset,
+input [29:0] adr,
+input [31:0] data,
+input [3:0] byteen,
+input en,
+output done,
+                   
+output reg [29:0] memadr,
+output reg [31:0] memdata,
+output reg [3:0] membyteen,
+output reg memen,
+input memdone
+}}}
+
 
 == Main Memory ==
 
@@ -94,23 +117,6 @@ output reg done
 
 If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.
 
-==Write Buffer==
-
-The write buffer is a four entry deep (as suggested by See MIPS Run) FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall thecpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
-
-The interface is:
-{{{
-input clk, reset,
-input [29:0] adr,
-input [31:0] data,
-input [3:0] byteen,
-input en, output done,
-output reg [29:0] memadr,
-output reg [31:0] memdata,
-output reg [3:0] membyteen,
-output reg memen,
-input memdone
-}}}
 
 =Memory Maps=
 
