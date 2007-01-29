@@ -54,7 +54,15 @@ module testbench;
         numTests);
       $stop;
     end
+    
+  initial
+    begin
+      interrupts[1] <= 0; #10700; 
+      interrupts[1] <= 1; #10; 
+      interrupts[1] <= 0;
+    end
   
+
   // generate clock to sequence tests
   always
     begin

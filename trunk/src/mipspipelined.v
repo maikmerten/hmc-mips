@@ -619,7 +619,7 @@ module exceptionunit(input            clk, reset,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
                      input            misalignedh, misalignedw, halfwordE,
-                     input            intenabled, //SR(IEc)
+                     input            iec, //SR(IEc)
                      input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
                      output reg       exception, branchdelay,
                      output reg [4:0] exccode, 
@@ -689,7 +689,9 @@ module exceptionunit(input            clk, reset,
         branchdelay = bdsE;
       end
       
-      if(intenabled & ( &(im & interrupts))) begin
+      if(iec & ( |(im & interrupts))) begin
+        $display("interupt");
+        exception = 1;
         exccode = 1;       // Interrupt
         excstage = 2;       // Stage E
         branchdelay = bdsE;

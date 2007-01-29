@@ -32,5 +32,5 @@ except: nop
         nop
         addi  $7, $7, 4         # Point to one past the errant instruction
         jr    $7                # Resume
-        nop                     # BSD
+        rfe                     # BSD
         
