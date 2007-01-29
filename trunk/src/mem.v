@@ -8,30 +8,26 @@
 
 `timescale 1 ns / 1 ps
 
-// Test code for cache.
-module testbenchc;
+// Test code for cache controller.
+module testbenchccontroller;
   reg         clk;
   reg         reset;
 
-  reg  [29:0] adr;
-  wire [31:0] data;
-  reg  [3:0]  byteen;
-  reg  rwb, en;
-  wire done;
-  reg  [31:0] dataf;
-
-  wire [29:0] memadr;
-  wire [31:0] memdata;
-  wire [3:0] membyteen;
-  wire memrwb;
-  wire memen;
-  reg  memdone;
-  reg  [31:0] memdataf;
+  reg  [31:0] pcF;
+  wire [31:0] instrF;
+  reg enF;
+  wire instrackF;
+  
+  reg [29:0] adrM;
+  reg [31:0] writedataM;
+  reg  [3:0]  byteenM;
+  wire [31:0] readdataM;
+  reg memwriteM, enM;
+  wire dataackM;
+  
+  reg swc;
   
   integer counter;
-
-  assign data = (rwb) ? 32'bz : dataf;
-  assign memdata = (memrwb) ? memdataf : 32'bz;
 
   // generate clock to sequence tests
   always
@@ -44,7 +40,9 @@ module testbenchc;
     begin
       counter <= 0;
       reset <= 1; #15; reset <= 0;
-      en <= 0;     
+      enM <= 0; 
+      enF <= 0;
+      swc <= 0;
     end
 
    always @(posedge clk)
@@ -52,51 +50,49 @@ module testbenchc;
        $display("%d", counter);
        case (counter)
          0: begin
-            memdone <= 1;
-            adr <= 30'h0;
-            dataf <= 32'hDEADBEEF;
-            byteen <= 4'b1111;
-            rwb <= 1'b0;
-            en <= 1;
+            pcF <= 32'h800012B4;
+            enF <= 1;
+         //   adrM <= 32'h200004Ad;
+         //   memwriteM <= 0;
+         //   enM <= 1;
+              adrM <= 30'h000004Ad;
+              writedataM <= 32'hDDCCBBAA;
+              memwriteM <= 1;
+              byteenM <= 4'b1111;
+              enM <= 1;
          end
-
          3: begin
-            memdone <= 1;
-            adr <= 30'h20000000;
-            dataf <= 32'hAABBCCDD;
-            byteen <= 4'b1011;
-            rwb <= 1'b0;
-            en <= 1;
-            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end        
-        
-         6:
-         begin
-            memdone <= 1;
-            memdataf <= 32'hAAAAAAAA;
-            
-            adr <= 30'h0;
-            byteen <= 4'b1111;
-            rwb <= 1'b1;
-            en <= 1;
-            $display("read: %h, data %h, done: %d", adr,data,done);
-            $display("readmem adr: %h, memdata %h, memen: %d, en %d done: %d", memadr,memdata,memen,en, done);
-         end
-         
+              adrM <= 30'h000004Ad;
+              writedataM <= 32'hDDCCBBAA;
+              memwriteM <= 0;
+              enM <= 1;
+          end
+        // 3: begin
+        //      adrM <= 32'h200004Ad;
+        //      memwriteM <= 0;
+        //      enM <= 1;    
+       //   end
+       //  6: begin
+       //      pcF <= 32'h800002B4;
+       //      enF <= 1;
+       // end
          default: begin
-            dataf <= (done) ? 32'b0 : dataf;
-            en <= (done) ? 0 : en; 
-            $display("read: %h, data %h, done: %d", adr,data,done);
-            $display("mem adr: %h, memdata %h, memen: %d, en %d done: %d", memadr,memdata,memen,en, done);
-            if(counter == 20) $stop;
+            enM <= (dataackM) ? 0 : enM; 
+            enF <= (instrackF) ? 0 : enF;
+            $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrF: %h, readdataM: %h", instrF, readdataM);
+            if(counter == 15) $stop;
             end
         endcase
         counter <= counter + 1;
         $display("");
      end
 
-  cache testcache(clk,reset,adr,data,byteen,rwb,en,done,
-     memadr,memdata,membyteen,memrwb,memen,memdone);
+cachecontroller cc(clk, reset, pcF, instrF, enF, instrackF,
+                   adrM, writedataM, byteenM, readdataM,
+                   memwriteM, enM, dataackM,
+                   swc);
+
 endmodule
 
 // Implementation of upper bit bypass here.
@@ -106,7 +102,6 @@ endmodule
 // instrF = Instruction fetched (instruction data)
 //
 // swc = swap caches.  (0 = normal assignment, 1 = swapped)
-// TODO: add cache bypass (or two controller.. above).
 module cachecontroller(input clk, reset,
                        input [31:0] pcF,
                        output [31:0] instrF,
@@ -131,6 +126,7 @@ wire [31:0] dmemdata;
 wire [3:0] dmembyteen;
 wire dmemrwb, dmemen;
 reg dmemdone;
+wire dmemdonewire;
 
 
 wire [29:0] iadr;
@@ -142,6 +138,7 @@ wire [31:0] imemdata;
 wire [3:0] imembyteen;
 wire imemrwb, imemen;
 reg imemdone;
+wire imemdonewire;
 
 wire [29:0] wbadr;
 wire [31:0] wbdata;
@@ -154,18 +151,19 @@ wire wbmemen;
 reg wbmemdone;
 
 reg [29:0] memadr;
-reg [31:0] memdata;
+wire [31:0] memdata;
+reg [31:0] memdataf;
 reg [3:0] membyteen;
 reg memrwb, memen;
-reg memdone;
+wire memdone;
 
 reg don,ion,wbon;
 
 // This swaps the output if swc is asserted.
 // The first is the swapped case, second is normal.
 // Inputs:
-assign iadr = (swc) ? adrM  : pcF;
-assign dadr = (swc) ? pcF : adrM;
+assign iadr = (swc) ? adrM  : pcF[31:2];
+assign dadr = (swc) ? pcF[31:2] : adrM;
 assign ien = (swc) ? enM : enF;
 assign den = (swc) ? enF : enM;
 assign ibyteen = (swc) ? byteenM : 4'b1;
@@ -176,7 +174,7 @@ assign drwb = (swc) ? 1'b1 : ~memwriteM;
 // If reading want this to be z,
 // if writing then drive with the data to write.
 assign ddata = (swc | ~memwriteM) ? 32'bz : writedataM;
-assign idata = (swc | memwriteM) ? writedataM : 32'bz;
+assign idata = (~swc | ~memwriteM) ? 32'bz : writedataM;
 
 // Outputs:
 assign instrF = (swc) ? ddata : idata;
@@ -184,16 +182,38 @@ assign readdataM = (swc) ? idata : ddata;
 assign instrackF = (swc) ? ddone : idone;
 assign dataackM = (swc) ? idone : ddone;
 
+// Write buffer... for writing.
+// need swap here...
+assign wbadr = (swc) ? (imemrwb ? 32'bz : imemadr) :
+                        (dmemrwb ? 32'bz : dmemadr); 
+assign wbdata = (swc) ? (imemrwb ? 32'bz : imemdata) :
+                        (dmemrwb ? 32'bz : dmemdata); 
+assign wbbyteen = (swc) ? (imemrwb ? 32'bz : imembyteen) :
+                          (dmemrwb ? 32'bz : dmembyteen); 
+assign wben = (swc) ? (imemrwb ? 1'b0 : imemen) :
+                      (dmemrwb ? 1'b0 : dmemen);
+assign dmemdonewire = (~swc & ~dmemrwb) ? wbdone :
+                                          dmemdone;
+assign imemdonewire = (swc & ~imemrwb) ? wbdone :
+                                          imemdone;
+
+
+// Mem assignments for reading (directrly from
+// main memory)
+assign memdata = (memrwb) ? 32'bz : memdataf; 
+assign imemdata = (ion & imemrwb) ? memdata : 32'bz;
+assign dmemdata = (don & dmemrwb) ? memdata : 32'bz;
+assign wbmemdata = (wbon) ? memdata : 32'bz;
 
 cache dcache(clk, reset, dadr, ddata, dbyteen,
                          drwb, den, ddone,
                          dmemadr,dmemdata,dmembyteen,
-                         dmemrwb, dmemen,dmemdone);
+                         dmemrwb, dmemen,dmemdonewire);
                          
 cache icache(clk, reset, iadr, idata, ibyteen,
                          irwb, ien, idone,
                          imemadr,imemdata,imembyteen,
-                         imemrwb, imemen,imemdone);
+                         imemrwb, imemen,imemdonewire);
 
 // TODO: first one should go to memory multiplexor.
 // we need to split this up... so that it can directly access the buffer.
@@ -206,59 +226,81 @@ writebuffer writebuf(clk, reset, wbadr, wbdata, wbbyteen,
                           
 // TODO: modify this so that memdata is muxed between z and the register.
 //       also, mem will probably be moved externally.
-testmem mem(clk, reset, memadr, memdata, membyteen,
+mainmem mem(clk, reset, memadr, memdata, membyteen,
                memrwb, memen, memdone);
                
 always @(negedge reset)
 begin
+    // Turn off "done" by memory interface
     dmemdone <= 0;
     imemdone <= 0;
     wbmemdone <= 0;
+    // Turn off different acccesses to memory.
+    don <= 0;
+    ion <= 0;
+    wbon <= 0;
 end
 
 always @(posedge clk)
 begin
+  //  $display("idone: %d, ddone: %d, wbdone: %d", idone, ddone, wbdone);
+  //  $display("imemdone: %d, dmemdone: %d, wbmemdone: %d", imemdone, dmemdone, wbmemdone);
+  //  $display("ien: %d, den: %d, wben: %d", ien, den, wben);
+  //  $display("ion: %d, don: %d, wbon: %d", ion, don, wbon);
     if(~(wbon | don | ion)) // If we aren't already working...
     begin
-        if(wben)
+        if(wbmemen)
         begin
             wbon <= 1;
             memadr <= wbmemadr;
-            memdata <= wbmemdata;
+            memdataf <= wbmemdata;
             membyteen <= wbmembyteen;
             memrwb <= 1'b0;  // write only.
             memen <= 1;
         end
+        if(~swc) // Yeah this is really ugly... find a better way.
+        begin  
+          if(dmemen & dmemrwb & ~wbmemen)
+          begin
+             don <= 1;
+             memadr <= dmemadr;
+             membyteen <= dmembyteen;
+             memrwb <= 1'b1;   // read only (writes go to write buffer)
+             memen <= 1;     
+          end
         
-        if(den & ~wben)
-        begin
-            don <= 1;
-            memadr <= dmemadr;
-            memdata <= dmemdata;
-            membyteen <= dmembyteen;
-            memrwb <= 1'b1;   // read only (writes go to write buffer)
-            memen <= 1;     
-        end
-        
-        if(ien & ~(wben | den))
-        begin
+          if(imemen & imemrwb & ~(wbmemen | dmemen))
+          begin    
             ion <= 1;
             memadr <= imemadr;
-            memdata <= imemdata;
             membyteen <= imembyteen;
             memrwb <= 1'b1;   // read only (writes disallowed)
             memen <= 1;
-        end
+          end
+        end else begin
+          if(imemen & imemrwb & ~wbmemen)
+          begin
+             ion <= 1;
+             memadr <= imemadr;
+             membyteen <= imembyteen;
+             memrwb <= 1'b1;   // read only (writes go to write buffer)
+             memen <= 1;     
+          end
+          if(dmemen & dmemrwb & ~(wbmemen | imemen))
+          begin
+            don <= 1;
+            memadr <= dmemadr;
+            membyteen <= dmembyteen;
+            memrwb <= 1'b1;   // read only (writes disallowed)
+            memen <= 1;
+          end
+      end
     end else begin    
       // TODO: remove this level.
-      if(memdone)
-      begin
-          memen <= 0;   // We're done using the memory.
-          // Deactivate these.
-          don <= 1'b0;
-          ion <= 1'b0;
-          wbon <= 1'b0;
-      end
+      if(memdone) memen <= 0;
+      if(ddone) don <= 1'b0;
+      if(idone) ion <= 1'b0;
+      if(wbdone) wbon <= 1'b0;
     end
     // Has the result of asserting the respective done
     // for one cycle if memory has acknowledged the operation.
@@ -268,8 +310,11 @@ begin
 end
 endmodule
 
-// TEST MEMORY
-module testmem(input clk, reset,
+
+
+// MAIN MEMORY
+///
+module mainmem(input clk, reset,
                input [29:0] adr,
                inout [31:0] data,
                input [3:0] byteen,
@@ -304,13 +349,12 @@ always @(posedge clk)
      end
     if(i == 1 & ~done)
     begin
-        $display("DONE ! ");
+        if(~rwb) mem[adr] <= data;
         done <= 1;
-    end    
+    end
   end
 
   assign data = (rwb) ? mem[adr] : 32'bz;
-
 endmodule
                
 // 4kB CACHE
@@ -352,11 +396,12 @@ module cache(input clk, reset,
             assign data = (rwb) ? ((bypass) ? bypassdata : cacheline[tag]) : 32'bz;
             // We're automatically done only if it is in cache,
             // AND we aren't bypassing the cache.
-            assign done = (incache & rwb & ~bypass) ? 1'b1 : memdonef;
+            assign done = ((incache & rwb & ~bypass) | ~en) ? 1'b1 : memdonef;
             
             // Pass these on directly.
             assign memdata = (memrwb) ?
                               32'bz : memdataf;
+  
   
             always @(negedge reset)
             begin
@@ -385,9 +430,7 @@ module cache(input clk, reset,
                         membyteen <= byteen;
                         memrwb <= 1'b0;   // Writing
                         memen <= 1'b1;
-                        $display("HERE %h", data);
                     end
-                    
                     // If the entry is not in cache,
                     // we must read it from main memory.
                     if(rwb) begin
@@ -397,7 +440,6 @@ module cache(input clk, reset,
                         memen <= 1'b1;
                     end
                 end
-                
                 memdonef <= memen & memdone;
                 
                 // If we're done writing.

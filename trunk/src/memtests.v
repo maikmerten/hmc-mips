@@ -366,3 +366,90 @@ module testbenchc;
   cache testcache(clk,reset,adr,data,byteen,rwb,en,done,
      memadr,memdata,membyteen,memrwb,memen,memdone);
 endmodule
+
+// Test code for cache controller.
+module testbenchccontroller;
+  reg         clk;
+  reg         reset;
+
+  reg  [31:0] pcF;
+  wire [31:0] instrF;
+  reg enF;
+  wire instrackF;
+  
+  reg [29:0] adrM;
+  reg [31:0] writedataM;
+  reg  [3:0]  byteenM;
+  wire [31:0] readdataM;
+  reg memwriteM, enM;
+  wire dataackM;
+  
+  reg swc;
+  
+  integer counter;
+
+  // generate clock to sequence tests
+  always
+    begin
+      #30;
+      clk <= 1; # 5; clk <= 0; # 5;
+    end
+    
+  initial
+    begin
+      counter <= 0;
+      reset <= 1; #15; reset <= 0;
+      enM <= 0; 
+      enF <= 0;
+      swc <= 0;
+    end
+
+   always @(posedge clk)
+     begin
+       $display("%d", counter);
+       case (counter)
+         0: begin
+            pcF <= 32'h800012B4;
+            enF <= 1;
+         //   adrM <= 32'h200004Ad;
+         //   memwriteM <= 0;
+         //   enM <= 1;
+              adrM <= 30'h000004Ad;
+              writedataM <= 32'hDDCCBBAA;
+              memwriteM <= 1;
+              byteenM <= 4'b1111;
+              enM <= 1;
+         end
+         3: begin
+              adrM <= 30'h000004Ad;
+              writedataM <= 32'hDDCCBBAA;
+              memwriteM <= 0;
+              enM <= 1;
+          end
+        // 3: begin
+        //      adrM <= 32'h200004Ad;
+        //      memwriteM <= 0;
+        //      enM <= 1;    
+       //   end
+       //  6: begin
+       //      pcF <= 32'h800002B4;
+       //      enF <= 1;
+       // end
+         default: begin
+            enM <= (dataackM) ? 0 : enM; 
+            enF <= (instrackF) ? 0 : enF;
+            $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrF: %h, readdataM: %h", instrF, readdataM);
+            if(counter == 15) $stop;
+            end
+        endcase
+        counter <= counter + 1;
+        $display("");
+     end
+
+cachecontroller cc(clk, reset, pcF, instrF, enF, instrackF,
+                   adrM, writedataM, byteenM, readdataM,
+                   memwriteM, enM, dataackM,
+                   swc);
+
+endmodule
