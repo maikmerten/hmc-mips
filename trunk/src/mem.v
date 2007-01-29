@@ -187,9 +187,97 @@ module testbench;
                    */
 endmodule
 
-module memsys(input swap);
+// Test code for writebuffer.
+module testbenchwb;
+  reg         clk;
+  reg         reset;
+  reg    [31:0]     datar;
+  wire    [31:0]    data;
+  wire        done;
+  wire         donetest;
+  reg [29:0] adr;
+  reg rwb, en;
+  reg invalidate;
+
+  wire [29:0] memadr;
+  wire [31:0] memdata;
+  wire [3:0] membyteen;
+  wire memen;
+  reg memdone;
+  
+  integer counter;
+
+  assign data = (rwb) ? 32'bz : datar;
+
+  // generate clock to sequence tests
+  always
+    begin
+      #30;
+      clk <= 1; # 5; clk <= 0; # 5;
+    end
     
+  initial
+    begin
+      counter <= 0;
+      reset <= 1; #15; reset <= 0;
+    end
+
+   always @(posedge clk)
+     begin
+       case (counter)
+           0: begin
+            memdone <= 0;
+            adr <= 30'h0;
+            datar <= 32'hDEADBEEF;
+            en <= 1;
+         end
+         1: begin
+            adr <= 30'h0;
+            datar <= 32'hAAAAAAAA;
+            en <= 1;
+            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end
+         2: begin
+            adr <= 30'h0;
+            datar <= 32'hBBBBBBBB;
+            en <= 1;           
+             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end
+         3: begin
+            adr <= 30'h0;
+            datar <= 32'hCCCCCCCC;
+            en <= 1;
+             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end
+         4: begin
+             adr <= 30'h0;
+             datar <= 32'hDDDDDDDD;
+             en <= 1;
+             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end
+         5: begin
+             datar <= 32'h00000000;
+             en <= ~done; 
+             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end
+         10: begin
+             memdone <= 1;
+             en <= ~done; 
+         end
+         default: begin
+            en <= ~done; 
+            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+            if(counter == 20) $stop;
+            end
+        endcase
+        counter <= counter + 1;
+     end
+
+  
+  writebuffer writebuf(clk,reset,adr,datar,4'b1,en,done,
+     memadr,memdata,membyteen,memen,memdone);
 endmodule
+
 
 // Implementation of upper bit bypass here.
 // Description of interface:
@@ -399,12 +487,11 @@ always @(posedge clk)
     end    
   end
 
-assign data = (rwb) ? mem[adr] : 32'bz;
+  assign data = (rwb) ? mem[adr] : 32'bz;
 
 endmodule
                
-               
-// TODO: We could reduce this interface by attaching at cachecontroller level.  Or make a memory controller?
+// TODO: add cache bypass (or two controller.. above).
 module cache(input clk, reset,
              input [29:0] adr,
              inout [31:0] data,
@@ -419,18 +506,20 @@ module cache(input clk, reset,
              
             reg [52:0] cachedata[1023:0];
             reg waiting;
+            reg memdoner;
 
             wire [9:0] tag;
             wire [19:0] adrmsb;
             wire incache;
             wire [19:0] tagdata;
             wire valid;
-            wire [31:0] cacheline;  // TODO: cache line correct here?
-            wire [52:0] cacheslot;  // TODO: cache slot correct here?
+            wire [31:0] cacheline;
+            wire [52:0] cacheslot;
             
             always @(negedge reset)
             begin
                 waiting <= 0;
+                memdoner <= 0;
             end
             
        
@@ -444,14 +533,13 @@ module cache(input clk, reset,
             assign incache = (tagdata == adrmsb) & valid;
          
             assign data = (en & rwb & incache) ? cacheline : 32'bz;
-            assign done = incache;
+            assign done = (rwb) ? incache : memdoner;
             
-            // TODO: finish writing implementation.
-            // Need an extra "writing" reg to make sure this isn't the first write.
             assign memadr = adr;
             assign memen = (en & rwb & ~incache) |  // Enable memory interface if
                            (en & ~rwb);              // it is reading and not in cache
-                                                    // or if we are writing.
+                                                      // or if we are writing.
+            assign memrwb = rwb;
             
             always @(posedge clk)
               begin
@@ -459,12 +547,13 @@ module cache(input clk, reset,
                     if(~rwb) begin // If we're writing.
                       cachedata[tag] <= (| byteen) ? 
                                           53'b0 :   // If less than a word, invalidate.
-                                          {1'b1, adrmsb, data};  // Otherwise, store and valid.
+                                          {1'b1, adrmsb, data};  // Otherwise, store and make valid.
                     end
                     if(rwb & ~incache & memdone) begin
                       cachedata[tag] <= {1'b1, adrmsb, memdata};
                     end
                 end
+                memdoner <= (en & rwb) ? (memdone) : 0;
               end     
 endmodule
 
@@ -481,59 +570,52 @@ module writebuffer(input clk, reset,
                    output reg memen,
                    input memdone);
    reg [1:0] ptr;               // Current place to store.
-   reg [1:0] writeptr;
-   reg writing;
-   wire [1:0] nextptr;
-   wire [1:0] nextwriteptr;
+   reg [1:0] writeptr;          // Next value to write.
    reg [31:0] bufdata[3:0];
    reg [29:0] bufadr[3:0];
    reg [3:0] bufbyteen[3:0];
-    
-   assign done = ~((ptr == writeptr) & writing);   // If we have a free space available.
-   
-   assign nextptr = (nextptr + 1 == 4) ? 0 : nextptr + 1;
-   assign nextwriteptr = (nextwriteptr + 1 == 4) ? 0 : nextwriteptr + 1;
+   reg [3:0] bufen[3:0];      // Flag to indicate whether buffer entry has
+                              // valid data.
+  
+   assign done = ~bufen[ptr];   // If we have a free space available.
    
    always @(negedge reset)
    begin
        ptr <= 0;
        writeptr <= 0;
-       writing <= 0;
-       memen <= 0;
        memadr <= 0;
        memdata <= 0;
        membyteen <= 0;
+       memen <= 0;
+       bufen[0] <= 0;
+       bufen[1] <= 0;
+       bufen[2] <= 0;
+       bufen[3] <= 0;
    end
    
    always @(posedge clk)
-   begin
+   begin     
        if(en & done)
        begin
            bufadr[ptr] <= adr;
            bufdata[ptr] <= data;
            bufbyteen[ptr] <= byteen;
-           ptr <= nextptr;
-           writing <= 1;
-           memadr <= bufadr[writeptr];   // TODO: improve this design so that 
-           memdata <= bufdata[writeptr]; // memadr/data/etc not here.
-           membyteen <= bufbyteen[writeptr];
-           memen <= 1;
-           $display("HERE %h", bufadr[ptr]);
+           bufen[ptr] <= 1;
+           ptr <= ptr + 1;  // Assumes LSBs
        end
        
-       if(writing & memdone)
+       // If memory is done or we aren't writing.
+       if(memdone | ~memen)   
        begin
-           if(writeptr == nextwriteptr)
+          if(bufen[writeptr])  // write next one
            begin
-               writing <= 0;
-               memen <= 0;
-           end else begin
-              memadr <= bufadr[nextwriteptr]; 
-              memdata <= bufdata[nextwriteptr];
-              membyteen <= bufbyteen[nextwriteptr];
-              memen <= 1;
-           end   
-           writeptr <= nextwriteptr;
-      end
+              memadr <= bufadr[writeptr]; 
+              memdata <= bufdata[writeptr];
+              membyteen <= bufbyteen[writeptr];
+              bufen[writeptr] <= 0;
+              writeptr <= writeptr + 1; // Assumes LSBs
+           end
+           memen <= bufen[writeptr];
+       end
    end
 endmodule
