@@ -62,9 +62,9 @@ module testbenchc;
 
          3: begin
             memdone <= 1;
-            adr <= 30'h0;
+            adr <= 30'h20000000;
             dataf <= 32'hAABBCCDD;
-            byteen <= 4'b1101;
+            byteen <= 4'b1011;
             rwb <= 1'b0;
             en <= 1;
             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
@@ -336,16 +336,23 @@ module cache(input clk, reset,
 
             reg [31:0] memdataf;
             reg memdonef;
+            
+            reg [31:0] bypassdata;
 
             wire [9:0] tag;
             wire [19:0] adrmsb;
             wire incache;
+            wire bypass;
+            
             assign tag = adr[9:0];
             assign adrmsb = adr[29:10];
             assign incache = (tagdata[tag] == adrmsb) & valid[tag];
+            assign bypass = adr[29];
             
-            assign data = (rwb) ? cacheline[tag] : 32'bz;
-            assign done = (incache & rwb) ? 1'b1 : memdonef;
+            assign data = (rwb) ? ((bypass) ? bypassdata : cacheline[tag]) : 32'bz;
+            // We're automatically done only if it is in cache,
+            // AND we aren't bypassing the cache.
+            assign done = (incache & rwb & ~bypass) ? 1'b1 : memdonef;
             
             // Pass these on directly.
             assign memdata = (memrwb) ?
@@ -356,6 +363,7 @@ module cache(input clk, reset,
                 memdataf <= 0;
                 memen <= 0;
                 memdonef <= 0;
+                bypassdata <= 0;
             end
                           
             always @(posedge clk)
@@ -366,10 +374,13 @@ module cache(input clk, reset,
                   if(en & ~done & ~memen) begin
                     // If we're beginning writing.
                     if(~rwb) begin
-                        cacheline[tag] <= (& byteen) ? data : 32'b0;
-                        tagdata[tag] <= (& byteen) ? adrmsb : 20'b0;
-                        valid[tag] <= (& byteen) ? 1'b1 : 1'b0; // If less than a word, invalidate.
-                        memadr <= adr;
+                        if(~bypass)
+                        begin
+                          cacheline[tag] <= (& byteen) ? data : 32'b0;
+                          tagdata[tag] <= (& byteen) ? adrmsb : 20'b0;
+                          valid[tag] <= (& byteen) ? 1'b1 : 1'b0; // If less than a word, invalidate.
+                        end
+                        memadr <= adr[28:0];
                         memdataf <= data;
                         membyteen <= byteen;
                         memrwb <= 1'b0;   // Writing
@@ -380,7 +391,7 @@ module cache(input clk, reset,
                     // If the entry is not in cache,
                     // we must read it from main memory.
                     if(rwb) begin
-                        memadr <= adr;
+                        memadr <= adr[28:0];
                         membyteen <= 4'b1; // We'll always read in all.
                         memrwb <= 1'b1;    // Reading
                         memen <= 1'b1;
@@ -396,9 +407,14 @@ module cache(input clk, reset,
                 
                // If we're done reading.
                if(rwb & memen & memdone) begin
-                   cacheline[tag] <= memdata;
-                   tagdata[tag] <= adrmsb;
-                   valid[tag] <= 1'b1;
+                   if(bypass)
+                   begin
+                       bypassdata <= memdata;
+                   end else begin  
+                      cacheline[tag] <= memdata;
+                      tagdata[tag] <= adrmsb;
+                      valid[tag] <= 1'b1;
+                  end
                    memen <= 1'b0;
                end
             end     
