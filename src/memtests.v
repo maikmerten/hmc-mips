@@ -330,9 +330,9 @@ module testbenchc;
 
          3: begin
             memdone <= 1;
-            adr <= 30'h0;
+            adr <= 30'h20000000;
             dataf <= 32'hAABBCCDD;
-            byteen <= 4'b1101;
+            byteen <= 4'b1011;
             rwb <= 1'b0;
             en <= 1;
             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
