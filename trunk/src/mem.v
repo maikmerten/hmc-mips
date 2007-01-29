@@ -8,33 +8,30 @@
 
 `timescale 1 ns / 1 ps
 
-module testbench;
-    
+// Test code for cache.
+module testbenchc;
   reg         clk;
   reg         reset;
-  reg    [31:0]     datar;
-  wire    [31:0]    data;
-  wire        done;
-  wire         donetest;
-  reg [29:0] adr;
-  reg rwb, en;
-  reg invalidate;
 
-/*  
-  wire memreaddone;
+  reg  [29:0] adr;
+  wire [31:0] data;
+  reg  [3:0]  byteen;
+  reg  rwb, en;
+  wire done;
+  reg  [31:0] dataf;
+
   wire [29:0] memadr;
-  wire [31:0] memreaddata;
-  wire memreaden;
-  */
-    wire [29:0] memadr;
   wire [31:0] memdata;
   wire [3:0] membyteen;
+  wire memrwb;
   wire memen;
-  reg memdone;
+  reg  memdone;
+  reg  [31:0] memdataf;
   
   integer counter;
 
-  assign data = (rwb) ? 32'bz : datar;
+  assign data = (rwb) ? 32'bz : dataf;
+  assign memdata = (memrwb) ? memdataf : 32'bz;
 
   // generate clock to sequence tests
   always
@@ -47,237 +44,60 @@ module testbench;
     begin
       counter <= 0;
       reset <= 1; #15; reset <= 0;
+      en <= 0;     
     end
 
    always @(posedge clk)
      begin
+       $display("%d", counter);
        case (counter)
-           /*
-         0: begin
-            adr <= 30'h0;
-            datar <= 32'hDEADBEEF;
-            rwb <= 0;
-            en <= 1;
-            invalidate <= 0;
-            #1
-            $display("Wrote to %h: %h, done: %d", adr, data, done);
-            end
-         1: begin
-            adr <= 30'hAC;
-            datar <= 32'hABCDEFAB;
-            rwb <= 0;
-            en <= 1;
-            invalidate <= 0;
-            #1
-            $display("Wrote to %h: %h, done: %d", adr, data, done);
-            end
-         2: begin
-            adr <= 30'hAD;
-            datar <= 32'h00000100;
-            rwb <= 0;
-            en <= 1;
-            invalidate <= 1;
-            #1
-            $display("Wrote to %h: %h, done: %d", adr, data, done);
-            end
-         3: begin
-            adr <= 30'hAD;
-            rwb <= 1;
-            en <= 1;
-            invalidate <= 0;
-            #1
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         4: begin
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         5: begin
-            #1;
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         6: begin
-            #1;
-            adr <= 30'h4AD;
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         7: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         8: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end
-         9: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end
-         10: begin
-            adr <= 30'h0;
-            rwb <= 1;
-            en <= 1;
-            #1;
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         11: begin
-            adr <= 30'hAC;
-            rwb <= 1;
-            en <= 1;
-            #1;
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         12: begin
-            adr <= 30'hAD;
-            rwb <= 1;
-            en <= 1;
-            #1;
-            $display("Read from %h: %h, done: %d", adr, data, done);
-            end
-         13: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end
-         14: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end
-         15: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end
-         16: begin
-             $display("Read from %h: %h, done: %d", adr, data, done);
-         end */
          0: begin
             memdone <= 1;
             adr <= 30'h0;
-            datar <= 32'hDEADBEEF;
-            en <= 1;
-            #1;
-            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         1: begin
-            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         2: begin
-             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         default: begin
-            $stop;
-            end
-        endcase
-        counter <= counter + 1;
-     end
-
-/*
-  cache testcache(clk,reset,adr,data,rwb,en,done,invalidate,
-                memadr, memreaddata, memreaden,memreaddone);
-
-  testmem mem(clk,reset,memadr,memreaddata,1'b1,memreaden,memreaddone);
-  */
-
-  
-  writebuffer writebuf(clk,reset,adr,datar,en,done,4'b1,
-     memadr,memdata,membyteen, memen, memdone);
-  /*
-  module writebuffer(input clk, reset,
-                   input [29:0] adr,
-                   input [31:0] data,
-                   input en, output done,
-                   input [3:0] byteen,
-                   output reg [29:0] memadr,
-                   output reg [31:0] memdata,
-                   output reg [3:0] membyteen,
-                   output reg memen,
-                   input memdone)
-                   */
-endmodule
-
-// Test code for writebuffer.
-module testbenchwb;
-  reg         clk;
-  reg         reset;
-  reg    [31:0]     datar;
-  wire    [31:0]    data;
-  wire        done;
-  wire         donetest;
-  reg [29:0] adr;
-  reg rwb, en;
-  reg invalidate;
-
-  wire [29:0] memadr;
-  wire [31:0] memdata;
-  wire [3:0] membyteen;
-  wire memen;
-  reg memdone;
-  
-  integer counter;
-
-  assign data = (rwb) ? 32'bz : datar;
-
-  // generate clock to sequence tests
-  always
-    begin
-      #30;
-      clk <= 1; # 5; clk <= 0; # 5;
-    end
-    
-  initial
-    begin
-      counter <= 0;
-      reset <= 1; #15; reset <= 0;
-    end
-
-   always @(posedge clk)
-     begin
-       case (counter)
-           0: begin
-            memdone <= 0;
-            adr <= 30'h0;
-            datar <= 32'hDEADBEEF;
+            dataf <= 32'hDEADBEEF;
+            byteen <= 4'b1111;
+            rwb <= 1'b0;
             en <= 1;
          end
-         1: begin
-            adr <= 30'h0;
-            datar <= 32'hAAAAAAAA;
-            en <= 1;
-            $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         2: begin
-            adr <= 30'h0;
-            datar <= 32'hBBBBBBBB;
-            en <= 1;           
-             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
+
          3: begin
+            memdone <= 1;
             adr <= 30'h0;
-            datar <= 32'hCCCCCCCC;
+            dataf <= 32'hAABBCCDD;
+            byteen <= 4'b1101;
+            rwb <= 1'b0;
             en <= 1;
-             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         4: begin
-             adr <= 30'h0;
-             datar <= 32'hDDDDDDDD;
-             en <= 1;
-             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         5: begin
-             datar <= 32'h00000000;
-             en <= ~done; 
-             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
-         end
-         10: begin
-             memdone <= 1;
-             en <= ~done; 
-         end
-         default: begin
-            en <= ~done; 
             $display("mem adr: %h, memdata %h, memen: %d, done: %d", memadr,memdata,memen,done);
+         end        
+        
+         6:
+         begin
+            memdone <= 1;
+            memdataf <= 32'hAAAAAAAA;
+            
+            adr <= 30'h0;
+            byteen <= 4'b1111;
+            rwb <= 1'b1;
+            en <= 1;
+            $display("read: %h, data %h, done: %d", adr,data,done);
+            $display("readmem adr: %h, memdata %h, memen: %d, en %d done: %d", memadr,memdata,memen,en, done);
+         end
+         
+         default: begin
+            dataf <= (done) ? 32'b0 : dataf;
+            en <= (done) ? 0 : en; 
+            $display("read: %h, data %h, done: %d", adr,data,done);
+            $display("mem adr: %h, memdata %h, memen: %d, en %d done: %d", memadr,memdata,memen,en, done);
             if(counter == 20) $stop;
             end
         endcase
         counter <= counter + 1;
+        $display("");
      end
 
-  
-  writebuffer writebuf(clk,reset,adr,datar,4'b1,en,done,
-     memadr,memdata,membyteen,memen,memdone);
+  cache testcache(clk,reset,adr,data,byteen,rwb,en,done,
+     memadr,memdata,membyteen,memrwb,memen,memdone);
 endmodule
-
 
 // Implementation of upper bit bypass here.
 // Description of interface:
@@ -286,6 +106,7 @@ endmodule
 // instrF = Instruction fetched (instruction data)
 //
 // swc = swap caches.  (0 = normal assignment, 1 = swapped)
+// TODO: add cache bypass (or two controller.. above).
 module cachecontroller(input clk, reset,
                        input [31:0] pcF,
                        output [31:0] instrF,
@@ -447,6 +268,7 @@ begin
 end
 endmodule
 
+// TEST MEMORY
 module testmem(input clk, reset,
                input [29:0] adr,
                inout [31:0] data,
@@ -491,70 +313,95 @@ always @(posedge clk)
 
 endmodule
                
-// TODO: add cache bypass (or two controller.. above).
+// 4kB CACHE
+//
+// TODO: Forward requests to write buffer.
 module cache(input clk, reset,
              input [29:0] adr,
              inout [31:0] data,
              input [3:0] byteen,
              input rwb, en,
              output done,
-             output [29:0] memadr, 
-             input [31:0] memdata,
-             output [3:0] membyteen,
-             output memrwb, memen,
-             input memdone);
              
-            reg [52:0] cachedata[1023:0];
-            reg waiting;
-            reg memdoner;
+             output reg [29:0] memadr, 
+             inout  [31:0] memdata,
+             output reg [3:0] membyteen,
+             output reg memrwb,
+             output reg memen,
+             input memdone);
+            
+            reg [31:0] cacheline[1023:0];
+            reg [19:0] tagdata[1023:0];
+            reg        valid[1023:0];
+
+            reg [31:0] memdataf;
+            reg memdonef;
 
             wire [9:0] tag;
             wire [19:0] adrmsb;
             wire incache;
-            wire [19:0] tagdata;
-            wire valid;
-            wire [31:0] cacheline;
-            wire [52:0] cacheslot;
+            assign tag = adr[9:0];
+            assign adrmsb = adr[29:10];
+            assign incache = (tagdata[tag] == adrmsb) & valid[tag];
             
+            assign data = (rwb) ? cacheline[tag] : 32'bz;
+            assign done = (incache & rwb) ? 1'b1 : memdonef;
+            
+            // Pass these on directly.
+            assign memdata = (memrwb) ?
+                              32'bz : memdataf;
+  
             always @(negedge reset)
             begin
-                waiting <= 0;
-                memdoner <= 0;
+                memdataf <= 0;
+                memen <= 0;
+                memdonef <= 0;
             end
-            
-       
-            assign adrmsb = adr[29:10];
-            assign tag = adr[9:0];
-            assign cacheslot = cachedata[tag];
-            assign valid = cacheslot[52];
-            assign tagdata = cacheslot[51:32];
-            assign cacheline = cacheslot[31:0];
-            
-            assign incache = (tagdata == adrmsb) & valid;
-         
-            assign data = (en & rwb & incache) ? cacheline : 32'bz;
-            assign done = (rwb) ? incache : memdoner;
-            
-            assign memadr = adr;
-            assign memen = (en & rwb & ~incache) |  // Enable memory interface if
-                           (en & ~rwb);              // it is reading and not in cache
-                                                      // or if we are writing.
-            assign memrwb = rwb;
-            
+                          
             always @(posedge clk)
-              begin
-                  if(en) begin
-                    if(~rwb) begin // If we're writing.
-                      cachedata[tag] <= (| byteen) ? 
-                                          53'b0 :   // If less than a word, invalidate.
-                                          {1'b1, adrmsb, data};  // Otherwise, store and make valid.
+            begin
+                  // If a request is pending,
+                  // we're not already done,
+                  // and we're not already working.
+                  if(en & ~done & ~memen) begin
+                    // If we're beginning writing.
+                    if(~rwb) begin
+                        cacheline[tag] <= (& byteen) ? data : 32'b0;
+                        tagdata[tag] <= (& byteen) ? adrmsb : 20'b0;
+                        valid[tag] <= (& byteen) ? 1'b1 : 1'b0; // If less than a word, invalidate.
+                        memadr <= adr;
+                        memdataf <= data;
+                        membyteen <= byteen;
+                        memrwb <= 1'b0;   // Writing
+                        memen <= 1'b1;
+                        $display("HERE %h", data);
                     end
-                    if(rwb & ~incache & memdone) begin
-                      cachedata[tag] <= {1'b1, adrmsb, memdata};
+                    
+                    // If the entry is not in cache,
+                    // we must read it from main memory.
+                    if(rwb) begin
+                        memadr <= adr;
+                        membyteen <= 4'b1; // We'll always read in all.
+                        memrwb <= 1'b1;    // Reading
+                        memen <= 1'b1;
                     end
                 end
-                memdoner <= (en & rwb) ? (memdone) : 0;
-              end     
+                
+                memdonef <= memen & memdone;
+                
+                // If we're done writing.
+                if(~memrwb & memen & memdone) begin
+                     memen <= 1'b0;
+                end
+                
+               // If we're done reading.
+               if(rwb & memen & memdone) begin
+                   cacheline[tag] <= memdata;
+                   tagdata[tag] <= adrmsb;
+                   valid[tag] <= 1'b1;
+                   memen <= 1'b0;
+               end
+            end     
 endmodule
 
 module writebuffer(input clk, reset,
@@ -595,6 +442,8 @@ module writebuffer(input clk, reset,
    
    always @(posedge clk)
    begin     
+       // If we have space, write to
+       // buffer.
        if(en & done)
        begin
            bufadr[ptr] <= adr;
@@ -604,7 +453,8 @@ module writebuffer(input clk, reset,
            ptr <= ptr + 1;  // Assumes LSBs
        end
        
-       // If memory is done or we aren't writing.
+       // If memory is done or we aren't writing
+       // then start a write, or disable memory.
        if(memdone | ~memen)   
        begin
           if(bufen[writeptr])  // write next one
