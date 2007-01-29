@@ -59,6 +59,8 @@ Since the main memory only has one data and address bus, the cache controller is
   #  Data cache read
   #  Instruction cache read
 The precedence is implemented using combinational logic and a multiplexer.  The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write.
+
+If a data memory write occurs at the same time as an instruction memory read, the instruction memory read will occur first.  This is due to latency of writing to the write buffer and then the write buffer writing to memory.  This cycle latency may be improved in the future.
   
 == Cache ==
 
@@ -151,9 +153,3 @@ Since the cache will be full of garbage when the CPU starts, the cache must be i
 
 == Cache Invalidation Procedures ==
 Cache regions can be invalidated using:
-
-= Test Plan =
-
-
-
-somewhere in here:  A buffer write doesn't immediately cause everything to stop... there is a few cycle delay before it actually take priority in memory.
