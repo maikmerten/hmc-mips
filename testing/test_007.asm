@@ -8,6 +8,8 @@
 #
 #   Tests store commands
 
+.set noreorder
+
 main:   addi $3, $0, -1          # $3 = 0xffffffff
         addi $4, $0, 0x10        # $4 = 0x10
         sw   $3, 0($4)           # Store 0xffffffff in 0x10

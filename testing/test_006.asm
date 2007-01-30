@@ -8,6 +8,8 @@
 #
 #   Coprocessor 0 status register test.
 
+.set noreorder
+
 main:   addi  $3, $0, -1        # $3 = 0xffffffff
         mtc0  $3, $12           # set SR to all the ones we can
         nop                     # Let the assignment go through the pipeline

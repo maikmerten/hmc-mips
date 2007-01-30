@@ -9,6 +9,8 @@
 # Expected Behavior:
 #   Tests R-Type Arithmetic instructions (besides mult and div)  
 
+.set noreorder
+
 main:   addiu $2, $0, -10       # $2 = -10
         addiu $3, $0, 10        # $3 = 10 
 	subu  $5, $3, $3	# $5 = 10 - 10 *added 1/25/07 to test subu

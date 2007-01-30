@@ -12,6 +12,9 @@
 # Expected Behavior:
 #   Fibinnacci Sequence.  
 
+# Prevent the assembler from reordering and filling in branch delay slots
+.set noreorder
+
 main:   addi $2, $0, 0          # initialize $2 = 0
         addi $3, $0, 1          # initialize $3 = 1
         addi $5, $0, 21         # initialize $5 = 21 (stopping point)
