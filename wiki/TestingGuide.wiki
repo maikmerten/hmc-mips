@@ -29,6 +29,16 @@
 # Test complete --           9 out of          10 passed
 }}}
 
+= Compiling Tests =
+
+You must have GCC cross compiled for MIPS.  Currently this is only known to be available for Linux machines.
+
+As noted by [http://tams-www.informatik.uni-hamburg.de/applets/hades/webdemos/mips.html this] website:
+
+"If you are running Linux, you also try to download the following [http://tams-www.informatik.uni-hamburg.de/applets/hades/archive/gcc-2.7.2.3-mips.tgz gcc-mips.tgz] archive in tar.gz format; it includes gcc 2.7.2.3 and corresponding binutils ready for Linux/x86 (Pentium,Athlon) hosts. Note that the tools expect to be installed into a directory called /opt/mips. This path is configured into the tools; you will have to build the tools yourself and supply the corresponding -prefix option to change the base directory."
+
+Once you have done this, you should be able to {{{cd testing/}}} and type {{{make}}}.
+
 = Viewing More Internal Objects =
 
 *Note these instructions are not necessary if you use the debug.fdo script*
