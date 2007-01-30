@@ -6,7 +6,7 @@
  *
  * Created: 1/27/07
  *
- *   Multiply/Divide test
+ *   Multiply test
  */
 
 //  In order to run the first function, first initialize stack pointer
