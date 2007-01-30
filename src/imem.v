@@ -40,7 +40,7 @@ module imem(input  [10:0]  a,
       $readmemh("testing/test_011.dat",RAM);
       #1000;
       $readmemh("testing/test_012.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_013.dat",RAM);
       #1000;
 		$readmemh("testing/test_014.dat",RAM);

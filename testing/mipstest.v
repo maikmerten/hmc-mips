@@ -40,14 +40,19 @@ module testbench;
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
         reset <= 1; # 15; reset <= 0;
-        # 985;
+        // Pausing
+        if(currentTest == 12) begin
+          # 4985;
+        end else
+           # 985;
+
         if(currentSuccess) begin
-          $display("Simulation %d succeeded (start time %d)", currentTest, 
-            counter - 100);
+          $display("Simulation %d succeeded (end time %d)", currentTest, 
+            counter);
           successfulTests = successfulTests + 1;
         end else begin
-          $display("Simulation %d FAILED    (start time %d)", currentTest, 
-            counter - 100);
+          $display("Simulation %d FAILED    (end time %d)", currentTest, 
+            counter);
         end
       end
       $display("Test complete -- %d out of %d passed", successfulTests, 
@@ -57,14 +62,14 @@ module testbench;
     
   initial
     begin
-      interrupts[0] <= 0; #13400;
+      interrupts[0] <= 0; #17400;
       interrupts[0] <= 1; #10;
       interrupts[0] <= 0;
     end
       
   initial
     begin
-      interrupts[1] <= 0; #13100; 
+      interrupts[1] <= 0; #17100; 
       interrupts[1] <= 1; #10; 
       interrupts[1] <= 0; #90;
       interrupts[1] <= 1; #10;
@@ -129,7 +134,7 @@ module testbench;
             if(dataadr === 32'h2c & writedata === 32'h9) begin
               currentSuccess <= 1;
             end else begin
-              $display("Writing value %d to address %h", writedata, dataadr);
+              $display("Writing value %h to address %h", writedata, dataadr);
             end
           end
         6:
@@ -171,7 +176,6 @@ module testbench;
               $display("Writing value %d to address %h", writedata, dataadr);
             end
           end
-          
         11:
           if(memwrite) begin
             if(dataadr === 32'h0 & writedata === 32'h4) begin
@@ -182,10 +186,12 @@ module testbench;
           end
         12:
           if(memwrite) begin
-            if(dataadr === 32'h0 & writedata === 3500) begin
+            // This program is written in C, so we don't look at the address
+            // that it is writing to, just the value it is writing
+            if(writedata === 479001600 /* 12 factorial */) begin
               currentSuccess <= 1;
             end else begin
-              $display("Writing value %d to address %h", writedata, dataadr);
+              //$display("Writing value %d to address %h at time %d", writedata,              // dataadr, counter);
             end
           end
           
