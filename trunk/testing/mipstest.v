@@ -34,14 +34,14 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 16;
+      numTests = 17;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
         reset <= 1; # 15; reset <= 0;
         // Pausing
-        if(currentTest == 12) begin
+        if(currentTest == 12 | currentTest == 16) begin
           # 4985;
         end else
            # 985;
@@ -217,6 +217,17 @@ module testbench;
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
+            end
+          end
+      16:
+          if(memwrite) begin
+            // This program is written in C, so we don't look at the address
+            // that it is writing to, just the value it is writing
+            if(writedata === 2201) begin
+              currentSuccess <= 1;
+            end else begin
+              //$display("Writing value %d to address %h at time %d", writedata,
+              // dataadr, counter);
             end
           end
 //        default:
