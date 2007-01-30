@@ -11,17 +11,22 @@
 #   the proper number of exceptions. Not terribly rigorous, but ought to be 
 #   enough for now.
 
+.set noreorder
+
 # Start code 0x1FC00000
 main:   addi $3, $0, 0
-        nop               # run syscall (SPIM doesn't support this)
+        syscall 0
         break 0		        # run the break call
-        nop               # modified in source code to be a malformed opcode (ffffffff)
+        .word 0xffffffff       # a malformed opcode (ffffffff)
         add.s  $f2,$f2,$f4 	# floating point test        
         
         sw    $3, 0($0)         # should write 4 to address 0
 end:    beq   $0, $0, end       # loop forever
         nop
 
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
 
 # Start exception code 0x1FC00100
 except: nop

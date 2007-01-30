@@ -8,6 +8,8 @@
 #
 #   Tests overflow limits
 
+.set noreorder
+
 # Start code 0x1FC00000
 main:   addi  $6, $0, 0		# start overflow count at 0
 	lui   $2, 0x8000        # $2 = 0x80000000 = (largest negative number)
@@ -33,8 +35,11 @@ main:   addi  $6, $0, 0		# start overflow count at 0
 end:    beq   $0, $0, end       # loop forever
         nop
 
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop
 
-# Start exception code 0x1FC00100
+# Start exception code at 0x1FC00100 (0x100 compiled) at the earliest
 except: mfc0  $4, $13           # get the cause register
         mfc0  $7, $14           # get the exception address
         andi  $4, 0xff          # mask out the exception code

@@ -8,6 +8,8 @@
 #
 #   Tests immediate instructions, hazards, negative numbers.  
 
+.set noreorder
+
 main:   addiu $2, $0, -10       # $2 = -10
         addiu $3, $0, 10        # $3 = 10
         addu  $2, $2, $3        # $2 = $2 + $3 = -10 + 10 = 0

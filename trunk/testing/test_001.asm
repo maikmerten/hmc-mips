@@ -16,6 +16,8 @@
 # Original code by
 # David_Harris@hmc.edu 9 November 2005 
 
+.set noreorder
+
 main:   addi $2, $0, 5          # initialize $2 = 5           20020005
         addi $3, $0, 12         # initialize $3 = 12          2003000c
         addi $7, $3, -9         # initialize $7 = 3           2067fff7

@@ -8,6 +8,8 @@
 #
 #   Tests load commands
 
+.set noreorder
+
 main:   addi $4, $0, 0x18        # $4 = 0x18
         addi $5, $0, 0           # $5 = 0
         lui  $3, 0x1234          #

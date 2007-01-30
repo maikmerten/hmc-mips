@@ -11,8 +11,12 @@
 #   the proper number of exceptions. Not terribly rigorous, but ought to be 
 #   enough for now.
 
+.set noreorder
+
 # Start code 0x1FC00000
-main:   addi $3, $0, 0
+main:   addi  $3, $0, -1        # $3 = 0xffffffff
+        mtc0  $3, $12           # set SR to all the ones we can
+        addi $3, $0, 0
         nop                    # we don't really do much, we just sit around
         nop                    # waiting to be interrupted
         nop
@@ -33,13 +37,14 @@ main:   addi $3, $0, 0
         nop
         nop
         nop
-        nop
-        nop
         
-        sw    $3, 4($0)         # should write 1 to address 0
+        sw    $3, 4($0)         # should write 2 to address 4
 end:    beq   $0, $0, end       # loop forever
         nop
 
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;
+nop
 
 # Start exception code 0x1FC00100
 except: nop
@@ -63,4 +68,3 @@ except: nop
         addi  $7, $7, 4         # Point to one past the errant instruction
         jr    $7                # Resume
         rfe                     # reenable interrupts
-        

@@ -8,6 +8,8 @@
 #
 #   Tests shift operations.
 
+.set noreorder
+
 main:   addiu $2, $0, 0x7f      # $2 = 0x7f
         srl   $3, $2, 5         # $3 = 0x7f >> 5 = 0x03
         sllv  $2, $2, $3        # $2 = 0x7f << 3 = 0x3f8

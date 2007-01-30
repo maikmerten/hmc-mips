@@ -8,6 +8,8 @@
 #
 #   Overflow exception test.
 
+.set noreorder
+
 # Start code 0x1FC00000
 main:   lui   $2, 0x8000        # $2 = 0x80000000 = (largest negative number)
         lui   $3, 0x8000        # $3 = 0x80000000 = (largest negative number)
@@ -17,6 +19,9 @@ main:   lui   $2, 0x8000        # $2 = 0x80000000 = (largest negative number)
 end:    beq   $0, $0, end       # loop forever
         nop
 
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
+nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop
 
 # Start exception code 0x1FC00100
 except: mfc0  $4, $13           # get the cause register
