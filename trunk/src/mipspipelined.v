@@ -27,11 +27,11 @@ module mips(input         clk, reset,
   wire [5:0]  opD, functD;
   wire [4:0]  rsD, rtD, rdE;
   wire        regdstE, alusrcE, 
-              unsignedD, loadsignedM, rdsrcD, linkD, linkE, luiE,
+              unsignedD, loadsignedM, rdsrcD, linkD, luiE,
               overflowableE, overflowE,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
               byteM, hardwordM,
-              aeqzD, aeqbD, agtzD, altzD, mdrunE,
+              aeqzD, aeqbD, agtzD, altzD, mdrunE, branchD, jumpregD,
               bdsF, bdsD, bdsE, bdsM,
               syscallE, breakE, riE, fpu,
               adesableE, adelableE, adelthrownE, misaligned;
@@ -52,8 +52,8 @@ module mips(input         clk, reset,
                byteM, halfwordM, branchD,
                alusrcE, unsignedD, loadsignedM,
                regdstE, regwriteE, regwriteM, 
-               regwriteW, jumpD, overflowableE,
-               aluoutsrcE, alushcontrolE, linkD, linkE, luiE,
+               regwriteW, jumpD, jumpregD, overflowableE,
+               aluoutsrcE, alushcontrolE, linkD, luiE,
                rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
                bdsF, bdsD, bdsE, bdsM,
                syscallE, breakE, riE, fpuE,
@@ -61,9 +61,9 @@ module mips(input         clk, reset,
                specialregsrcE, hilodisableE,
                hiloaccessD, mdstartE, hilosrcE);
   datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
-              branchD, 
+              branchD, jumpregD,
               unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
-              regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, linkE, luiE,
+              regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
               rdsrcD, 
               specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
               pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readdataE,
@@ -95,10 +95,10 @@ module controller(input        clk, reset, exception,
                   output       branchD, alusrcE, unsignedD, 
                   output       loadsignedM,
                   output       regdstE, regwriteE, regwriteM, regwriteW,
-                  output       jumpD, overflowableE,
+                  output       jumpD, jumpregD, overflowableE,
                   output [1:0] aluoutsrcE, 
                   output [2:0] alushcontrolE, 
-                  output       linkD, linkE, luiE,
+                  output       linkD, luiE,
                   output       rdsrcD, 
                   output [1:0] pcsrcFD, pcbranchsrcD,
                   output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
@@ -145,7 +145,8 @@ module controller(input        clk, reset, exception,
 
   branchcontroller  bc(reset, exception, jumpD, branchD, linkD, aeqzD, aeqbD, 
                        agtzD, altzD, 
-                       ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD);
+                       ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD,
+                       jumpregD);
   
   cop0dec c0dec(opD, rsD, functD, cop0readD, cop0writeD, rfeD); 
 
@@ -401,12 +402,12 @@ endmodule
 
 module datapath(input         clk, reset,
                 input         memtoregE, memtoregM, memtoregW, byteM, halfwordM,
-                input         branchD, unsignedD, loadsignedM,
+                input         branchD, jumpregD, unsignedD, loadsignedM,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
                 input         jumpD, 
                 input  [1:0]  aluoutsrcE, 
-                input         linkD, linkE, luiE,
+                input         linkD, luiE,
                 input         rdsrcD, 
                 input  [1:0]  specialregsrcE, hilodisableE,
                 input         hiloaccessD, mdstartE, hilosrcE,
@@ -443,7 +444,7 @@ module datapath(input         clk, reset,
   wire [15:0] rhalfwordM;
   wire [31:0] rbyteextM, rhalfwordextM, readdata2M;
   wire [3:0]  bytebyteenM, halfwordbyteenM;
-  wire [31:0] pcnextFD, pcnextbrFD, pcplus4F;
+  wire [31:0] pcnextFD, pcnextbrFD, pcplus4F, pcplus4D;
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
@@ -457,7 +458,7 @@ module datapath(input         clk, reset,
   // hazard detection
   hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
-              memtoregE, memtoregM, branchD,
+              memtoregE, memtoregM, branchD, jumpregD,
               instrackF, dataackM, exception, hiloaccessD, mdrunE, excstage,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, flushD, flushE, flushM);
@@ -480,19 +481,22 @@ module datapath(input         clk, reset,
   flopenr #(32) r1D(clk, reset, ~stallD, pcF, pcD);
   flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
   flopenrc #(1) r3D(clk, reset, ~stallD, flushD, adelthrownF, adelthrownD);
+  flopenr #(32) r4D(clk, reset, ~stallD, pcplus4F, pcplus4D);
   signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
   eqcmp       comp(srca2D, srcb2D, equalD);
+  // TODO: consider moving link adder to the Execute stage
   adder       pcadd2(pcD, 32'b1000, pcplus8D);
-  adder btadd(pcD, {signimmD[29:0], 2'b00}, branchtargetD);
+  // PCSpin uses pcD, gcc/assembler use pcplus4D, we'll stick with pcplus4D
+  adder btadd(pcplus4D, {signimmD[29:0], 2'b00}, branchtargetD);
   // TODO: Make these into individual modules
   assign #1 {aeqzD, aeqbD, agtzD, altzD} = {srca2D == 0, srca2D == srcb2D, 
                                             ~srca2D[31] & (srca2D[30:0] !== 0),
                                             srca2D[31]};
-  mux3 #(32)  pcbranchmux(branchtargetD, {pcD[31:28], instrD[25:0], 2'b00}, 
+  mux3 #(32)  pcbranchmux(branchtargetD, {pcplus4D[31:28], instrD[25:0], 2'b00},
                           srca2D, pcbranchsrcD, pcnextbrFD);
-  mux2 #(5)  rdmux(rdD, 5'b11111, rdsrcD, rd2D);
+  mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
 
   // Instruction breakdown
   assign opD = instrD[31:26];
@@ -727,12 +731,12 @@ module statusregunit(input             clk, reset, writeenable, exception,
   always @ ( posedge clk )
     begin
       if (reset | rfeE) begin
-        statusreg[0] = 1;
+        statusreg[0] = 1; // iec
       end
       
       else if(exception) begin
         // if we're handling an exception, ignore interrupts.
-        statusreg[0] = 0;
+        statusreg[0] = 0; // iec
       end
     end
     
@@ -796,7 +800,7 @@ endmodule
 module hazard(input  [4:0]     rsD, rtD, rsE, rtE, 
               input  [4:0]     writeregE, writeregM, writeregW,
               input            regwriteE, regwriteM, regwriteW,
-              input            memtoregE, memtoregM, branchD, 
+              input            memtoregE, memtoregM, branchD, jumpregD,
               input            instrackF, dataackM, exception,
               input            hiloaccessD, mdrunE,
               input  [1:0]     excstage, // TODO (Thomas): Remove and make 
@@ -838,7 +842,11 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
   // This assumes we are reading an instruction every cycle
   assign #1 instrmissF = ~instrackF;
 
-  assign #1 branchstallD = branchD & 
+  // This could be made slightly better since jumpreg only uses one register
+  // output.
+  // TODO: All the zero tests are wasteful since no one would use register zero
+  // for a branch or jump, consider removing them.
+  assign #1 branchstallD = (branchD | jumpregD) & 
              (regwriteE & ((rsD != 0 & writeregE == rsD) | 
                           (rtD != 0 & writeregE == rtD)) |
               memtoregM & ((rsD != 0 & writeregM == rsD) | 
@@ -869,21 +877,24 @@ module branchcontroller(input             reset, exception, jump, branch, link,
                         input             lt, gt, eq, src,
                         output reg        rdsrc, 
                         output reg  [1:0] pcsrc,
-                        output reg  [1:0] pcbranchsrc);
+                        output reg  [1:0] pcbranchsrc,
+                        output reg        jumpreg);
 
   always @ ( * )
     begin
       pcsrc = 2'b10; // Default to PC+4
       rdsrc = 1'b0;
       pcbranchsrc = 2'b00; // This is really a don't care
+      jumpreg = 1'b0;
       if(reset) begin
         pcsrc = 2'b00;
       end else if (exception) begin
         pcsrc = 2'b01;
       end else if (jump) begin // Jump
         pcsrc = 2'b11;
-        if(src) begin  // Jump using register
+        if(src) begin  // Jump using register 
           pcbranchsrc = 2'b10;
+          jumpreg = 1'b1;
         end else begin // Jump using immediate
           pcbranchsrc = 2'b01;
           rdsrc = link;
