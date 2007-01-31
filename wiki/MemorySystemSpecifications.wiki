@@ -15,11 +15,11 @@ The memory subsystem is composed of the following subunits:
   * A write buffer to reduce number of stalls when writing to main memory.
   * The main system memory.
 
-A memory read or write is selected and started, via the cache controller, with the rwb (read/write bar) bit and en (enable) bit, respectively.  The cache controller signals a completed operation by asserting the done bit.  The interface to external memory is similar, where the cache controller expects external memory to haverwb, en, and done bits.  
+A memory read or write is selected and started, via the cache controller, with the rwb (read/write bar) bit and en (enable) bit, respectively.  The cache controller signals a completed operation by asserting the done bit.  The interface to external memory is similar, where the cache controller expects external memory to have rwb, en, and done bits.  
 
 == Interface ==
 
-Most of the subcomponents interface using:
+Most of the subcomponents' interfaces include:
 
 adr (address)
 data (bi-direction data)
