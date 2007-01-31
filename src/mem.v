@@ -66,16 +66,20 @@ module testbenchccontroller;
               writedataM <= 32'hDDCCBBAA;
               memwriteM <= 0;
               enM <= 1;
+            $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrF: %h, readdataM: %h", instrF, readdataM);
           end
         // 3: begin
         //      adrM <= 32'h200004Ad;
         //      memwriteM <= 0;
         //      enM <= 1;    
        //   end
-       //  6: begin
-       //      pcF <= 32'h800002B4;
-       //      enF <= 1;
-       // end
+         6: begin
+             pcF <= 32'hA00012B4;
+             enF <= 1;
+             $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrF: %h, readdataM: %h", instrF, readdataM);
+        end
          default: begin
             enM <= (dataackM) ? 0 : enM; 
             enF <= (instrackF) ? 0 : enF;
@@ -224,8 +228,7 @@ writebuffer writebuf(clk, reset, wbadr, wbdata, wbbyteen,
                           wbmemadr, wbmemdata, wbmembyteen,
                           wbmemen, wbmemdone);
                           
-// TODO: modify this so that memdata is muxed between z and the register.
-//       also, mem will probably be moved externally.
+// TODO: Move mem so it is external.
 mainmem mem(clk, reset, memadr, memdata, membyteen,
                memrwb, memen, memdone);
                
@@ -399,6 +402,8 @@ module cache(input clk, reset,
             assign done = ((incache & rwb & ~bypass) | ~en) ? 1'b1 : memdonef;
             
             // Pass these on directly.
+            // Use tri-state here??
+            //mux2 #(32) memdatamux(memrwb, 32'bz, memdataf);
             assign memdata = (memrwb) ?
                               32'bz : memdataf;
   
