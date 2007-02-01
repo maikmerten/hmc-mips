@@ -113,7 +113,7 @@ module controller(input        clk, reset, exception,
              useshifterD, cop0readD, cop0writeD, rfeD,
              loadsignedD, loadsignedE,
 	           syscallD, breakD, riD, fpuD,
-             adesableD, adelableD, adesthrownD,
+             adesableD, adelableD, adelthrownD,
              mdstartD, hilosrcD,
              hiloreadD, hiloselD;
   wire       byteD, halfwordD, byteE;
@@ -728,19 +728,10 @@ module statusregunit(input             clk, reset, writeenable, exception,
 
   assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode
 
+  //always @ ( posedge clk )
+   // statusreg = 0;
+
   always @ ( posedge clk )
-    begin
-      if (reset | rfeE) begin
-        statusreg[0] = 1; // iec
-      end
-      
-      else if(exception) begin
-        // if we're handling an exception, ignore interrupts.
-        statusreg[0] = 0; // iec
-      end
-    end
-    
-  always @ ( negedge clk )
     begin
       if(writeenable) begin
         statusreg = writedata;
@@ -757,6 +748,12 @@ module statusregunit(input             clk, reset, writeenable, exception,
         // 17 to 8 are swc, isc, and im
         statusreg[7:6] = 0;
         statusreg[5:1] = {kuo, ieo, kup, iep, kuc};
+      end
+      if(reset | rfeE) begin
+        statusreg[0] = 1; // iec
+      end else if(exception) begin
+        // if we're handling an exception, ignore interrupts.
+        statusreg[0] = 0; // iec
       end
     end
 endmodule
@@ -1014,4 +1011,3 @@ module regfile(input         clk,
   assign #1 rd1 = (ra1 != 0) ? rf[ra1] : 0;
   assign #1 rd2 = (ra2 != 0) ? rf[ra2] : 0;
 endmodule
-
