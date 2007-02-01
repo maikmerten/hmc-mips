@@ -10,7 +10,7 @@
  */
 
 //  In order to run the first function, first initialize stack pointer
-asm("li $sp,0x200");
+asm("li $sp,0xf0");
 
 void test_012()
 {
