@@ -36,6 +36,24 @@ module eqcmp(input [31:0] a, b,
   assign #1 eq = (a == b);
 endmodule
 
+module eqzerocmp(input [31:0] a,
+             output        eq);
+
+  assign #1 eq = (a == 0);
+endmodule
+
+module gtzerocmp(input [31:0] a,
+             output        eq);
+
+  assign #1 eq = ~a[31] & (a[30:0] !== 0);
+endmodule
+
+module ltzerocmp(input [31:0] a,
+             output        eq);
+
+  assign #1 eq = a[31];
+endmodule
+
 module sl2(input  [31:0] a,
            output [31:0] y);
 

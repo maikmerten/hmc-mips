@@ -272,70 +272,60 @@ module alushdec(input      [5:0] funct,
                                  mdstart, hilosrc, hiloread, hilosel,
                 output     [1:0] hilodisable);
 
-  reg [5:0] functcontrol;
+  reg [12:0] functcontrol;
   wire usefunct;
 
   // The pattern 0101 indicates that we have an R-type and should use the 
   // funct code (0101 is also the nor command, of which there is no immediate
   // equivalent; hence 0101 is available)
   assign #1 usefunct = ({maindecuseshifter, alushmaincontrol} == 4'b0101);
-  assign #1 {mdstart, hilosrc, useshifter, alushcontrol} = 
-    (usefunct ? functcontrol : {2'b0, maindecuseshifter, alushmaincontrol});
-
-  // TODO: Put all this random logic into the PLA below to make everyone's life
-  // easier later on.
-  assign #1 overflowable = (usefunct & (  (funct == 6'b100000)    // ADD
-                                        | (funct == 6'b100010))); // SUB
- 
-  assign #1 syscallD = (usefunct & (funct == 6'hc));
-  assign #1 breakD = (usefunct & (funct == 6'hd));
-  assign #1 hiloread = (usefunct & (  (funct == 6'b010000)   // MFHI
-                                    | (funct == 6'b010010))); // MFLO
-
-  // hilosel could be tied directly to funct[1]
-  assign #1 hilosel = (funct == 6'b010010);   // True for MFLO
-  assign #1 hilodisable = {usefunct & (funct == 6'b010001),  // MTHI
-                           usefunct & (funct == 6'b010011)}; // MTLO
+  assign #1 {overflowable, syscallD, breakD, hiloread, hilosel, hilodisable,
+    mdstart, hilosrc, useshifter, alushcontrol} = 
+    (usefunct ? functcontrol : {9'b0, maindecuseshifter, alushmaincontrol});
 
   always @ ( * )
       case(funct)
           // ALU Ops
-          6'b100000: functcontrol <= 6'b000010; // ADD 
-          6'b100001: functcontrol <= 6'b000010; // ADDU
-          6'b100010: functcontrol <= 6'b000110; // SUB 
-          6'b100011: functcontrol <= 6'b000110; // SUBU
-          6'b100100: functcontrol <= 6'b000000; // AND
-          6'b100101: functcontrol <= 6'b000001; // OR
-          6'b100110: functcontrol <= 6'b000100; // XOR
-          6'b100111: functcontrol <= 6'b000101; // NOR
-          6'b101010: functcontrol <= 6'b000111; // SLT
-          6'b101011: functcontrol <= 6'b000011; // SLTU
-
-          // Shift Ops
-          // The lower 3 bits are: {constant, left, rightassociative}
-          6'b000000: functcontrol <= 6'b001110; // SLL
-          6'b000010: functcontrol <= 6'b001100; // SRL
-          6'b000011: functcontrol <= 6'b001101; // SRA
-          6'b000100: functcontrol <= 6'b001010; // SLLV
-          6'b000110: functcontrol <= 6'b001000; // SRLV
-          6'b000111: functcontrol <= 6'b001001; // SRAV
-
+          6'b100000: functcontrol <= 13'b1000000000010; // ADD 
+          6'b100001: functcontrol <= 13'b0000000000010; // ADDU
+          6'b100010: functcontrol <= 13'b1000000000110; // SUB 
+          6'b100011: functcontrol <= 13'b0000000000110; // SUBU
+          6'b100100: functcontrol <= 13'b0000000000000; // AND
+          6'b100101: functcontrol <= 13'b0000000000001; // OR
+          6'b100110: functcontrol <= 13'b0000000000100; // XOR
+          6'b100111: functcontrol <= 13'b0000000000101; // NOR
+          6'b101010: functcontrol <= 13'b0000000000111; // SLT
+          6'b101011: functcontrol <= 13'b0000000000011; // SLTU
+                                                 
+          // Shift Ops                           
+          // The lower 3 bits are: {coonstant, left, rightassociative}
+          6'b000000: functcontrol <= 13'b0000000001110; // SLL
+          6'b000010: functcontrol <= 13'b0000000001100; // SRL
+          6'b000011: functcontrol <= 13'b0000000001101; // SRA
+          6'b000100: functcontrol <= 13'b0000000001010; // SLLV
+          6'b000110: functcontrol <= 13'b0000000001000; // SRLV
+          6'b000111: functcontrol <= 13'b0000000001001; // SRAV
+                                                 
           // Branch Ops (These are all don't cares)
-          
-          // Mult/div/HI/LO Ops
-          // The lower 3 bits are {dontcare, signedop, muldivb}
-          
-          6'b010000: functcontrol <= 6'b000000; // MFHI
-          6'b010001: functcontrol <= 6'b010000; // MTHI
-          6'b010010: functcontrol <= 6'b000000; // MFLO
-          6'b010011: functcontrol <= 6'b010000; // MTLO
-
-          6'b011000: functcontrol <= 6'b100011; // MULT
-          6'b011001: functcontrol <= 6'b100001; // MULTU
-          6'b011010: functcontrol <= 6'b100010; // DIV
-          6'b011011: functcontrol <= 6'b100000; // DIVU
-
-          default:   functcontrol <= 6'b000xxx; // ???
+                                                 
+          // Mult/div/HI/LO Ops                  
+          // The lower 3 bits are {dont care, signedop, muldivb}
+                                                 
+          6'b010000: functcontrol <= 13'b0001000000000; // MFHI
+          6'b010001: functcontrol <= 13'b0000010010000; // MTHI
+          6'b010010: functcontrol <= 13'b0001100000000; // MFLO
+          6'b010011: functcontrol <= 13'b0000001010000; // MTLO
+                                                 
+          6'b011000: functcontrol <= 13'b0000000100011; // MULT
+          6'b011001: functcontrol <= 13'b0000000100001; // MULTU
+          6'b011010: functcontrol <= 13'b0000000100010; // DIV
+          6'b011011: functcontrol <= 13'b0000000100000; // DIVU
+                                               
+          // Exceptions                        
+          6'b001100: functcontrol <= 13'b0100000000000; // SYSCALL
+          6'b001101: functcontrol <= 13'b0010000000000; // BREAK
+                                                 
+          default:   functcontrol <= 13'b0000000000xxx; // ???
       endcase
 endmodule
 
@@ -490,10 +480,10 @@ module datapath(input         clk, reset,
   adder       pcadd2(pcD, 32'b1000, pcplus8D);
   // PCSpin uses pcD, gcc/assembler use pcplus4D, we'll stick with pcplus4D
   adder btadd(pcplus4D, {signimmD[29:0], 2'b00}, branchtargetD);
-  // TODO: Make these into individual modules
-  assign #1 {aeqzD, aeqbD, agtzD, altzD} = {srca2D == 0, srca2D == srcb2D, 
-                                            ~srca2D[31] & (srca2D[30:0] !== 0),
-                                            srca2D[31]};
+  eqcmp aeqbcmp(srca2D, srcb2D, aeqbD);
+  eqzerocmp aeqzcmp(srca2D, aeqzD);
+  gtzerocmp agtzcmp(srca2D, agtzD);
+  ltzerocmp altzcmp(srca2D, altzD);
   mux3 #(32)  pcbranchmux(branchtargetD, {pcplus4D[31:28], instrD[25:0], 2'b00},
                           srca2D, pcbranchsrcD, pcnextbrFD);
   mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
@@ -841,13 +831,11 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
 
   // This could be made slightly better since jumpreg only uses one register
   // output.
-  // TODO: All the zero tests are wasteful since no one would use register zero
-  // for a branch or jump, consider removing them.
   assign #1 branchstallD = (branchD | jumpregD) & 
-             (regwriteE & ((rsD != 0 & writeregE == rsD) | 
-                          (rtD != 0 & writeregE == rtD)) |
-              memtoregM & ((rsD != 0 & writeregM == rsD) | 
-                          (rtD != 0 & writeregM == rtD)));
+             (regwriteE & ((writeregE == rsD) | 
+                          (writeregE == rtD)) |
+              memtoregM & ((writeregM == rsD) | 
+                          (writeregM == rtD)));
 
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE;
   assign #1 stallF =   stallD      // stalling D stalls all previous stages
