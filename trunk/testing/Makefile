@@ -12,13 +12,13 @@ all: test_000.dat test_001.dat test_002.dat test_003.dat test_004.dat test_005.d
 .PRECIOUS: %.dat %.dump %.o %.s
 
 %.dat: %.dump
-	cat $< | grep --only-matching "^ *[0-9a-fA-F]\+:[^0-9a-fA-F]*[0-9a-fA-F]\+" | tr -d " " | grep --only-matching "[0-9a-fA-F]\{8\}" > $@
+	cat $< | grep --only-matching "^ *[0-9a-fA-F]\+:[^0-9a-fA-F]*[0-9a-fA-F ]\+" | tr -d " " | grep --only-matching "[0-9a-fA-F]\{8\}" > $@
 
 %.dump: %.o
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
-# The -g parameter prevents the removal of unneeded nops and swapping branches
-# (so does .set noreorder in the assembly code)
+# ".set noreorder" in the assembly code prevents the removal of unneeded nops 
+# and swapping branches
 %.o: %.asm
 	$(AS) -c $< -o $@
 
