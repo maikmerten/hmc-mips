@@ -117,12 +117,11 @@ module controller(input        clk, reset, exception,
              mdstartD, hilosrcD,
              hiloreadD, hiloselD;
   wire       byteD, halfwordD, byteE;
-  reg  [1:0] aluoutsrcD, specialregsrcD;
-  wire [1:0] hilodisablealushD, hilodisablealushE;
+  wire [1:0] hilodisablealushD, hilodisablealushE, specialregsrcD, aluoutsrcD;
   wire       ltD, gtD, eqD, brsrcD;
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
-  wire       cop0writeE, cop0writeM;
+  wire       cop0opD, cop0writeE, cop0writeM;
 
   assign #1 regwriteD = mainregwrite | linkD | cop0readD;
   assign #1 regdstD = maindecregdstD | cop0writeD;
@@ -134,7 +133,7 @@ module controller(input        clk, reset, exception,
   maindec md(opD, memtoregD, memwriteD, byteD, halfwordD, loadsignedD,
              alusrcD, maindecregdstD, mainregwrite, unsignedD, luiD,
              maindecuseshifterD, maindecoverflowableD, alushcontmaindecD,
-             riD, fpuD, adesableD, adelableD);
+             riD, fpuD, adesableD, adelableD, cop0opD);
 
   alushdec  ad(functD, maindecuseshifterD, alushcontmaindecD, useshifterD,
                alushcontrolD, alushdecoverflowableD, syscallD, breakD,
@@ -148,32 +147,22 @@ module controller(input        clk, reset, exception,
                        ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD,
                        jumpregD);
   
-  cop0dec c0dec(opD, rsD, functD, cop0readD, cop0writeD, rfeD); 
+  cop0dec c0dec(opD, rsD, functD, cop0opD, cop0readD, cop0writeD, rfeD); 
 
   // Chooses which component is selected as aluout
-  always @ ( * )
-    if(linkD)
-      aluoutsrcD <= 2'b10; // PC+8
-    else if (cop0readD | hiloreadD)
-      aluoutsrcD <= 2'b11; // special register
-    else if (useshifterD)
-      aluoutsrcD <= 2'b01; // shifter
-    else
-      aluoutsrcD <= 2'b00; // alu
+  // 2'b00 for alu
+  // 2'b01 for shifter
+  // 2'b10 for PC+8 (branch/jump & link)
+  // 2'b11 for special register
+  assign #1 aluoutsrcD = {linkD | cop0readD | hiloreadD,
+                          useshifterD | cop0readD | hiloreadD};
 
-
-  // Chooses which special register is used
-  always @ ( * ) 
-    if(hiloreadD)
-      if(hiloselD)
-        // Use LO
-        specialregsrcD <= 2'b10;
-      else
-        // Use HI
-        specialregsrcD <= 2'b01;
-    else // implied if cop0readD
-      // Read from coprocessor0
-      specialregsrcD <= 2'b00;
+  // Choose which special register to use
+  // hilosel is high when choosing LO
+  // 2'b00 for cop0readD
+  // 2'b01 for HI
+  // 2'b10 for LO
+  assign #1 specialregsrcD = {hiloreadD & hiloselD, hiloreadD & ~hiloselD};
 
   // Choose which HI or LO register(s) should be written to
   hilocontrol hiloc(mdrunE, hilodisablealushE, hilodisableE);
@@ -213,9 +202,9 @@ module maindec(input  [5:0] op,
                output       unsignedD, lui, useshift, overflowable,
                output [2:0] alushcontrol,
                output       riD, fpuD,
-               output       adesableD, adelableD);
+               output       adesableD, adelableD, cop0op);
 
-  reg [18:0] controls;
+  reg [19:0] controls;
  
   assign {regwrite, /* regwrite is also enabled by branchdec and cop0dec */
           regdst,   /* regdst is also enabled by cop0dec */ 
@@ -224,41 +213,37 @@ module maindec(input  [5:0] op,
           memwrite,
           memtoreg, byte, halfword, loadsignedD,
           useshift, alushcontrol /* 3 bits */,
-          unsignedD, lui, adesableD, adelableD, fpuD, riD} = controls;
+          unsignedD, lui, adesableD, adelableD, fpuD, riD, cop0op} = controls;
 
   always @ ( * )
     case(op)
-      6'b000000: controls <= 19'b1100000000101000000; //R-type
-      6'b000001: controls <= 19'b0100000000101000000; //Opcode 1 (branches)
-      6'b100000: controls <= 19'b1001011010010000000; //LB (assume big endian)
-      6'b100001: controls <= 19'b1001010110010000100; //LH
-      6'b100011: controls <= 19'b1001010010010000100; //LW
-      6'b100100: controls <= 19'b1001011000010100000; //LBU
-      6'b100101: controls <= 19'b1001010100010100000; //LHU
-      6'b101000: controls <= 19'b0001101000010000000; //SB
-      6'b101001: controls <= 19'b0001100100010001000; //SH
-      6'b101011: controls <= 19'b0001100000010001000; //SW
-      6'b001000: controls <= 19'b1011000000010000000; //ADDI
-      6'b001001: controls <= 19'b1001000000010000000; //ADDIU
-      6'b001010: controls <= 19'b1001000000111000000; //SLTI
-      6'b001011: controls <= 19'b1001000000011000000; //SLTIU 
-      6'b001100: controls <= 19'b1001000000000100000; //ANDI
-      6'b001101: controls <= 19'b1001000000001100000; //ORI
-      6'b001110: controls <= 19'b1001000000100100000; //XORI
-      6'b001111: controls <= 19'b1001000001010110000; //LUI
-      6'b000010: controls <= 19'b0000000000010000000; //J
-      6'b000011: controls <= 19'b1100000000010000000; //JAL
-      6'b000100: controls <= 19'b0000000000110000000; //BEQ
-      6'b000101: controls <= 19'b0000000000110000000; //BNE
-      6'b000110: controls <= 19'b0000000000110000000; //BLEZ
-      6'b000111: controls <= 19'b0000000000110000000; //BGTZ
-      6'b010000: controls <= 19'b0000000000010000000; //MFC0, MTC0, RFE
-      6'b010001: controls <= 19'b0000000000000000010; //fpu
-      default:   
-        begin
-          controls <= 19'bxxxxxxxxxxxxxxxxxx1;  //???
-          //$stop;
-        end
+      6'b000000: controls <= 20'b11000000001010000000; //R-type
+      6'b000001: controls <= 20'b01000000000100000000; //Opcode 1 (branches)
+      6'b100000: controls <= 20'b10010110100100000000; //LB (assume big endian)
+      6'b100001: controls <= 20'b10010101100100001000; //LH
+      6'b100011: controls <= 20'b10010100100100001000; //LW
+      6'b100100: controls <= 20'b10010110000101000000; //LBU
+      6'b100101: controls <= 20'b10010101000101000000; //LHU
+      6'b101000: controls <= 20'b00011010000100000000; //SB
+      6'b101001: controls <= 20'b00011001000100010000; //SH
+      6'b101011: controls <= 20'b00011000000100010000; //SW
+      6'b001000: controls <= 20'b10110000000100000000; //ADDI
+      6'b001001: controls <= 20'b10010000000100000000; //ADDIU
+      6'b001010: controls <= 20'b10010000001110000000; //SLTI
+      6'b001011: controls <= 20'b10010000000110000000; //SLTIU 
+      6'b001100: controls <= 20'b10010000000001000000; //ANDI
+      6'b001101: controls <= 20'b10010000000011000000; //ORI
+      6'b001110: controls <= 20'b10010000001001000000; //XORI
+      6'b001111: controls <= 20'b10010000010101100000; //LUI
+      6'b000010: controls <= 20'b00000000000100000000; //J
+      6'b000011: controls <= 20'b11000000000100000000; //JAL
+      6'b000100: controls <= 20'b00000000001100000000; //BEQ
+      6'b000101: controls <= 20'b00000000001100000000; //BNE
+      6'b000110: controls <= 20'b00000000001100000000; //BLEZ
+      6'b000111: controls <= 20'b00000000001100000000; //BGTZ
+      6'b010000: controls <= 20'b00000000000100000001; //MFC0, MTC0, RFE
+      6'b010001: controls <= 20'b00000000000000000100; //(floating point)
+      default:   controls <= 20'bxxxxxxxxxxxxxxxxxx1x; //??? (throw exception)
     endcase
 endmodule
 
@@ -278,6 +263,8 @@ module alushdec(input      [5:0] funct,
   // The pattern 0101 indicates that we have an R-type and should use the 
   // funct code (0101 is also the nor command, of which there is no immediate
   // equivalent; hence 0101 is available)
+  // TODO: Consider simply using another bit in the main decoder instead of
+  // this comparrison junk
   assign #1 usefunct = ({maindecuseshifter, alushmaincontrol} == 4'b0101);
   assign #1 {overflowable, syscallD, breakD, hiloread, hilosel, hilodisable,
     mdstart, hilosrc, useshifter, alushcontrol} = 
@@ -298,7 +285,7 @@ module alushdec(input      [5:0] funct,
           6'b101011: functcontrol <= 13'b0000000000011; // SLTU
                                                  
           // Shift Ops                           
-          // The lower 3 bits are: {coonstant, left, rightassociative}
+          // The lower 3 bits are: {constant, left, rightassociative}
           6'b000000: functcontrol <= 13'b0000000001110; // SLL
           6'b000010: functcontrol <= 13'b0000000001100; // SRL
           6'b000011: functcontrol <= 13'b0000000001101; // SRA
@@ -358,7 +345,10 @@ module branchdec(input  [5:0] op,
           5'b00001: controls <= 7'b0101100;   // BGEZ
           5'b10000: controls <= 7'b0110001;   // BLTZAL
           5'b10001: controls <= 7'b0101101;   // BGEZAL
-          default:  controls <= 7'bxxxxxxx;   // Error, unsupported instruction
+          default:  begin
+            controls <= 7'bxxxxxxx;   // Error, unsupported instruction
+            $display("ERROR: invalid opcode 1 instruction");
+          end
         endcase
       6'b000100: controls <= 7'b0100110;      // BEQ
       6'b000101: controls <= 7'b0111010;      // BNE
@@ -379,14 +369,12 @@ endmodule
 module cop0dec(input [5:0] op,
                input [4:0] rs,
                input [5:0] funct,
+               input       cop0op,
                output      cop0read, cop0write, rfe);
 
-  // TODO: move signals like this to the main decoder            
-  wire opcode16 = (op == 6'b010000);
-
-  assign #1 cop0read = (opcode16 & (rs == 5'b00000));                    // MFC0
-  assign #1 cop0write = (opcode16 & (rs == 5'b00100));                   // MTC0
-  assign #1 rfe = (opcode16 & (rs == 5'b10000) & (funct == 6'b010000));  // RFE
+  assign #1 cop0read = (cop0op & (rs == 5'b00000));                    // MFC0
+  assign #1 cop0write = (cop0op & (rs == 5'b00100));                   // MTC0
+  assign #1 rfe = (cop0op & (rs == 5'b10000) & (funct == 6'b010000));  // RFE
 
 endmodule
 
