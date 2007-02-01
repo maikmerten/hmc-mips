@@ -30,7 +30,8 @@ module cache(input         clk, writeenable,
              output [31:0] readdata,
              output reg    ack);
 
-  reg  [31:0] RAM[1023:0];
+  reg  [31:0] RAM[256:0]; // Don't make this much bigger or SynplifyPro
+                          // will hate you (and won't halt)
   reg fakedelay1, fakedelay2;
 
   assign readdata = RAM[a[31:2]]; // word aligned

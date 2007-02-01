@@ -191,7 +191,8 @@ module testbench;
             if(writedata === 479001600 /* 12 factorial */) begin
               currentSuccess <= 1;
             end else begin
-              //$display("Writing value %d to address %h at time %d", writedata,              // dataadr, counter);
+              $display("Writing value %d to address %h at time %d", writedata,
+                       dataadr, counter);
             end
           end
           
