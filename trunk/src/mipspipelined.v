@@ -6,7 +6,7 @@
 // Carl Nygaard carlpny at gmail dot com 2007
 // Thomas W. Barr tbarr at cs dot hmc dot edu 2007
 // Matt Totino mtotino at hmc.edu 2007
-// Nathaniel Pinckney npinckney at gmail dot com
+// Nathaniel Pinckney npinckney at gmail dot com 2007
 //
 // Pipelined MIPS processor
 //------------------------------------------------
@@ -848,45 +848,34 @@ endmodule
 module branchcontroller(input             reset, exception, jump, branch, link,
                         input             aeqz, aeqb, agtz, altz,
                         input             lt, gt, eq, src,
-                        output reg        rdsrc, 
-                        output reg  [1:0] pcsrc,
-                        output reg  [1:0] pcbranchsrc,
-                        output reg        jumpreg);
+                        output            rdsrc, 
+                        output      [1:0] pcsrc,
+                        output      [1:0] pcbranchsrc,
+                        output            jumpreg);
 
-  always @ ( * )
-    begin
-      pcsrc = 2'b10; // Default to PC+4
-      rdsrc = 1'b0;
-      pcbranchsrc = 2'b00; // This is really a don't care
-      jumpreg = 1'b0;
-      if(reset) begin
-        pcsrc = 2'b00;
-      end else if (exception) begin
-        pcsrc = 2'b01;
-      end else if (jump) begin // Jump
-        pcsrc = 2'b11;
-        if(src) begin  // Jump using register 
-          pcbranchsrc = 2'b10;
-          jumpreg = 1'b1;
-        end else begin // Jump using immediate
-          pcbranchsrc = 2'b01;
-          rdsrc = link;
-        end
-      end else if(branch) begin // Branch
-        // All linking branches link to register 31
-        rdsrc = link;
-        pcbranchsrc = 2'b00;
-        if(src) begin // Compare a and b
-          if((eq & aeqb) | (~eq & ~aeqb)) begin
-            pcsrc = 2'b11;
-          end
-        end else begin  // Compare a to zero
-          if((~eq & ~lt & ~gt) | (eq & aeqz) | (gt & agtz) | (lt & altz)) begin
-            pcsrc = 2'b11;
-          end
-        end
-      end
-    end
+  // Various comparison results that warrant taking a branch
+  wire abcompare = (eq & aeqb) | (~eq & ~aeqb);
+  wire azcompare = (~eq & ~lt & ~gt) | (eq & aeqz) | (gt & agtz) | (lt & altz);
+
+  // rdsrc is 1 when we need to force destination register to be 31
+  assign #1 rdsrc = ((jump & ~src) | branch) & link;
+  assign #1 jumpreg = jump & src;
+
+  // pcsrc values
+  // 2'b00 reset vector
+  // 2'b01 exception vector
+  // 2'b10 PC+4
+  // 2'b11 branch
+  assign #1 pcsrc = {~reset & ~exception, 
+                        ~reset & (exception | jump 
+                        | (branch & ((src & abcompare) | (~src & azcompare))))};
+
+  // pcbranchsrc
+  // 2'b00 branch to pc+4 + offset
+  // 2'b01 jump to register value
+  // 2'b10 jump to immediate
+  assign #1 pcbranchsrc = {jump & src, jump & ~src};
+
 endmodule
            
 module alu(input      [31:0] a, b, 
@@ -904,7 +893,6 @@ module alu(input      [31:0] a, b,
   assign #1 sltUnsigned = a < b;
   assign #1 aorb = a | b;
 
-  // Overflow assumes add or sub command (cop0 checks whether overflow matters)
   assign #1 overflow = (a[31] == b2[31] & a[31] != sum[31]);
 
   // ALU Unit
