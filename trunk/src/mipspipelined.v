@@ -407,22 +407,17 @@ module datapath(input         clk, reset,
                 output [3:0]  byteenM,
                 output        misalignedh, misalignedw, adelthrownE, mdrunE);
 
-  parameter RESETVECTORUNCACHED = 32'hbfc00000;
-  parameter EXCEPTIONVECTORUNCACHED = 32'hbfc00100;
-  // Curretly, cached exceptions are not supported
-  parameter EXCEPTIONVECTORCACHED = 32'h9fc00100;  // TODO: Double-check value
-
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
   wire        stallF, flushD;
-  wire [4:0]  rd2D, rsE, rtE, rdD;
+  wire [4:0]  rd2D, rsE, rtE;
   wire [4:0]  writeregE, writeregM;
   wire [31:0] writedataM;
   wire [7:0]  rbyteM;
   wire [15:0] rhalfwordM;
   wire [31:0] rbyteextM, rhalfwordextM, readdata2M;
   wire [3:0]  bytebyteenM, halfwordbyteenM;
-  wire [31:0] pcnextFD, pcnextbrFD, pcplus4F, pcplus4D;
+  wire [31:0] pcnextFD, pcnextbrFD, pcplus4D, pcplus4F;
   wire [31:0] signimmD, signimmE;
   wire [31:0] srcaD, srca2D, srcaE, srca2E;
   wire [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
@@ -441,75 +436,49 @@ module datapath(input         clk, reset,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, flushD, flushE, flushM);
 
-  // next PC logic (operates in fetch and decode)
-  mux4 #(32)  pcmux(RESETVECTORUNCACHED, EXCEPTIONVECTORUNCACHED,
-                    pcplus4F, pcnextbrFD, pcsrcFD, pcnextFD); 
 
-  // register file (operates in decode and writeback)
-  regfile     rf(clk, regwriteW, rsD, rtD, writeregW,
-                 resultW, srcaD, srcbD);
+  fetchstage fetchstage(// inputs 
+                        clk, reset, stallF, pcsrcFD, pcnextbrFD,
+                        // outputs
+                        adelthrownF, pcF, pcplus4F);
 
-  // Fetch stage logic
-  flopenr #(32) pcreg(clk, reset, ~stallF, pcnextFD, pcF);
-  adder       pcadd1(pcF, 32'b100, pcplus4F);
-  // misaligned fetch logic
-  assign     adelthrownF = pcF[0] | pcF[1];
-
-  // Decode stage 
+  // Fetch to decode register
   flopenr #(32) r1D(clk, reset, ~stallD, pcF, pcD);
   flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
   flopenrc #(1) r3D(clk, reset, ~stallD, flushD, adelthrownF, adelthrownD);
   flopenr #(32) r4D(clk, reset, ~stallD, pcplus4F, pcplus4D);
-  signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
-  mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
-  mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
-  eqcmp       comp(srca2D, srcb2D, equalD);
-  // TODO: consider moving link adder to the Execute stage
-  adder       pcadd2(pcD, 32'b1000, pcplus8D);
-  // PCSpin uses pcD, gcc/assembler use pcplus4D, we'll stick with pcplus4D
-  adder btadd(pcplus4D, {signimmD[29:0], 2'b00}, branchtargetD);
-  eqcmp aeqbcmp(srca2D, srcb2D, aeqbD);
-  eqzerocmp aeqzcmp(srca2D, aeqzD);
-  gtzerocmp agtzcmp(srca2D, agtzD);
-  ltzerocmp altzcmp(srca2D, altzD);
-  mux3 #(32)  pcbranchmux(branchtargetD, {pcplus4D[31:28], instrD[25:0], 2'b00},
-                          srca2D, pcbranchsrcD, pcnextbrFD);
-  mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
 
-  // Instruction breakdown
-  assign opD = instrD[31:26];
-  assign functD = instrD[5:0];
-  assign rsD = instrD[25:21];
-  assign rtD = instrD[20:16];
-  assign rdD = instrD[15:11];
+  decodestage decodestage(// inputs
+                          clk, unsignedD, rdsrcD, 
+                          instrD, pcD, pcplus4D, resultW, 
+                          aluoutM, regwriteW, writeregW, forwardaD, forwardbD,
+                          pcbranchsrcD,
+                          // outputs
+                          opD, functD, rsD, rtD, rd2D, 
+                          srca2D, srcb2D, signimmD, pcnextbrFD,
+                          aeqbD, aeqzD, agtzD, altzD);
 
-  // Execute stage 
-  floprc #(32) r1E(clk, reset, flushE, srcaD, srcaE);
-  floprc #(32) r2E(clk, reset, flushE, srcbD, srcbE);
+  // Decode to Execute stage register
+  floprc #(32) r1E(clk, reset, flushE, srca2D, srcaE); // TODO: was srcaD and  
+  floprc #(32) r2E(clk, reset, flushE, srcb2D, srcbE); // srcbD so double check
   floprc #(32) r3E(clk, reset, flushE, signimmD, signimmE);
   floprc #(5)  r4E(clk, reset, flushE, rsD, rsE);
   floprc #(5)  r5E(clk, reset, flushE, rtD, rtE);
   floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
-  floprc #(32) r7E(clk, reset, flushE, pcplus8D, pcplus8E);
   floprc #(32) r9E(clk, reset, flushE, pcD, pcE);
   floprc #(1)  r10E(clk, reset, flushE, adelthrownD, adelthrownE);
   
-  mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
-  mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
-  mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
-  alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE, overflowE);
-  shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
-                      shiftresultE);
-  mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
-  assign misalignedw = aluoutE[1] | aluoutE[0];
-  assign misalignedh = aluoutE[0];
-  mdunit md(clk, reset,
-            srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
-            hiE, loE, mdrunE);
-  mux3 #(32)  specialregmux(cop0readdataE, hiE, loE, specialregsrcE, 
-                            specialregE);
-  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, specialregE, 
-                        aluoutsrcE, aluoutE);
+  executestage executestage(// inputs
+                            clk, reset, alusrcE, 
+                            luiE, regdstE, mdstartE, hilosrcE, mdrunE,
+                            hilodisableE, specialregsrcE, aluoutsrcE,
+                            forwardaE, forwardbE, 
+                            alushcontrolE, rtE, rdE, 
+                            srcaE, srcbE, resultW, aluoutM, signimmE, pcE,
+                            cop0readdataE, 
+                            // outputs
+                            srcb2E, aluoutE, writeregE, overflowE, misalignedw, 
+                            misalignedh);
 
   // Memory stage
   floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
@@ -525,7 +494,7 @@ module datapath(input         clk, reset,
   mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutM[1], halfwordbyteenM);
   mux3 #(4) byteenmux(4'b1111, halfwordbyteenM, bytebyteenM, 
                       {byteM, halfwordM}, byteenM);
-  // Load conversionts
+  // Load conversions
   mux4 #(8) rbytemux(readdataM[7:0], readdataM[15:8], readdataM[23:16], 
                         readdataM[31:24], aluoutM[1:0], rbyteM);
   mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutM[1],
@@ -542,6 +511,109 @@ module datapath(input         clk, reset,
   flopr #(32) r4W(clk, reset, writedataM, writedataW);
   flopr #(32) r5W(clk, reset, pcM, pcW);
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
+
+endmodule
+
+module fetchstage(input             clk, reset, stallF,
+                  input  [1:0]      pcsrcFD,
+                  input  [31:0]     pcnextbrFD,
+                  output            adelthrownF,
+                  output [31:0]     pcF, 
+                  // Next Stage Outputs
+                  output [31:0]     pcplus4F);
+
+  wire [31:0] pcnextF;
+
+  parameter RESETVECTORUNCACHED = 32'hbfc00000;
+  parameter EXCEPTIONVECTORUNCACHED = 32'hbfc00100;
+  // Curretly, cached exceptions are not supported
+  parameter EXCEPTIONVECTORCACHED = 32'h9fc00100;  // TODO: Double-check value
+
+  // next PC logic (operates in fetch and decode)
+  mux4 #(32)  pcmux(RESETVECTORUNCACHED, EXCEPTIONVECTORUNCACHED,
+                    pcplus4F, pcnextbrFD, pcsrcFD, pcnextF); 
+
+  // Fetch stage logic
+  flopenr #(32) pcreg(clk, reset, ~stallF, pcnextF, pcF);
+  adder       pcadd1(pcF, 32'b100, pcplus4F);
+  // misaligned fetch logic
+  assign     adelthrownF = pcF[0] | pcF[1];
+
+endmodule
+
+module decodestage(input         clk, unsignedD, rdsrcD,
+                   input  [31:0] instrD, pcD, pcplus4D, resultW, aluoutM, 
+                   input         regwriteW, 
+                   input  [4:0]  writeregW,
+                   input         forwardaD, forwardbD,
+                   input  [1:0]  pcbranchsrcD,
+                   output [5:0]  opD, functD,
+                   output [4:0]  rsD, rtD, rd2D,
+                   output [31:0] srca2D, srcb2D, signimmD, pcnextbrFD,
+                   output        aeqbD, aeqzD, agtzD, altzD);
+
+  wire [31:0] srcaD, srcbD, branchtargetD;
+  wire [4:0]  rdD;
+
+  // Instruction breakdown
+  assign opD = instrD[31:26];
+  assign functD = instrD[5:0];
+  assign rsD = instrD[25:21];
+  assign rtD = instrD[20:16];
+  assign rdD = instrD[15:11];
+
+  // register file (operates in decode and writeback)
+  regfile     rf(clk, regwriteW, rsD, rtD, writeregW,
+                 resultW, srcaD, srcbD);
+
+  signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
+  mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
+  mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
+  // PCSpim uses pcD, gcc/assembler use pcplus4D, we'll stick with pcplus4D
+  adder btadd(pcplus4D, {signimmD[29:0], 2'b00}, branchtargetD);
+  eqcmp aeqbcmp(srca2D, srcb2D, aeqbD);
+  eqzerocmp aeqzcmp(srca2D, aeqzD);
+  gtzerocmp agtzcmp(srca2D, agtzD);
+  ltzerocmp altzcmp(srca2D, altzD);
+  mux3 #(32)  pcbranchmux(branchtargetD, {pcplus4D[31:28], instrD[25:0], 2'b00},
+                          srca2D, pcbranchsrcD, pcnextbrFD);
+  mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
+endmodule
+
+module executestage(input         clk, reset, alusrcE, 
+                                  luiE, regdstE, mdstartE, hilosrcE, mdrunE,
+                    input  [1:0]  hilodisableE, specialregsrcE, aluoutsrcE,
+                                  forwardaE, forwardbE, 
+                    input  [2:0]  alushcontrolE, 
+                    input  [4:0]  rtE, rdE, 
+                    input  [31:0] srcaE, srcbE, resultW, aluoutM, signimmE, pcE,
+                                  cop0readdataE, 
+                    output [31:0] srcb2E, aluoutE,
+                    output [4:0]  writeregE,
+                    output        overflowE, misalignedw, misalignedh);
+
+  wire [31:0] srca2E, srcb3E;
+  wire [31:0] aluresultE, shiftresultE, pcplus8E, specialregE, 
+              hiE, loE;
+
+  mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
+  mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
+  mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
+  alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE, overflowE);
+  shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
+                      shiftresultE);
+  mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
+  adder       pcadd2(pcE, 32'b1000, pcplus8E);
+  mdunit md(clk, reset,
+            srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
+            hiE, loE, mdrunE);
+  mux3 #(32)  specialregmux(cop0readdataE, hiE, loE, specialregsrcE, 
+                            specialregE);
+  mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, specialregE, 
+                        aluoutsrcE, aluoutE);
+
+  assign misalignedw = aluoutE[1] | aluoutE[0];
+  assign misalignedh = aluoutE[0];
 
 endmodule
 
