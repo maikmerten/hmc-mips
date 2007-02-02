@@ -9,8 +9,9 @@
 module imem(input  [10:0]  a,
             output [31:0] rd);
 
-  // 0x200 = 2^10 = 124
+  // 0x200 = 2^10 = 1024
   reg  [31:0] RAM[1023:0];
+  //  reg  [31:0] RAM[63:0];  // USE THIS FOR SYNTHESIS
 
   initial
     begin
