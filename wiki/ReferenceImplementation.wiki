@@ -1,0 +1,8 @@
+==Overview==
+
+To compare our implementation of the MIPS CPU with existing implementations, we must run the same regression tests on both our simulated hardware with some other simulation, or real hardware. There are several options to do this:
+
+ * GXemul - Known to boot Linux, IRIX. Emulates the r2000/3000 hardware in the form of the DECstation 2100.
+ * qemu - General purpose emulator, known to book Linux.
+ * Silicon Graphics Indy r4400 (twb's webserver) - 64bit arch probably too different from the r2k implementation we've written.
+ * DECstation 2100 (twb's doorstop) - Might be ideal, if I can get access to it. Currently in my high-school's engineering lab.
