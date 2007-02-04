@@ -36,10 +36,10 @@ module mips(input         clk, reset,
               syscallE, breakE, riE, fpu,
               adesableE, adelableE, adelthrownE, misaligned;
   wire [2:0]  alushcontrolE;
-  wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD, excstage;
+  wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
   wire        flushE, flushM;
   wire [31:0] cop0readdataE, writedataW;
-  wire [31:0] pcD, pcE, pcM, pcW;
+  wire [31:0] pcD, pcE, pcM;
   wire [4:0]  writeregW;
   wire [1:0]  specialregsrcE, hilodisableE;
   wire        hiloaccessD, mdstartE, hilosrcE;
@@ -67,21 +67,21 @@ module mips(input         clk, reset,
               rdsrcD, 
               specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
               pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readdataE,
-              pcF, pcD, pcE, pcM, pcW, instrF,
+              pcF, pcE, pcM, instrF,
               aluoutM, writedataM, readdataM, instrackF, dataackM, 
-              exception, excstage,
+              exception,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
               flushE, flushM, overflowE,
               writedataW, writeregW, byteenM, misalignedh, misalignedw, 
               adelthrownE, mdrunE);
 
   coprocessor0 cop0(clk, reset, cop0writeW, rdE, writeregW, writedataW, 
-                    overflowableE, overflowE, pcF, pcD, pcE, pcM, pcW,
+                    overflowableE, overflowE, pcE, pcM,
                     bdsF, bdsD, bdsE, bdsM,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                     halfwordE, rfeE, interrupts, 
-                    cop0readdataE, re, swc, isc, exception, excstage
+                    cop0readdataE, re, swc, isc, exception
                     );
 endmodule
 
@@ -389,12 +389,11 @@ module datapath(input         clk, reset,
                 input  [1:0]  pcsrcFD, pcbranchsrcD,
                 input  [2:0]  alushcontrolE,
                 input  [31:0] cop0readdataE,
-                output [31:0] pcF, pcD, pcE, pcM, pcW,
+                output [31:0] pcF, pcE, pcM,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedata2M,
                 input  [31:0] readdataM, 
                 input         instrackF, dataackM, exception,
-                input  [1:0]  excstage,
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
@@ -418,13 +417,14 @@ module datapath(input         clk, reset,
   wire [31:0] pcplus8D, instrD;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
+  wire [31:0] pcD;
   wire        adelthrownF, adelthrownD;
 
   // hazard detection
   hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, branchD, jumpregD,
-              instrackF, dataackM, exception, hiloaccessD, mdrunE, excstage,
+              instrackF, dataackM, exception, hiloaccessD, mdrunE,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, flushD, flushE, flushM);
 
@@ -442,7 +442,7 @@ module datapath(input         clk, reset,
 
   decodestage decodestage(// inputs
                           clk, unsignedD, rdsrcD, 
-                          instrD, pcD, pcplus4D, resultW, 
+                          instrD, pcplus4D, resultW, 
                           aluoutM, regwriteW, writeregW, forwardaD, forwardbD,
                           pcbranchsrcD,
                           // outputs
@@ -489,7 +489,6 @@ module datapath(input         clk, reset,
   flopr #(32) r2W(clk, reset, readdata2M, readdataW);
   flopr #(5)  r3W(clk, reset, writeregM, writeregW);
   flopr #(32) r4W(clk, reset, writedataM, writedataW);
-  flopr #(32) r5W(clk, reset, pcM, pcW);
 
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
 
@@ -523,7 +522,7 @@ module fetchstage(input             clk, reset, stallF,
 endmodule
 
 module decodestage(input         clk, unsignedD, rdsrcD,
-                   input  [31:0] instrD, pcD, pcplus4D, resultW, aluoutM, 
+                   input  [31:0] instrD, pcplus4D, resultW, aluoutM, 
                    input         regwriteW, 
                    input  [4:0]  writeregW,
                    input         forwardaD, forwardbD,
@@ -633,7 +632,7 @@ module coprocessor0(input             clk, reset,
                     input      [4:0]  readaddress, writeaddress,
                     input      [31:0] writecop0W,
                     input             overflowableE, overflowE,
-                    input      [31:0] pcF, pcD, pcE, pcM, pcW,
+                    input      [31:0] pcE, pcM,
                     input             bdsF, bdsD, bdsE, bdsM,
                     input             syscallE, breakE, riE, fpuE,
                     input             adesableE, adelableE, adelthrownE, 
@@ -643,9 +642,7 @@ module coprocessor0(input             clk, reset,
                     output            re,   // reverse endianess
                                       swc,  // swap caches
                                       isc,  // isolate cache
-                                      exception,
-                    output     [1:0]  excstage
-                    );
+                                      exception );
 
   wire [31:0] statusreg, causereg, epc;
   wire [7:0]  im;    // Interupt mask
@@ -658,10 +655,9 @@ module coprocessor0(input             clk, reset,
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                      halfwordE, iec, interrupts, im,
-                     exception, branchdelay, exccode, 
-                     excstage);
-  epcunit       epcu(clk, exception, branchdelay, excstage, pcF, pcD, pcE, pcM,
-                     pcW, epc);
+                     exception, branchdelay, exccode);
+  epcunit       epcu(clk, exception, branchdelay, pcE, pcM, epc);
+  
   statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
   causeregunit  cr(clk, branchdelay, interrupts, exccode, 
@@ -687,14 +683,10 @@ module exceptionunit(input            clk, reset,
                      input            iec, //SR(IEc)
                      input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
                      output reg       exception, branchdelay,
-                     output reg [4:0] exccode, 
-                     output reg [1:0] excstage);
+                     output reg [4:0] exccode);
 
   // TODO: worry about undesired startup exceptions
 
-  // excstage is the stage exception occured in
-  // 0 = Fetch, 1 = Decode, 2 = Execute, 3 = Memory
-  // (assume writeback does not have exceptions)
 
   always @ ( * ) // Using posedge clk would add extra clock sycle and likely 
                  // offset everything by one, rendering some of the
@@ -706,35 +698,30 @@ module exceptionunit(input            clk, reset,
       if(overflowableE & overflowE) begin
         exception = 1;
         exccode = 12;       // Overflow
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
       if(syscallE) begin
         exception = 1;
         exccode = 8;       // Syscall
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
       if(breakE) begin
         exception = 1;
         exccode = 9;       // Break
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
       if(riE) begin
         exception = 1;
         exccode = 10;       // RI (reserved instruction)
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
       if(fpuE) begin
         exception = 1;
         exccode = 11;       // CpU - Coprocessor unavailable
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
@@ -742,7 +729,6 @@ module exceptionunit(input            clk, reset,
         //$display("adel:%d, hwE:%d, malh:$d, malw:$d", adelableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 4;       // ADeL
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
@@ -750,15 +736,12 @@ module exceptionunit(input            clk, reset,
         //$display("ades:%d, hwE:%d, malh:$d, malw:$d", adesableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 5;       // ADeS
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
       if(iec & ( |(im & interrupts))) begin
-        $display("interupt");
         exception = 1;
         exccode = 1;       // Interrupt
-        excstage = 2;       // Stage E
         branchdelay = bdsE;
       end
       
@@ -839,18 +822,11 @@ module causeregunit(input             clk, branchdelay,
 endmodule
 
 module epcunit(input             clk, exception, branchdelay,
-               input      [1:0]  excstage,
-               input      [31:0] pcF, pcD, pcE, pcM, pcW,
+               input      [31:0] pcE, pcM,
                output reg [31:0] epc);
 
   always @ ( posedge clk )
-      if(exception)
-        case(excstage)
-          2'b00: epc <= (branchdelay ? pcD : pcF);
-          2'b01: epc <= (branchdelay ? pcE : pcD);
-          2'b10: epc <= (branchdelay ? pcM : pcE);
-          2'b11: epc <= (branchdelay ? pcW : pcM);
-        endcase
+      if(exception) epc <= (branchdelay ? pcM : pcE);
 endmodule
 
 
@@ -861,9 +837,6 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               input            memtoregE, memtoregM, branchD, jumpregD,
               input            instrackF, dataackM, exception,
               input            hiloaccessD, mdrunE,
-              input  [1:0]     excstage, // TODO (Thomas): Remove and make 
-                                         //   everything execution stage
-                                         //   (simplify this excstage mess)
               output           forwardaD, forwardbD,
               output reg [1:0] forwardaE, forwardbE,
               output           stallF, stallD, flushD, flushE, flushM);
@@ -916,13 +889,12 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
                                    // yet available to enter the decode stage
                      | exception;  // All exceptions invalidate the decod stage
 
-  assign #1 flushE =   stallD // stalling D flushes next stage
-                     | (exception & excstage != 2'b00); // flush decoder on all 
-                                                        // exceptions but those
-                                                        // in the fetch stage
+  assign #1 flushE =   stallD | exception; // stalling D flushes next stage 
+                                            // flush decoder on all exceptions
+                                            
   // flush memory stage when we need to throw out an ALU computation, such as
   // when there is an arithmetic overflow
-  assign #1 flushM = (exception & (excstage == 2'b10 | excstage == 2'b11)); 
+  assign #1 flushM = exception; 
 
   // *** not necessary to stall D stage on store if source comes from load;
   // *** instead, another bypass network could be added from W to M
