@@ -129,7 +129,7 @@ wire [29:0] dmemadr;
 wire [31:0] dmemdata;
 wire [3:0] dmembyteen;
 wire dmemrwb, dmemen;
-reg dmemdone;
+wire dmemdone;
 wire dmemdonewire;
 
 
@@ -141,7 +141,7 @@ wire [29:0] imemadr;
 wire [31:0] imemdata;
 wire [3:0] imembyteen;
 wire imemrwb, imemen;
-reg imemdone;
+wire imemdone;
 wire imemdonewire;
 
 wire [29:0] wbadr;
@@ -152,7 +152,7 @@ wire [29:0] wbmemadr;
 wire [31:0] wbmemdata;
 wire [3:0] wbmembyteen;
 wire wbmemen;
-reg wbmemdone;
+wire wbmemdone;
 
 reg [29:0] memadr;
 wire [31:0] memdata;
@@ -175,16 +175,19 @@ assign dbyteen = (swc) ? 4'b1 : byteenM;
 assign irwb = (swc) ? ~memwriteM : 1'b1;
 assign drwb = (swc) ? 1'b1 : ~memwriteM;
 
+wire working;
+assign working = wbon | don | ion;
+
 // If reading want this to be z,
 // if writing then drive with the data to write.
 assign ddata = (swc | ~memwriteM) ? 32'bz : writedataM;
 assign idata = (~swc | ~memwriteM) ? 32'bz : writedataM;
 
 // Outputs:
-assign instrF = (swc) ? ddata : idata;
-assign readdataM = (swc) ? idata : ddata;
-assign instrackF = (swc) ? ddone : idone;
-assign dataackM = (swc) ? idone : ddone;
+mux2 #(32) instrFmux(idata,ddata,swc,instrF);
+mux2 #(32) readdataMmux(ddata,idata,swc,readdataM);
+mux2 #(1) instrackFmux(idone,ddone,swc,instrackF);
+mux2 #(1) dataackMmux(ddone,idone,swc,dataackM);
 
 // Write buffer... for writing.
 // need swap here...
@@ -204,10 +207,10 @@ assign imemdonewire = (swc & ~imemrwb) ? wbdone :
 
 // Mem assignments for reading (directrly from
 // main memory)
-assign memdata = (memrwb) ? 32'bz : memdataf; 
-assign imemdata = (ion & imemrwb) ? memdata : 32'bz;
-assign dmemdata = (don & dmemrwb) ? memdata : 32'bz;
-assign wbmemdata = (wbon) ? memdata : 32'bz;
+mux2 memdatamux(memdataf, 32'bz, memrwb, memdata);
+mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
+mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
+mux2 wbmemdatamux(32'bz, memdata, wbon, wbmemdata);
 
 cache dcache(clk, reset, dadr, ddata, dbyteen,
                          drwb, den, ddone,
@@ -235,9 +238,9 @@ mainmem mem(clk, reset, memadr, memdata, membyteen,
 always @(negedge reset)
 begin
     // Turn off "done" by memory interface
-    dmemdone <= 0;
-    imemdone <= 0;
-    wbmemdone <= 0;
+    //dmemdone <= 0;
+    //imemdone <= 0;
+    //wbmemdone <= 0;
     // Turn off different acccesses to memory.
     don <= 0;
     ion <= 0;
@@ -246,11 +249,7 @@ end
 
 always @(posedge clk)
 begin
-  //  $display("idone: %d, ddone: %d, wbdone: %d", idone, ddone, wbdone);
-  //  $display("imemdone: %d, dmemdone: %d, wbmemdone: %d", imemdone, dmemdone, wbmemdone);
-  //  $display("ien: %d, den: %d, wben: %d", ien, den, wben);
-  //  $display("ion: %d, don: %d, wbon: %d", ion, don, wbon);
-    if(~(wbon | don | ion)) // If we aren't already working...
+    if(~working) // If we aren't already working...
     begin
         if(wbmemen)
         begin
@@ -307,10 +306,13 @@ begin
     end
     // Has the result of asserting the respective done
     // for one cycle if memory has acknowledged the operation.
-    dmemdone <= (memdone) ? don : 1'b0;
-    imemdone <= (memdone) ? ion : 1'b0;
-    wbmemdone <= (memdone) ? wbon : 1'b0;
+    //dmemdone <= (memdone) ? don : 1'b0;
+    //imemdone <= (memdone) ? ion : 1'b0;
+    //wbmemdone <= (memdone) ? wbon : 1'b0;
 end
+  flopr #(1) dmemdonef(clk,reset,memdone & don,dmemdone);
+  flopr #(1) imemdonef(clk,reset,memdone & ion,imemdone);
+  flopr #(1) wbmemdonef(clk,reset,memdone & wbon,wbmemdone);
 endmodule
 
 
@@ -402,12 +404,9 @@ module cache(input clk, reset,
             assign done = ((incache & rwb & ~bypass) | ~en) ? 1'b1 : memdonef;
             
             // Pass these on directly.
-            // Use tri-state here??
-            //mux2 #(32) memdatamux(memrwb, 32'bz, memdataf);
-            assign memdata = (memrwb) ?
-                              32'bz : memdataf;
-  
-  
+            // TODO: Use tri-state buffer here??
+            mux2 #(32) memdatamux(memdataf, 32'bz, memrwb, memdata);
+ 
             always @(negedge reset)
             begin
                 memdataf <= 0;
@@ -474,61 +473,49 @@ module writebuffer(input clk, reset,
                    input en,
                    output done,
                    
-                   output reg [29:0] memadr,
-                   output reg [31:0] memdata,
-                   output reg [3:0] membyteen,
-                   output reg memen,
+                   output [29:0] memadr,
+                   output [31:0] memdata,
+                   output [3:0] membyteen,
+                   output memen,
                    input memdone);
-   reg [1:0] ptr;               // Current place to store.
-   reg [1:0] writeptr;          // Next value to write.
-   reg [31:0] bufdata[3:0];
-   reg [29:0] bufadr[3:0];
-   reg [3:0] bufbyteen[3:0];
-   reg [3:0] bufen[3:0];      // Flag to indicate whether buffer entry has
+   wire [31:0] bufdata[3:0];
+   wire [29:0] bufadr[3:0];
+   wire [3:0] bufbyteen[3:0];
+   wire bufen[3:0];      // Flag to indicate whether buffer entry has
                               // valid data.
-  
+   
+   wire [1:0] ptr,writeptr;
+   wire [3:0] ptrs,writeptrs;  // TODO: this could easily be a shift register...
+   wire writeready;
+   
    assign done = ~bufen[ptr];   // If we have a free space available.
+   assign writeready = (memdone | ~memen) & bufen[writeptr];
    
-   always @(negedge reset)
-   begin
-       ptr <= 0;
-       writeptr <= 0;
-       memadr <= 0;
-       memdata <= 0;
-       membyteen <= 0;
-       memen <= 0;
-       bufen[0] <= 0;
-       bufen[1] <= 0;
-       bufen[2] <= 0;
-       bufen[3] <= 0;
-   end
+   flopenr #(2) ptrf(clk, reset, en & done, ptr + 1'b1, ptr);
+   flopenr #(2) writeptrf(clk, reset, writeready, writeptr + 1'b1, writeptr);
    
-   always @(posedge clk)
-   begin     
-       // If we have space, write to
-       // buffer.
-       if(en & done)
-       begin
-           bufadr[ptr] <= adr;
-           bufdata[ptr] <= data;
-           bufbyteen[ptr] <= byteen;
-           bufen[ptr] <= 1;
-           ptr <= ptr + 1;  // Assumes LSBs
-       end
-       
-       // If memory is done or we aren't writing
-       // then start a write, or disable memory.
-       if(memdone | ~memen)   
-       begin
-          if(bufen[writeptr])  // write next one
-           begin
-              memadr <= bufadr[writeptr]; 
-              memdata <= bufdata[writeptr];
-              membyteen <= bufbyteen[writeptr];
-              bufen[writeptr] <= 0;
-              writeptr <= writeptr + 1; // Assumes LSBs
-           end
-           memen <= bufen[writeptr];
-       end
-   end
+   flopenr #(30) memadrf(clk, reset, writeready, bufadr[writeptr], memadr);
+   flopenr #(32) memdataf(clk, reset, writeready, bufdata[writeptr], memdata);
+   flopenr #(4) membyteenf(clk, reset, writeready, bufbyteen[writeptr], membyteen);
+   flopenr #(1) memenf(clk, reset, memdone | ~memen, bufen[writeptr], memen);
+  
+   dec2 ptrdec(ptr,ptrs);
+   dec2 writeptrdec(writeptr,writeptrs);
+  
+  
+   // TODO: this is really really not elegant.  We should change this
+   // so the buffers are just mux'd out to the memory instead.
+   genvar i;
+   generate
+     for(i = 0; i < 4; i = i + 1) begin:fbuf
+       flopenr #(1) fbufen(clk,reset,((en & done) & ptrs[i]) | ((memdone | ~memen) & writeptrs[i]), 
+                                 (en & done) & ptrs[i],bufen[i]);
+       flopenr #(32) fbufdata(clk,reset,(en & done) & ptrs[i], 
+                                 data,bufdata[i]);
+       flopenr #(30) fbufadr(clk,reset,(en & done) & ptrs[i], 
+                                 adr,bufadr[i]);
+       flopenr #(4) fbufbyteen(clk,reset,(en & done) & ptrs[i], 
+                                 byteen,bufbyteen[i]);
+     end
+   endgenerate
 endmodule
