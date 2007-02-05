@@ -32,8 +32,7 @@ module mips(input         clk, reset,
               memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
               byteM, hardwordM,
               aeqzD, aeqbD, agtzD, altzD, mdrunE, branchD, jumpregD,
-              bdsF, bdsD, bdsE, bdsM,
-              syscallE, breakE, riE, fpu,
+              bdsE, syscallE, breakE, riE, fpu,
               adesableE, adelableE, adelthrownE, misaligned;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
@@ -54,8 +53,7 @@ module mips(input         clk, reset,
                regdstE, regwriteE, regwriteM, 
                regwriteW, jumpD, jumpregD, overflowableE,
                aluoutsrcE, alushcontrolE, linkD, luiE,
-               rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, 
-               bdsF, bdsD, bdsE, bdsM,
+               rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, bdsE,
                syscallE, breakE, riE, fpuE,
                adesableE, adelableE, halfwordE, rfeE,
                specialregsrcE, hilodisableE,
@@ -100,7 +98,7 @@ module controller(input        clk, reset, exception,
                   output       linkD, luiE,
                   output       rdsrcD, 
                   output [1:0] pcsrcFD, pcbranchsrcD,
-                  output       cop0writeW, bdsF, bdsD, bdsE, bdsM,
+                  output       cop0writeW, bdsE,
                   output       syscallE, breakE, riE, fpuE,
                   output       adesableE, adelableE, halfwordE, rfeE,
                   output [1:0] specialregsrcE, hilodisableE,
@@ -121,6 +119,7 @@ module controller(input        clk, reset, exception,
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
   wire       cop0opD, cop0writeE, cop0writeM;
+  wire       bsdF, bdsD;
 
   assign #1 regwriteD = mainregwrite | linkD | cop0readD;
   assign #1 regdstD = maindecregdstD | cop0writeD;
@@ -186,11 +185,11 @@ module controller(input        clk, reset, exception,
 		              adesableE, adelableE, adelthrownE,
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
                   specialregsrcE, rfeE});
-  floprc #(8) regM(clk, reset, flushM,
+  floprc #(7) regM(clk, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
-                  byteE, halfwordE, bdsE},
+                  byteE, halfwordE},
                   {memtoregM, memwriteM, regwriteM, cop0writeM, loadsignedM,
-                  byteM, halfwordM, bdsM});
+                  byteM, halfwordM});
   flopr #(3) regW(clk, reset, 
                   {memtoregM, regwriteM, cop0writeM},
                   {memtoregW, regwriteW, cop0writeW});
