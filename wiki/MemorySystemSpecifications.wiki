@@ -127,7 +127,7 @@ The interface from the main memory's view is:
 
 {{{
 input clk
-input [29:0] adr,
+input [26:0] adr,
 inout [31:0] data,
 input [3:0] byteen,
 input rwb, en,
