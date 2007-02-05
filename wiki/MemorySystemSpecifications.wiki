@@ -123,10 +123,10 @@ input memdone
 
 The memory subsystem expects a single main memory interface.  The exact timings of the main memory are very flexible.  The main memory should expect an EN (enable) input when the cache system requests a read/write.  Once the main memory has performed the operation, and driven any necessary output ports with the correct value, it asserts done.
 
-The interface from the main memory view is:
+The interface from the main memory's view is:
 
 {{{
-input clk, reset,
+input clk
 input [29:0] adr,
 inout [31:0] data,
 input [3:0] byteen,
