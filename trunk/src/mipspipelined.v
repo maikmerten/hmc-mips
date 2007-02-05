@@ -644,15 +644,15 @@ module coprocessor0(input             clk, reset,
   wire [31:0] statusreg, causereg, epc;
   wire [7:0]  im;    // Interupt mask
   wire [4:0]  exccode;
-  wire        branchdelay; 
 
 
   exceptionunit excu(clk, reset, overflowableE, overflowE, 
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                      halfwordE, iec, interrupts, im,
-                     exception, branchdelay, exccode);
-  epcunit       epcu(clk, exception, branchdelay, pcE, epc);
+                     exception, exccode);
+                     
+  epcunit       epcu(clk, exception, bdsE, pcE, epc);
   
   statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
@@ -677,60 +677,33 @@ module exceptionunit(input            clk, reset,
                      input            misalignedh, misalignedw, halfwordE,
                      input            iec, //SR(IEc)
                      input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
-                     output reg       exception, branchdelay,
+                     output           exception,
                      output reg [4:0] exccode);
 
-  // TODO: worry about undesired startup exceptions
-
-
+    wire overflow, adel, ades, interrupt;
+    
+    assign overflow = overflowableE & overflowE;
+    assign adel = (adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE;
+    assign ades =  adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh);
+    assign interrupt = iec & ( |(im & interrupts));
+    assign exception = |(exccode);
+    
   always @ ( * ) // Using posedge clk would add extra clock sycle and likely 
                  // offset everything by one, rendering some of the
                  // subsequent logic incorrect.
-    begin
-      exception = 0;
-      branchdelay = 0;
-      // This if-tree emphasizes the priority of exceptions.
-      if(overflowableE & overflowE) begin
-        exception = 1;
-        exccode = 12;       // Overflow
-      end
-      
-      if(syscallE) begin
-        exception = 1;
-        exccode = 8;       // Syscall
-      end
-      
-      if(breakE) begin
-        exception = 1;
-        exccode = 9;       // Break
-      end
-      
-      if(riE) begin
-        exception = 1;
-        exccode = 10;       // RI (reserved instruction)
-      end
-      
-      if(fpuE) begin
-        exception = 1;
-        exccode = 11;       // CpU - Coprocessor unavailable
-      end
-      
-      if((adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE) begin
-        exception = 1;
-        exccode = 4;       // ADeL
-      end
-      
-      if(adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
-        exception = 1;
-        exccode = 5;       // ADeS
-      end
-      
-      if(iec & ( |(im & interrupts))) begin
-        exception = 1;
-        exccode = 1;       // Interrupt
-      end
-      
-    end
+    casex({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE})
+      // rearrange to set priority. all the spec demands is that interrupt
+      // be highest
+      8'b1xxxxxxx : exccode <= 5'b00001;
+      8'b01xxxxxx : exccode <= 5'b01100;
+      8'b001xxxxx : exccode <= 5'b00100;
+      8'b0001xxxx : exccode <= 5'b00101;
+      8'b00001xxx : exccode <= 5'b01000;
+      8'b000001xx : exccode <= 5'b01001;
+      8'b0000001x : exccode <= 5'b01010;
+      8'b00000001 : exccode <= 5'b01011;
+      default    : exccode <= 5'b00000;
+    endcase
 endmodule
 
 module statusregunit(input             clk, reset, writeenable, exception, 
@@ -806,14 +779,14 @@ module causeregunit(input             clk, branchdelay,
     end
 endmodule
 
-module epcunit(input             clk, exception, branchdelay,
+module epcunit(input             clk, exception, bdsE,
                input      [31:0] pcE,
                output     [31:0] epc);
 
   wire [31:0]   pcEminus4, epcnext;
   
   adder         pcadd3(pcE, 32'hfffffffc, pcEminus4);
-  mux2 #(32)    epcmux(pcE, pcEminus4, branchdelay, epcnext);
+  mux2 #(32)    epcmux(pcE, pcEminus4, bdsE, epcnext);
   flopen #(32)  epcreg(clk, exception, epcnext, epc);
   
                
