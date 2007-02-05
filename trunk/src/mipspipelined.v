@@ -415,7 +415,7 @@ module datapath(input         clk, reset,
   wire [31:0] pcplus8D, instrD;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
-  wire [31:0] pcD, pcM;
+  wire [31:0] pcD;
   wire        adelthrownF, adelthrownD;
 
   // hazard detection
@@ -474,7 +474,6 @@ module datapath(input         clk, reset,
   floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
   floprc #(32) r2M(clk, reset, flushM, aluoutE, aluoutM);
   floprc #(5)  r3M(clk, reset, flushM, writeregE, writeregM);
-  floprc #(32)  r4M(clk, reset, flushM, pcE, pcM);
 
   memorystage memorystage(// inputs
                           byteM, halfwordM, loadsignedM, 
