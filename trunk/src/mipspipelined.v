@@ -76,8 +76,7 @@ module mips(input         clk, reset,
               adelthrownE, mdrunE);
 
   coprocessor0 cop0(clk, reset, cop0writeW, rdE, writeregW, writedataW, 
-                    overflowableE, overflowE, pcE, pcM,
-                    bdsF, bdsD, bdsE, bdsM,
+                    overflowableE, overflowE, pcE, pcM, bdsE,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                     halfwordE, rfeE, interrupts, 
@@ -633,7 +632,7 @@ module coprocessor0(input             clk, reset,
                     input      [31:0] writecop0W,
                     input             overflowableE, overflowE,
                     input      [31:0] pcE, pcM,
-                    input             bdsF, bdsD, bdsE, bdsM,
+                    input             bdsE,
                     input             syscallE, breakE, riE, fpuE,
                     input             adesableE, adelableE, adelthrownE, 
                     input             misalignedh, misalignedw, halfwordE, rfeE,
@@ -651,7 +650,6 @@ module coprocessor0(input             clk, reset,
 
 
   exceptionunit excu(clk, reset, overflowableE, overflowE, 
-                     bdsF, bdsD, bdsE, bdsM,
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                      halfwordE, iec, interrupts, im,
@@ -660,7 +658,7 @@ module coprocessor0(input             clk, reset,
   
   statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
-  causeregunit  cr(clk, branchdelay, interrupts, exccode, 
+  causeregunit  cr(clk, bdsE, interrupts, exccode, 
                    exception, /* write enable determined by exception */
                    causereg);
    
@@ -676,7 +674,6 @@ endmodule
 
 module exceptionunit(input            clk, reset,
                      input            overflowableE, overflowE,
-                     input            bdsF, bdsD, bdsE, bdsM,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
                      input            misalignedh, misalignedw, halfwordE,
@@ -698,51 +695,41 @@ module exceptionunit(input            clk, reset,
       if(overflowableE & overflowE) begin
         exception = 1;
         exccode = 12;       // Overflow
-        branchdelay = bdsE;
       end
       
       if(syscallE) begin
         exception = 1;
         exccode = 8;       // Syscall
-        branchdelay = bdsE;
       end
       
       if(breakE) begin
         exception = 1;
         exccode = 9;       // Break
-        branchdelay = bdsE;
       end
       
       if(riE) begin
         exception = 1;
         exccode = 10;       // RI (reserved instruction)
-        branchdelay = bdsE;
       end
       
       if(fpuE) begin
         exception = 1;
         exccode = 11;       // CpU - Coprocessor unavailable
-        branchdelay = bdsE;
       end
       
       if((adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE) begin
-        //$display("adel:%d, hwE:%d, malh:$d, malw:$d", adelableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 4;       // ADeL
-        branchdelay = bdsE;
       end
       
       if(adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) begin
-        //$display("ades:%d, hwE:%d, malh:$d, malw:$d", adesableE, halfwordE, misalignedh, misalignedw);
         exception = 1;
         exccode = 5;       // ADeS
-        branchdelay = bdsE;
       end
       
       if(iec & ( |(im & interrupts))) begin
         exception = 1;
         exccode = 1;       // Interrupt
-        branchdelay = bdsE;
       end
       
     end
