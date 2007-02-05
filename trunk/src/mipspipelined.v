@@ -38,7 +38,7 @@ module mips(input         clk, reset,
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
   wire        flushE, flushM;
   wire [31:0] cop0readdataE, writedataW;
-  wire [31:0] pcD, pcE, pcM;
+  wire [31:0] pcD, pcE;
   wire [4:0]  writeregW;
   wire [1:0]  specialregsrcE, hilodisableE;
   wire        hiloaccessD, mdstartE, hilosrcE;
@@ -65,7 +65,7 @@ module mips(input         clk, reset,
               rdsrcD, 
               specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
               pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readdataE,
-              pcF, pcE, pcM, instrF,
+              pcF, pcE, instrF,
               aluoutM, writedataM, readdataM, instrackF, dataackM, 
               exception,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
@@ -74,7 +74,7 @@ module mips(input         clk, reset,
               adelthrownE, mdrunE);
 
   coprocessor0 cop0(clk, reset, cop0writeW, rdE, writeregW, writedataW, 
-                    overflowableE, overflowE, pcE, pcM, bdsE,
+                    overflowableE, overflowE, pcE, bdsE,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                     halfwordE, rfeE, interrupts, 
@@ -387,7 +387,7 @@ module datapath(input         clk, reset,
                 input  [1:0]  pcsrcFD, pcbranchsrcD,
                 input  [2:0]  alushcontrolE,
                 input  [31:0] cop0readdataE,
-                output [31:0] pcF, pcE, pcM,
+                output [31:0] pcF, pcE,
                 input  [31:0] instrF,
                 output [31:0] aluoutM, writedata2M,
                 input  [31:0] readdataM, 
@@ -415,7 +415,7 @@ module datapath(input         clk, reset,
   wire [31:0] pcplus8D, instrD;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
-  wire [31:0] pcD;
+  wire [31:0] pcD, pcM;
   wire        adelthrownF, adelthrownD;
 
   // hazard detection
@@ -630,7 +630,7 @@ module coprocessor0(input             clk, reset,
                     input      [4:0]  readaddress, writeaddress,
                     input      [31:0] writecop0W,
                     input             overflowableE, overflowE,
-                    input      [31:0] pcE, pcM,
+                    input      [31:0] pcE,
                     input             bdsE,
                     input             syscallE, breakE, riE, fpuE,
                     input             adesableE, adelableE, adelthrownE, 
@@ -653,7 +653,7 @@ module coprocessor0(input             clk, reset,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                      halfwordE, iec, interrupts, im,
                      exception, branchdelay, exccode);
-  epcunit       epcu(clk, exception, branchdelay, pcE, pcM, epc);
+  epcunit       epcu(clk, exception, branchdelay, pcE, epc);
   
   statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
@@ -808,11 +808,16 @@ module causeregunit(input             clk, branchdelay,
 endmodule
 
 module epcunit(input             clk, exception, branchdelay,
-               input      [31:0] pcE, pcM,
-               output reg [31:0] epc);
+               input      [31:0] pcE,
+               output     [31:0] epc);
 
-  always @ ( posedge clk )
-      if(exception) epc <= (branchdelay ? pcM : pcE);
+  wire [31:0]   pcEminus4, epcnext;
+  
+  adder         pcadd3(pcE, 32'hfffffffc, pcEminus4);
+  mux2 #(32)    epcmux(pcE, pcEminus4, branchdelay, epcnext);
+  flopen #(32)  epcreg(clk, exception, epcnext, epc);
+  
+               
 endmodule
 
 
