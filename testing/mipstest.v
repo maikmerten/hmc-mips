@@ -77,6 +77,16 @@ module testbench;
       interrupts[1] <= 1; #10;
       interrupts[1] <= 0;
     end
+    
+  initial
+      begin
+        interrupts[2] <= 0;
+        interrupts[3] <= 0;
+        interrupts[4] <= 0;
+        interrupts[5] <= 0;
+        interrupts[6] <= 0;
+        interrupts[7] <= 0;
+      end
   
 
   // generate clock to sequence tests
