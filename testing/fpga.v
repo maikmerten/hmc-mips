@@ -9,7 +9,7 @@
 // this module simulates everything going on in the FPGA. it should be the
 // top level synth'd.
 
-module fpga(input clk, reset,
+module fpga(input ph1, ph2, reset,
                  output  [3:0] outputleds);
                  
         wire [7:0] interrupts;
@@ -22,9 +22,9 @@ module fpga(input clk, reset,
         assign interrupts = 8'b00000000;
         assign outputleds = {status, 1'b1};
         
-        top cpu(clk, reset, interrupts, writedata, dataadr, memwrite);
+        top cpu(ph1, ph2, reset, interrupts, writedata, dataadr, memwrite);
         
-          always@(negedge clk)
+          always@(posedge ph2) //formerly negedge clk, changed to work w/ 2-phase clock
             begin
               status[2] = 1;
               if (reset) 
