@@ -13,7 +13,7 @@ module top(input         ph1, ph2, reset,
 
 
   wire [31:0] pc, instr, readdata;
-  wire instrack, dataack;
+  wire instrack, dataack,instrackreal,dataackreal;
   wire [3:0] byteen;
   wire memtoregM, swc;
   
@@ -27,17 +27,21 @@ module top(input         ph1, ph2, reset,
   // instantiate processor and memories
   mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
-  extmem imem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
-  cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
+         //   assign instrack = 1;
+  extmem extmem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
+ cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
+ 
+ //assign instrack = instrackreal | reset;
+//assign dataack = dataackreal | reset;
 /*
-  cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrack,
+  cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrackreal,
                      dataadr[31:2], writedata, byteen, readdata,
-                     memwrite, reM, dataack,
+                     memwrite, memtoregM, dataackreal,
                      swc,
                      memadr,memdata,membyteen,
                      memrwb,memen,memdone);
-                     
+           /*          
   mainmem mem(ph1, ph2, reset, memadr, memdata, membyteen,
                  memrwb, memen, memdone);
                  */
