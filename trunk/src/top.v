@@ -11,17 +11,36 @@ module top(input         ph1, ph2, reset,
            output [31:0] writedata, dataadr, 
            output        memwrite);
 
+
   wire [31:0] pc, instr, readdata;
   wire instrack, dataack;
   wire [3:0] byteen;
   wire memtoregM, swc;
   
+  wire [26:0] memadr;
+  wire [31:0] memdata;
+  wire [3:0] membyteen;
+  wire memrwb;
+  wire memen;
+  wire memdone;
+  
   // instantiate processor and memories
   mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
-  imem imem(pc[12:2], instr); assign instrack = 1; // TODO: make imem a cache
+  extmem imem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
   cache dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
+/*
+  cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrack,
+                     dataadr[31:2], writedata, byteen, readdata,
+                     memwrite, reM, dataack,
+                     swc,
+                     memadr,memdata,membyteen,
+                     memrwb,memen,memdone);
+                     
+  mainmem mem(ph1, ph2, reset, memadr, memdata, membyteen,
+                 memrwb, memen, memdone);
+                 */
 endmodule
 
 // this is an ideal cache right now
