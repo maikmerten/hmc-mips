@@ -13,7 +13,7 @@
 
 module fpgabench;
 
-  reg         clk;
+  reg         ph1, ph2;
   reg         reset;
 
   reg [7:0] interrupts;
@@ -23,12 +23,13 @@ module fpgabench;
   wire [3:0] outputleds;
 
   // instantiate device to be tested
-  fpga dut(clk, reset, outputleds);
+  fpga dut(ph1, ph2, reset, outputleds);
   
   // generate clock to sequence tests
   always
     begin
-      clk <= 1; # 5; clk <= 0; # 5;
+      ph1 <= 1; # 4; ph1 <= 0; # 1; //changed for new clock
+      ph2 <= 1; # 4; ph2 <= 0; # 1;
     end
     
   initial
