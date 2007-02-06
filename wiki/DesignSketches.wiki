@@ -41,8 +41,7 @@ http://hmc-mips.googlecode.com/svn/trunk/images/memorystageblock.jpg
 
 == Coprocessor 0 Synthesized ==
 
-http://hmc-mips.googlecode.com/svn/trunk/images/cop0block.JPG
-
+http://hmc-mips.googlecode.com/svn/trunk/images/coprocessor0block.jpg
 
 = Old =
 
