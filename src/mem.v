@@ -361,7 +361,23 @@ always @(posedge clk)
 
   assign data = (rwb) ? mem[adr] : 32'bz;
 endmodule
-               
+          
+          
+// 4kB cache memory + tag (20) [51:32] + valid (1-bit) [52]
+module cacheram(input clk,
+  input [9:0] adr,
+  input rwb,
+  input [52:0] din,
+  output [52:0] dout);
+  
+  reg [52:0] mem[1023:0];
+  
+  always @(posedge clk)
+    if(~rwb) mem[adr] <= din;
+    
+  assign dout = mem[adr];
+endmodule
+
 // 4kB CACHE
 //
 // TODO: Forward requests to write buffer.
@@ -372,98 +388,70 @@ module cache(input clk, reset,
              input rwb, en,
              output done,
              
-             output reg [29:0] memadr, 
+             output [29:0] memadr, 
              inout  [31:0] memdata,
-             output reg [3:0] membyteen,
-             output reg memrwb,
-             output reg memen,
+             output [3:0] membyteen,
+             output memrwb,
+             output memen,
              input memdone);
             
-            reg [31:0] cacheline[1023:0];
-            reg [19:0] tagdata[1023:0];
-            reg        valid[1023:0];
-
-            reg [31:0] memdataf;
-            reg memdonef;
+            //reg [31:0] cacheline[1023:0];
+            //reg [19:0] tagdata[1023:0];
+            //reg        valid[1023:0];
+            wire [31:0] cacheline;
+            wire [19:0] tagdata;
+            wire        valid;
+            wire [31:0] cachelinenew;
+            wire [19:0] tagdatanew;
+            wire        validnew;
+            wire        cacheramrwb;
             
-            reg [31:0] bypassdata;
+            wire [31:0] memdataf;
+            wire memdonef;
+            
+            wire [31:0] bypassdata;
 
             wire [9:0] tag;
             wire [19:0] adrmsb;
             wire incache;
             wire bypass;
             
+            cacheram cacheram(clk,tag,cacheramrwb,{validnew,tagdatanew,cachelinenew},
+                                                  {valid,tagdata,cacheline});
+
+           
+            assign #1 cacheramrwb = ~(((rwb & memen & memdone) & (~bypass)) | 
+              ((en & ~done & ~memen) & (~rwb) & (~bypass)));
+              
+            assign validnew = (& byteen) | rwb;  // Valid if writing all or this is a read.
+            assign tagdatanew = adrmsb;
+            assign cachelinenew = rwb ? memdata : data;
+            
             assign tag = adr[9:0];
             assign adrmsb = adr[29:10];
-            assign incache = (tagdata[tag] == adrmsb) & valid[tag];
-            assign bypass = adr[29] & adr[27];
+            assign #1 incache = (tagdata == adrmsb) & valid;
+            assign #1 bypass = adr[29] & adr[27];
             
-            assign data = (rwb) ? ((bypass) ? bypassdata : cacheline[tag]) : 32'bz;
+            mux4 #(32) datamux(32'bz,32'bz,cacheline,bypassdata,{rwb,bypass},data);
             // We're automatically done only if it is in cache,
             // AND we aren't bypassing the cache.
-            assign done = ((incache & rwb & ~bypass) | ~en) ? 1'b1 : memdonef;
-            
+            mux2 #(1) donemux(memdonef,1'b1,(incache & rwb & ~bypass) | ~en,done);
+
             // Pass these on directly.
             // TODO: Use tri-state buffer here??
             mux2 #(32) memdatamux(memdataf, 32'bz, memrwb, memdata);
  
-            always @(negedge reset)
-            begin
-                memdataf <= 0;
-                memen <= 0;
-                memdonef <= 0;
-                bypassdata <= 0;
-            end
-                          
-            always @(posedge clk)
-            begin
-                  // If a request is pending,
-                  // we're not already done,
-                  // and we're not already working.
-                  if(en & ~done & ~memen) begin
-                    // If we're beginning writing.
-                    if(~rwb) begin
-                        if(~bypass)
-                        begin
-                          cacheline[tag] <= (& byteen) ? data : 32'b0;
-                          tagdata[tag] <= (& byteen) ? adrmsb : 20'b0;
-                          valid[tag] <= (& byteen) ? 1'b1 : 1'b0; // If less than a word, invalidate.
-                        end
-                        memadr <= adr[26:0];
-                        memdataf <= data;
-                        membyteen <= byteen;
-                        memrwb <= 1'b0;   // Writing
-                        memen <= 1'b1;
-                    end
-                    // If the entry is not in cache,
-                    // we must read it from main memory.
-                    if(rwb) begin
-                        memadr <= adr[26:0];
-                        membyteen <= 4'b1; // We'll always read in all.
-                        memrwb <= 1'b1;    // Reading
-                        memen <= 1'b1;
-                    end
-                end
-                memdonef <= memen & memdone;
-                
-                // If we're done writing.
-                if(~memrwb & memen & memdone) begin
-                     memen <= 1'b0;
-                end
-                
-               // If we're done reading.
-               if(rwb & memen & memdone) begin
-                   if(bypass)
-                   begin
-                       bypassdata <= memdata;
-                   end else begin  
-                      cacheline[tag] <= memdata;
-                      tagdata[tag] <= adrmsb;
-                      valid[tag] <= 1'b1;
-                  end
-                   memen <= 1'b0;
-               end
-            end     
+            // TODO: we should really make this an FSM.
+            // memdata..
+            flopenr #(32) fmemdata(clk,reset,(en & ~done & ~memen) & ~rwb,data,memdataf);
+            flopenr #(1) fmemen(clk,reset,(en & ~done & ~memen) | (rwb & memen & memdone) | (~memrwb & memen & memdone),
+                                             en & ~done & ~memen,memen);
+            flopen #(32) fbypassdata(clk,(rwb & memen & memdone) & bypass,memdata,bypassdata);
+            flopr #(1) fmemdone(clk,reset,memen & memdone,memdonef);
+            // TODO: change this so adr bus is only 27. ('Duh moment)
+            flopen #(30) fmemadr(clk,en & ~done & ~memen,{3'b0, adr[26:0]},memadr);
+            flopen #(4) fmembyteen(clk,en & ~done & ~memen,rwb ? 4'b1 : byteen,membyteen);
+            flopen #(1) fmemrwb(clk,en & ~done & ~memen,rwb,memrwb);
 endmodule
 
 module writebuffer(input clk, reset,
