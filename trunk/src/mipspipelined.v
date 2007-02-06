@@ -745,7 +745,7 @@ module statusregunit(input             ph1, ph2, reset, writeenable, exception,
      // 25 is re
      // 22 and 21 are bev and ts
      // 17 to 8 are swc, isc, and im
-  flopen #(31) statusreghighflop(ph1, ph2, writeenable,
+  flopenr #(31) statusreghighflop(ph1, ph2, reset, writeenable,
                              {2'b00, cu1, writedata[28], 2'b00, writedata[26],
                               2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
                               2'b00, kuo, ieo, kup, iep, kuc},
