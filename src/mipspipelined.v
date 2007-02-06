@@ -759,19 +759,11 @@ module causeregunit(input             clk, branchdelay,
                     input      [7:0]  interrupts,
                     input      [4:0]  exccode,
                     input             writeenable,
-                    output reg [31:0] causereg);
+                    output     [31:0] causereg);
 
-  always @ ( posedge clk )
-    if(writeenable) begin
-      causereg[31] = branchdelay;
-      causereg[30] = 0;
-      causereg[29:28] = 0; // Coprocessor error -- not sure what's good for
-      causereg[27:16] = 0;
-      causereg[15:8] = interrupts;
-      causereg[7] = 0;
-      causereg[6:2] = exccode;
-      causereg[1:0] = 0;
-    end
+  flopen #(32) causeregflop (clk, writeenable,
+                             {branchdelay, 1'b0, 14'b00000000000000,
+                              interrupts, 1'b0, exccode, 2'b00}, causereg);
 endmodule
 
 module epcunit(input             clk, exception, bdsE,
