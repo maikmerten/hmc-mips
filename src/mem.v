@@ -310,11 +310,15 @@ module cache(input ph1, ph2, reset,
             assign #1 incache = (tagdata == adrmsb) & valid;
             assign #1 bypass = adr[29] & adr[27];
             
-            assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
+            wire [31:0] data2;
+            assign data2 = (|state) ? memdata : cacheline;
+            tribuf datatri(rwb,data2,data);
+            //assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
             assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en;
             
             assign memadr = adr[26:0];
-            assign memdata = state[1] ? data : 32'bz;
+            tribuf memdatatri(~rwb,data,memdata);
+            //assign memdata = state[1] ? data : 32'bz;
             assign memen = (|state);
             assign membyteen = state[0] ? 4'b1 : byteen;
             assign memrwb = rwb;
