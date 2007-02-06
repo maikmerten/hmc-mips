@@ -511,7 +511,7 @@ module fetchstage(input             ph1, ph2, reset, stallF,
                     pcplus4F, pcnextbrFD, pcsrcFD, pcnextF); 
 
   // Fetch stage logic
-  flopenr #(32) pcreg(ph1, ph2, reset, ~stallF, pcnextF, pcF);
+  flopen #(32) pcreg(ph1, ph2, ~stallF, pcnextF, pcF);
   adder       pcadd1(pcF, 32'b100, pcplus4F);
   // misaligned fetch logic
   assign     adelthrownF = pcF[0] | pcF[1];

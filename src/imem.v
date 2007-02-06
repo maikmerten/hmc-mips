@@ -7,8 +7,6 @@
 `timescale 1 ns / 1 ps
 
                  
-//module imem(input  [10:0]  a,
-//            output [31:0] rd);
 module extmem(input ph1, ph2,
                input [10:0] adr,
                inout [31:0] data,

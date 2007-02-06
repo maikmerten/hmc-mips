@@ -28,7 +28,7 @@ module top(input         ph1, ph2, reset,
   mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
   extmem imem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
-  cache dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
+  cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
 /*
   cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrack,
@@ -44,7 +44,7 @@ module top(input         ph1, ph2, reset,
 endmodule
 
 // this is an ideal cache right now
-module cache(input         ph1, ph2, writeenable,
+module cacheideal(input         ph1, ph2, writeenable,
              input  [31:0] a, writedata, // TODO: Remove lower two bits of a
              input  [3:0]  byteen,
              output [31:0] readdata,
