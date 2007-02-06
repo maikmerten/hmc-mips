@@ -49,7 +49,7 @@
 
 `timescale 1 ns / 1 ps
 
-module multdiv(input         clk,
+module multdiv(input         ph1, ph2,
                input         reset,
                input         start,
                input         muldivb,
@@ -72,12 +72,12 @@ module multdiv(input         clk,
   wire [33:0] srch1, srch, prodhsh, nextprodh, yy, srchplusyy;
 
   // control logic
-  mdcontroller mdcont(clk, reset, start, run, done, init, muldivb, signedop, 
+  mdcontroller mdcont(ph1, ph2, reset, start, run, done, init, muldivb, signedop, 
                       cout, prodl[1:0], x[31], y[31], ysaved[31], srch1[31], srchplusyy[33], yzero, 
                       ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero, muldivbsaved, signedopsaved);
 
   // Y register and Booth mux
-  flopenr        yreg(clk, reset, start, y, ysaved);
+  flopenr        yreg(ph1, ph2, reset, start, y, ysaved);
   boothsel       ybooth(ysaved, ysel, signedopsaved, yy, cin);
   zerodetect     yzdetect(ysaved, yzero);
 
@@ -88,12 +88,12 @@ module multdiv(input         clk,
   xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for signed division
   adderc   #(34) addh(srch, yy, cin, srchplusyy, cout);
   mux3     #(34) prodhmux(prodhsh, srchplusyy, {prodhextra, prodh}, prodhsel, nextprodh); // d2 for signed division only
-  flopenr  #(34) prodhreg(clk, init, run, nextprodh, {prodhextra, prodh});
+  flopenr  #(34) prodhreg(ph1, ph2, init, run, nextprodh, {prodhextra, prodh});
 
   // PRODL
   shl1r2         prodlshlr(muldivbsaved, prodl, prodh[1:0], qi, prodlsh);
   mux4           prodlmux(prodlsh, srchplusyy[31:0], prodl, x, prodlsel, nextprodl); // d1 and d2 for signed division only
-  flopenr        prodlreg(clk, reset, run, nextprodl, prodl); // probably doesnt' need reset
+  flopenr        prodlreg(ph1, ph2, reset, run, nextprodl, prodl); // probably doesnt' need reset
 endmodule
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ endmodule
 // conditionally take the two's complement of the inputs and outputs.
 /////////////////////////////////////////////////////////////////////////////////
 
-module mdcontroller(input            clk,
+module mdcontroller(input            ph1, ph2,
                     input            reset,
                     input            start,
                     output           run,
@@ -138,12 +138,12 @@ module mdcontroller(input            clk,
   wire       signsdisagree;
 
   // count and run registers
-  flopenr #(6) countreg(clk, init, run, nextcount, count);
-  flopr #(1)   runreg(clk, reset, run, oldrun);
+  flopenr #(6) countreg(ph1, ph2, init, run, nextcount, count);
+  flopr #(1)   runreg(ph1, ph2, reset, run, oldrun);
 
   // remember whether we are multiplying or dividing and whether we are using
   // a signed op, the value must also be available while start is high
-  flopen #(2) controlreg(clk, start, {muldivb, signedop}, {muldivbreg, signedopreg});
+  flopen #(2) controlreg(ph1, ph2, start, {muldivb, signedop}, {muldivbreg, signedopreg});
 
   assign {muldivbsaved, signedopsaved} = start ? {muldivb, signedop}
                                                : {muldivbreg, signedopreg};
@@ -154,7 +154,7 @@ module mdcontroller(input            clk,
   inc #(6) nc(count, nextcount, nccout);
 
   // hang onto sign for result of signed division
-  flopen #(1) signdisagreereg(clk, start, xsign ^ ysign, signsdisagree);
+  flopen #(1) signdisagreereg(ph1, ph2, start, xsign ^ ysign, signsdisagree);
 
   // determine quotient digit
   assign qi = ~addsign; // sign of result for division
@@ -163,7 +163,7 @@ module mdcontroller(input            clk,
   assign dividebyzero = yzero & ~muldivbsaved;
 
   // keep previous x msb for Booth encoding
-  flopr #(1) xoldreg(clk, init, x[1], oldx);
+  flopr #(1) xoldreg(ph1, ph2, init, x[1], oldx);
 
   // mux select logic
   always @(*) begin

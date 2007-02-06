@@ -8,7 +8,7 @@
 
 module testbench;
 
-  reg         clk;
+  reg         ph1, ph2;
   reg         reset;
 
   reg [7:0] interrupts;
@@ -17,7 +17,7 @@ module testbench;
   wire memwrite;
 
   // instantiate device to be tested
-  top dut(clk, reset, interrupts, writedata, dataadr, memwrite);
+  top dut(ph1, ph2, reset, interrupts, writedata, dataadr, memwrite);
   
   integer currentTest;
   integer numTests;
@@ -26,7 +26,7 @@ module testbench;
   
   reg [31:0] counter;
   
-  always@(posedge clk)
+  always@(posedge ph1)
       counter <= counter + 1;
   
   // initialize test
@@ -92,11 +92,12 @@ module testbench;
   // generate clock to sequence tests
   always
     begin
-      clk <= 1; # 5; clk <= 0; # 5;
+      ph1 <= 1; # 4; ph1 <= 0; #1;
+		ph2 <= 1; # 4; ph2 <= 0; #1;
     end
 
   // check results
-  always@(negedge clk)
+  always@(posedge ph2)
     begin
       case (currentTest)
         0:
