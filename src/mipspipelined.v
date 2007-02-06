@@ -680,29 +680,34 @@ module exceptionunit(input            clk, reset,
                      output           exception,
                      output reg [4:0] exccode);
 
-    wire overflow, adel, ades, interrupt;
+    wire       overflow, adel, ades, interrupt;
+    wire  [2:0] priencout;
     
     assign overflow = overflowableE & overflowE;
     assign adel = (adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE;
     assign ades =  adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh);
     assign interrupt = iec & ( |(im & interrupts));
-    assign exception = |(exccode);
+    assign exception = |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
+    
+    prienc_8  excprienc({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE},
+                        priencout);
+                        
+    
     
   always @ ( * ) // Using posedge clk would add extra clock sycle and likely 
                  // offset everything by one, rendering some of the
                  // subsequent logic incorrect.
-    casex({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE})
+    casex(priencout)
       // rearrange to set priority. all the spec demands is that interrupt
       // be highest
-      8'b1xxxxxxx : exccode <= 5'b00001;
-      8'b01xxxxxx : exccode <= 5'b01100;
-      8'b001xxxxx : exccode <= 5'b00100;
-      8'b0001xxxx : exccode <= 5'b00101;
-      8'b00001xxx : exccode <= 5'b01000;
-      8'b000001xx : exccode <= 5'b01001;
-      8'b0000001x : exccode <= 5'b01010;
-      8'b00000001 : exccode <= 5'b01011;
-      default    : exccode <= 5'b00000;
+      3'b000 : exccode <= 5'b00001;
+      3'b001 : exccode <= 5'b01100;
+      3'b010 : exccode <= 5'b00100;
+      3'b011 : exccode <= 5'b00101;
+      3'b100 : exccode <= 5'b01000;
+      3'b101 : exccode <= 5'b01001;
+      3'b110 : exccode <= 5'b01010;
+      3'b111 : exccode <= 5'b01011;
     endcase
 endmodule
 
