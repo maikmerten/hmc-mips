@@ -788,7 +788,7 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               input            instrackF, dataackM, exception,
               input            hiloaccessD, mdrunE,
               output           forwardaD, forwardbD,
-              output reg [1:0] forwardaE, forwardbE,
+              output     [1:0] forwardaE, forwardbE,
               output           stallF, stallD, flushD, flushE, flushM);
 
   wire lwstallD, branchstallD, instrmissF, datamissM, multdivDE;
@@ -798,16 +798,11 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
   assign forwardbD = (rtD !=0 & rtD == writeregM & regwriteM);
 
   // forwarding sources to E stage (ALU)
-  always @( * )
-    begin
-      forwardaE = 2'b00; forwardbE = 2'b00;
-      if (rsE != 0)
-        if (rsE == writeregM & regwriteM) forwardaE = 2'b10;
-        else if (rsE == writeregW & regwriteW) forwardaE = 2'b01;
-      if (rtE != 0)
-        if (rtE == writeregM & regwriteM) forwardbE = 2'b10;
-        else if (rtE == writeregW & regwriteW) forwardbE = 2'b01;
-    end
+  assign forwardaE[1] = (rsE != 0) & (rsE == writeregM & regwriteM);
+  assign forwardaE[0] = (rsE != 0) & (rsE == writeregW & regwriteW) & !forwardaE[1];
+  
+  assign forwardbE[1] = (rtE != 0) & (rtE == writeregM & regwriteM);
+  assign forwardbE[0] = (rtE != 0) & (rtE == writeregW & regwriteW) & !forwardaE[1];
 
   // stalls  
 
