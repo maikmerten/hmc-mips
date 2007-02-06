@@ -14,7 +14,7 @@
 `timescale 1 ns / 1 ps
 
 // pipelined MIPS processor
-module mips(input         clk, reset,
+module mips(input         ph1, ph2, reset,
             output [31:0] pcF,
             input  [31:0] instrF,
             input  [7:0]  interrupts,
@@ -45,7 +45,7 @@ module mips(input         clk, reset,
   // Globals
   wire        re, swc, isc, exception;
 
-  controller c(clk, reset, exception, opD, functD, rsD, rtD, flushE, flushM,
+  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, flushE, flushM,
                aeqzD, aeqbD, agtzD, altzD, mdrunE,
                memtoregE, memtoregM, memtoregW, memwriteM, 
                byteM, halfwordM, branchD,
@@ -58,7 +58,7 @@ module mips(input         clk, reset,
                adesableE, adelableE, halfwordE, rfeE,
                specialregsrcE, hilodisableE,
                hiloaccessD, mdstartE, hilosrcE);
-  datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
+  datapath dp(ph1, ph2, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
               branchD, jumpregD,
               unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
               regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
@@ -73,7 +73,7 @@ module mips(input         clk, reset,
               writedataW, writeregW, byteenM, misalignedh, misalignedw, 
               adelthrownE, mdrunE);
 
-  coprocessor0 cop0(clk, reset, cop0writeW, rdE, writeregW, writedataW, 
+  coprocessor0 cop0(ph1, ph2, reset, cop0writeW, rdE, writeregW, writedataW, 
                     overflowableE, overflowE, pcE, bdsE,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
@@ -82,7 +82,7 @@ module mips(input         clk, reset,
                     );
 endmodule
 
-module controller(input        clk, reset, exception,
+module controller(input        ph1, ph2, reset, exception,
                   input  [5:0] opD, functD,
                   input  [4:0] rsD, rtD,
                   input        flushE, flushM,
@@ -169,8 +169,8 @@ module controller(input        clk, reset, exception,
 
 
   // pipeline registers
-  floprc #(1) regD(clk, reset, flushE, {bdsF}, {bdsD});
-  floprc #(32) regE(clk, reset, flushE,
+  floprc #(1) regD(ph1, ph2, reset, flushE, {bdsF}, {bdsD});
+  floprc #(32) regE(ph1, ph2, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
@@ -185,12 +185,12 @@ module controller(input        clk, reset, exception,
 		              adesableE, adelableE, adelthrownE,
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
                   specialregsrcE, rfeE});
-  floprc #(7) regM(clk, reset, flushM,
+  floprc #(7) regM(ph1, ph2, reset, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE},
                   {memtoregM, memwriteM, regwriteM, cop0writeM, loadsignedM,
                   byteM, halfwordM});
-  flopr #(3) regW(clk, reset, 
+  flopr #(3) regW(ph1, ph2, reset, 
                   {memtoregM, regwriteM, cop0writeM},
                   {memtoregW, regwriteW, cop0writeW});
 endmodule
@@ -373,7 +373,7 @@ module cop0dec(input [5:0] op,
 
 endmodule
 
-module datapath(input         clk, reset,
+module datapath(input         ph1, ph2, reset,
                 input         memtoregE, memtoregM, memtoregW, byteM, halfwordM,
                 input         branchD, jumpregD, unsignedD, loadsignedM,
                 input         alusrcE, regdstE,
@@ -428,18 +428,18 @@ module datapath(input         clk, reset,
 
 
   fetchstage fetchstage(// inputs 
-                        clk, reset, stallF, pcsrcFD, pcnextbrFD,
+                        ph1, ph2, reset, stallF, pcsrcFD, pcnextbrFD,
                         // outputs
                         adelthrownF, pcF, pcplus4F);
 
   // Fetch to decode register
-  flopenr #(32) r1D(clk, reset, ~stallD, pcF, pcD);
-  flopenrc #(32) r2D(clk, reset, ~stallD, flushD, instrF, instrD);
-  flopenrc #(1) r3D(clk, reset, ~stallD, flushD, adelthrownF, adelthrownD);
-  flopenr #(32) r4D(clk, reset, ~stallD, pcplus4F, pcplus4D);
+  flopenr #(32) r1D(ph1, ph2, reset, ~stallD, pcF, pcD);
+  flopenrc #(32) r2D(ph1, ph2, reset, ~stallD, flushD, instrF, instrD);
+  flopenrc #(1) r3D(ph1, ph2, reset, ~stallD, flushD, adelthrownF, adelthrownD);
+  flopenr #(32) r4D(ph1, ph2, reset, ~stallD, pcplus4F, pcplus4D);
 
   decodestage decodestage(// inputs
-                          clk, unsignedD, rdsrcD, 
+                          ph1, ph2, unsignedD, rdsrcD, 
                           instrD, pcplus4D, resultW, 
                           aluoutM, regwriteW, writeregW, forwardaD, forwardbD,
                           pcbranchsrcD,
@@ -449,17 +449,17 @@ module datapath(input         clk, reset,
                           aeqbD, aeqzD, agtzD, altzD);
 
   // Decode to Execute stage register
-  floprc #(32) r1E(clk, reset, flushE, srca2D, srcaE); // TODO: was srcaD and  
-  floprc #(32) r2E(clk, reset, flushE, srcb2D, srcbE); // srcbD so double check
-  floprc #(32) r3E(clk, reset, flushE, signimmD, signimmE);
-  floprc #(5)  r4E(clk, reset, flushE, rsD, rsE);
-  floprc #(5)  r5E(clk, reset, flushE, rtD, rtE);
-  floprc #(5)  r6E(clk, reset, flushE, rd2D, rdE);
-  floprc #(32) r9E(clk, reset, flushE, pcD, pcE);
-  floprc #(1)  r10E(clk, reset, flushE, adelthrownD, adelthrownE);
+  floprc #(32) r1E(ph1, ph2, reset, flushE, srca2D, srcaE); // TODO: was srcaD and  
+  floprc #(32) r2E(ph1, ph2, reset, flushE, srcb2D, srcbE); // srcbD so double check
+  floprc #(32) r3E(ph1, ph2, reset, flushE, signimmD, signimmE);
+  floprc #(5)  r4E(ph1, ph2, reset, flushE, rsD, rsE);
+  floprc #(5)  r5E(ph1, ph2, reset, flushE, rtD, rtE);
+  floprc #(5)  r6E(ph1, ph2, reset, flushE, rd2D, rdE);
+  floprc #(32) r9E(ph1, ph2, reset, flushE, pcD, pcE);
+  floprc #(1)  r10E(ph1, ph2, reset, flushE, adelthrownD, adelthrownE);
   
   executestage executestage(// inputs
-                            clk, reset, alusrcE, 
+                            ph1, ph2, reset, alusrcE, 
                             luiE, regdstE, mdstartE, hilosrcE,
                             hilodisableE, specialregsrcE, aluoutsrcE,
                             forwardaE, forwardbE, 
@@ -471,9 +471,9 @@ module datapath(input         clk, reset,
                             misalignedh, mdrunE);
 
   // Execute to Memory stage register
-  floprc #(32) r1M(clk, reset, flushM, srcb2E, writedataM);
-  floprc #(32) r2M(clk, reset, flushM, aluoutE, aluoutM);
-  floprc #(5)  r3M(clk, reset, flushM, writeregE, writeregM);
+  floprc #(32) r1M(ph1, ph2, reset, flushM, srcb2E, writedataM);
+  floprc #(32) r2M(ph1, ph2, reset, flushM, aluoutE, aluoutM);
+  floprc #(5)  r3M(ph1, ph2, reset, flushM, writeregE, writeregM);
 
   memorystage memorystage(// inputs
                           byteM, halfwordM, loadsignedM, 
@@ -482,16 +482,16 @@ module datapath(input         clk, reset,
                           writedata2M, readdata2M, byteenM);
 
   // Writeback stage
-  flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
-  flopr #(32) r2W(clk, reset, readdata2M, readdataW);
-  flopr #(5)  r3W(clk, reset, writeregM, writeregW);
-  flopr #(32) r4W(clk, reset, writedataM, writedataW);
+  flopr #(32) r1W(ph1, ph2, reset, aluoutM, aluoutW);
+  flopr #(32) r2W(ph1, ph2, reset, readdata2M, readdataW);
+  flopr #(5)  r3W(ph1, ph2, reset, writeregM, writeregW);
+  flopr #(32) r4W(ph1, ph2, reset, writedataM, writedataW);
 
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
 
 endmodule
 
-module fetchstage(input             clk, reset, stallF,
+module fetchstage(input             ph1, ph2, reset, stallF,
                   input  [1:0]      pcsrcFD,
                   input  [31:0]     pcnextbrFD,
                   output            adelthrownF,
@@ -511,14 +511,14 @@ module fetchstage(input             clk, reset, stallF,
                     pcplus4F, pcnextbrFD, pcsrcFD, pcnextF); 
 
   // Fetch stage logic
-  flopenr #(32) pcreg(clk, reset, ~stallF, pcnextF, pcF);
+  flopenr #(32) pcreg(ph1, ph2, reset, ~stallF, pcnextF, pcF);
   adder       pcadd1(pcF, 32'b100, pcplus4F);
   // misaligned fetch logic
   assign     adelthrownF = pcF[0] | pcF[1];
 
 endmodule
 
-module decodestage(input         clk, unsignedD, rdsrcD,
+module decodestage(input         ph1, ph2, unsignedD, rdsrcD,
                    input  [31:0] instrD, pcplus4D, resultW, aluoutM, 
                    input         regwriteW, 
                    input  [4:0]  writeregW,
@@ -540,7 +540,7 @@ module decodestage(input         clk, unsignedD, rdsrcD,
   assign rdD = instrD[15:11];
 
   // register file (operates in decode and writeback)
-  regfile     rf(clk, regwriteW, rsD, rtD, writeregW,
+  regfile     rf(ph1, ph2, regwriteW, rsD, rtD, writeregW,
                  resultW, srcaD, srcbD);
 
   signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
@@ -557,7 +557,7 @@ module decodestage(input         clk, unsignedD, rdsrcD,
   mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
 endmodule
 
-module executestage(input         clk, reset, alusrcE, 
+module executestage(input         ph1, ph2, reset, alusrcE, 
                                   luiE, regdstE, mdstartE, hilosrcE, 
                     input  [1:0]  hilodisableE, specialregsrcE, aluoutsrcE,
                                   forwardaE, forwardbE, 
@@ -581,7 +581,7 @@ module executestage(input         clk, reset, alusrcE,
                       shiftresultE);
   mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
   adder       pcadd2(pcE, 32'b1000, pcplus8E);
-  mdunit md(clk, reset,
+  mdunit md(ph1, ph2, reset,
             srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
             hiE, loE, mdrunE);
   mux3 #(32)  specialregmux(cop0readdataE, hiE, loE, specialregsrcE, 
@@ -624,7 +624,7 @@ module memorystage(input         byteM, halfwordM, loadsignedM,
                      readdata2M);
 endmodule
 
-module coprocessor0(input             clk, reset,
+module coprocessor0(input             ph1, ph2, reset,
                     input             cop0writeW, 
                     input      [4:0]  readaddress, writeaddress,
                     input      [31:0] writecop0W,
@@ -646,17 +646,17 @@ module coprocessor0(input             clk, reset,
   wire [4:0]  exccode;
 
 
-  exceptionunit excu(clk, reset, overflowableE, overflowE, 
+  exceptionunit excu(ph1, ph2, reset, overflowableE, overflowE, 
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
                      halfwordE, iec, interrupts, im,
                      exception, exccode);
                      
-  epcunit       epcu(clk, exception, bdsE, pcE, epc);
+  epcunit       epcu(ph1, ph2, exception, bdsE, pcE, epc);
   
-  statusregunit sr(clk, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
+  statusregunit sr(ph1, ph2, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
                    writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
-  causeregunit  cr(clk, bdsE, interrupts, exccode, 
+  causeregunit  cr(ph1, ph2, bdsE, interrupts, exccode, 
                    exception, /* write enable determined by exception */
                    causereg);
    
@@ -670,7 +670,7 @@ module coprocessor0(input             clk, reset,
     endcase
 endmodule 
 
-module exceptionunit(input            clk, reset,
+module exceptionunit(input            ph1, ph2, reset,
                      input            overflowableE, overflowE,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
@@ -694,7 +694,7 @@ module exceptionunit(input            clk, reset,
                         
     
     
-  always @ ( * ) // Using posedge clk would add extra clock sycle and likely 
+  always @ ( * ) // Using posedge ph1, ph2 would add extra clock sycle and likely 
                  // offset everything by one, rendering some of the
                  // subsequent logic incorrect.
     casex(priencout)
@@ -709,7 +709,7 @@ module exceptionunit(input            clk, reset,
     endcase
 endmodule
 
-module statusregunit(input             clk, reset, writeenable, exception, 
+module statusregunit(input             ph1, ph2, reset, writeenable, exception, 
                      input      [31:0] writedata, 
                      input             rfeE,
                      output     [31:0] statusreg,
@@ -745,28 +745,28 @@ module statusregunit(input             clk, reset, writeenable, exception,
      // 25 is re
      // 22 and 21 are bev and ts
      // 17 to 8 are swc, isc, and im
-  flopen #(31) statusreghighflop(clk, writeenable,
+  flopen #(31) statusreghighflop(ph1, ph2, writeenable,
                              {2'b00, cu1, writedata[28], 2'b00, writedata[26],
                               2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
                               2'b00, kuo, ieo, kup, iep, kuc},
                              statusreghigh);
 
-  flopen #(1) statusregiec(clk, iecenable, iecnew, iec);
+  flopen #(1) statusregiec(ph1, ph2, iecenable, iecnew, iec);
 
 endmodule
 
-module causeregunit(input             clk, branchdelay,
+module causeregunit(input             ph1, ph2, branchdelay,
                     input      [7:0]  interrupts,
                     input      [4:0]  exccode,
                     input             writeenable,
                     output     [31:0] causereg);
 
-  flopen #(32) causeregflop (clk, writeenable,
+  flopen #(32) causeregflop (ph1, ph2, writeenable,
                              {branchdelay, 1'b0, 14'b00000000000000,
                               interrupts, 1'b0, exccode, 2'b00}, causereg);
 endmodule
 
-module epcunit(input             clk, exception, bdsE,
+module epcunit(input             ph1, ph2, exception, bdsE,
                input      [31:0] pcE,
                output     [31:0] epc);
 
@@ -774,7 +774,7 @@ module epcunit(input             clk, exception, bdsE,
   
   adder         pcadd3(pcE, 32'hfffffffc, pcEminus4);
   mux2 #(32)    epcmux(pcE, pcEminus4, bdsE, epcnext);
-  flopen #(32)  epcreg(clk, exception, epcnext, epc);
+  flopen #(32)  epcreg(ph1, ph2, exception, epcnext, epc);
   
                
 endmodule
@@ -933,7 +933,7 @@ module shifter(input signed [31:0] a, b,
                       shiftresult);
 endmodule
 
-module mdunit(input         clk, reset,
+module mdunit(input         ph1, ph2, reset,
               input  [31:0] srca, srcb,
               input  [2:0]  alushcontrol,
               input         mdstart, hilosrc, 
@@ -944,19 +944,19 @@ module mdunit(input         clk, reset,
   wire [31:0] prodh, prodl, hinext, lonext;
   wire        dividebyzero; // MIPS does not support divide by zero exceptions
 
-  multdiv multdiv(clk, reset, mdstart, alushcontrol[0], alushcontrol[1],
+  multdiv multdiv(ph1, ph2, reset, mdstart, alushcontrol[0], alushcontrol[1],
                   srca, srcb, prodh, prodl, mdrun, dividebyzero);
   mux2 #(32) losrcmux(prodl, srca, hilosrc, lonext);
   mux2 #(32) hisrcmux(prodh, srca, hilosrc, hinext);
 
   // The HI and LO registers:
   // These don't really need the reset
-  flopenr #(32) loreg(clk, reset, ~hilodisable[0], lonext, lo);
-  flopenr #(32) hireg(clk, reset, ~hilodisable[1], hinext, hi);
+  flopenr #(32) loreg(ph1, ph2, reset, ~hilodisable[0], lonext, lo);
+  flopenr #(32) hireg(ph1, ph2, reset, ~hilodisable[1], hinext, hi);
     
 endmodule
 
-module regfile(input         clk, 
+module regfile(input         ph1, ph2, 
                input         we3, 
                input  [4:0]  ra1, ra2, wa3, 
                input  [31:0] wd3, 
@@ -969,7 +969,7 @@ module regfile(input         clk,
   // write third port on falling edge of clock
   // register 0 hardwired to 0
 
-  always @(negedge clk)
+  always @(negedge ph1, ph2)
     if (we3) rf[wa3] <= wd3;
 
   assign #1 rd1 = (ra1 != 0) ? rf[ra1] : 0;
