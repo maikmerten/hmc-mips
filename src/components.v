@@ -73,59 +73,80 @@ module signext #(parameter INPUT = 16, OUTPUT = 32)
   assign #1 y = {{OUTPUT-INPUT{extension}}, a};
 endmodule
 
-module flopr #(parameter WIDTH = 8)
-              (input                  clk, reset,
-               input      [WIDTH-1:0] d, 
-               output reg [WIDTH-1:0] q);
-
-  always @(posedge clk, posedge reset)
-    if (reset) q <= #1 0;
-    else       q <= #1 d;
-endmodule
-
+// start of flops
 module floprc #(parameter WIDTH = 8)
-              (input                  clk, reset, clear,
+              (input                  ph1, ph2, reset, clear,
                input      [WIDTH-1:0] d, 
                output reg [WIDTH-1:0] q);
 
-  always @(posedge clk, posedge reset)
-    if (reset)      q <= #1 0;
-    else if (clear) q <= #1 0;
-    else            q <= #1 d;
-endmodule
+  reg [WIDTH-1:0] master;
 
-module flopen #(parameter WIDTH = 32)
-               (input                  clk,
-                input                  en,
-                input      [WIDTH-1:0] d, 
-                output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if (en)    #1 q <= d;
-endmodule
+  always @(ph2, reset, d, clear)
+    if (ph2) #1 master <= reset ? 0 : (clear ? 0 : d);
 
-module flopenr #(parameter WIDTH = 32)
-                (input                  clk, reset,
-                 input                  en,
-                 input      [WIDTH-1:0] d, 
-                 output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk, posedge reset)
-    if      (reset) q <= #1 0;
-    else if (en)    q <= #1 d;
+  always @(ph1, master)
+    if (ph1) #1 q <= master;
 endmodule
 
 module flopenrc #(parameter WIDTH = 32)
-                 (input                  clk, reset,
+                 (input                  ph1, ph2, reset,
                   input                  en, clear,
                   input      [WIDTH-1:0] d, 
                   output reg [WIDTH-1:0] q);
  
-  always @(posedge clk, posedge reset)
-    if      (reset) q <= #1 0;
-    else if (clear) q <= #1 0;
-    else if (en)    q <= #1 d;
+  reg [WIDTH-1:0] master;
+
+  always @(ph2, reset, en, d, q, clear)
+    if (ph2) #1 master <= reset ? 0 : (clear ? 0 : (en ? d : q));
+
+  always @(ph1, master)
+    if (ph1) #1 q <= master;
 endmodule
+
+module flopenr #(parameter WIDTH = 32)
+                (input                  ph1, ph2, reset,
+                 input                  en,
+                 input      [WIDTH-1:0] d, 
+                 output reg [WIDTH-1:0] q);
+ 
+  reg [WIDTH-1:0] master;
+
+  always @(ph2, reset, en, d, q)
+    if (ph2) #1 master <= reset ? 0 : (en ? d : q);
+
+  always @(ph1, master)
+    if (ph1) #1 q <= master;
+endmodule
+
+module flopen #(parameter WIDTH = 32)
+               (input                  ph1,ph2,
+                input                  en,
+                input      [WIDTH-1:0] d, 
+                output reg [WIDTH-1:0] q);
+ 
+  reg [WIDTH-1:0] master;
+
+  always @(ph2, en, d, q)
+    if (ph2) #1 master <= en ? d : q;
+
+  always @(ph1, master)
+    if (ph1) #1 q <= master;
+endmodule
+
+module flopr #(parameter WIDTH = 32)
+              (input                  ph1, ph2, reset,
+               input      [WIDTH-1:0] d, 
+               output reg [WIDTH-1:0] q);
+ 
+  reg [WIDTH-1:0] master;
+
+  always @(ph2, reset, d)
+    if (ph2) #1 master <= reset ? 0 : d;
+
+  always @(ph1, master)
+    if (ph1) #1 q <= master;
+endmodule
+// end flops
 
 module mux2 #(parameter WIDTH = 32)
              (input  [WIDTH-1:0] d0, d1, 
