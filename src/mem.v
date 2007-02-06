@@ -61,29 +61,29 @@ module testbenchccontroller;
               byteenM <= 4'b1111;
               enM <= 1;
          end
-         3: begin
+        2: begin
               adrM <= 30'h000004Ad;
               writedataM <= 32'hDDCCBBAA;
               memwriteM <= 0;
               enM <= 1;
-            $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
-          end
+        end
         // 3: begin
         //      adrM <= 32'h200004Ad;
         //      memwriteM <= 0;
         //      enM <= 1;    
        //   end
-         6: begin
+         5: begin
              pcF <= 32'hA00012B4;
              enF <= 1;
-             $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+             $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
         end
          default: begin
             enM <= (dataackM) ? 0 : enM; 
             enF <= (instrackF) ? 0 : enF;
-            $display("instrackF: %d, dataackM: %d",instrackF,dataackM);
+            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
             if(counter == 15) $stop;
             end
@@ -395,9 +395,6 @@ module cache(input clk, reset,
              output memen,
              input memdone);
             
-            //reg [31:0] cacheline[1023:0];
-            //reg [19:0] tagdata[1023:0];
-            //reg        valid[1023:0];
             wire [31:0] cacheline;
             wire [19:0] tagdata;
             wire        valid;
@@ -406,52 +403,54 @@ module cache(input clk, reset,
             wire        validnew;
             wire        cacheramrwb;
             
-            wire [31:0] memdataf;
-            wire memdonef;
-            
-            wire [31:0] bypassdata;
-
             wire [9:0] tag;
             wire [19:0] adrmsb;
             wire incache;
             wire bypass;
             
+            reg [1:0] nextstate;
+            wire [1:0] state;
+            
             cacheram cacheram(clk,tag,cacheramrwb,{validnew,tagdatanew,cachelinenew},
                                                   {valid,tagdata,cacheline});
 
-           
-            assign #1 cacheramrwb = ~(((rwb & memen & memdone) & (~bypass)) | 
-              ((en & ~done & ~memen) & (~rwb) & (~bypass)));
-              
-            assign validnew = (& byteen) | rwb;  // Valid if writing all or this is a read.
-            assign tagdatanew = adrmsb;
-            assign cachelinenew = rwb ? memdata : data;
-            
+            // Valid if writing all or this is a read... and the memory is done.
+            assign #1 cachelinenew = state[0] ? memdata : data;
+            assign #1 tagdatanew = adrmsb;
+            assign #1 validnew = ((& byteen) | state[0]) & memdone;
+            assign #1 cacheramrwb = ~(|state) | bypass;
+                     
             assign tag = adr[9:0];
             assign adrmsb = adr[29:10];
             assign #1 incache = (tagdata == adrmsb) & valid;
             assign #1 bypass = adr[29] & adr[27];
             
-            mux4 #(32) datamux(32'bz,32'bz,cacheline,bypassdata,{rwb,bypass},data);
-            // We're automatically done only if it is in cache,
-            // AND we aren't bypassing the cache.
-            mux2 #(1) donemux(memdonef,1'b1,(incache & rwb & ~bypass) | ~en,done);
-
-            // Pass these on directly.
-            // TODO: Use tri-state buffer here??
-            mux2 #(32) memdatamux(memdataf, 32'bz, memrwb, memdata);
- 
-            // TODO: we should really make this an FSM.
-            // memdata..
-            flopenr #(32) fmemdata(clk,reset,(en & ~done & ~memen) & ~rwb,data,memdataf);
-            flopenr #(1) fmemen(clk,reset,(en & ~done & ~memen) | (rwb & memen & memdone) | (~memrwb & memen & memdone),
-                                             en & ~done & ~memen,memen);
-            flopen #(32) fbypassdata(clk,(rwb & memen & memdone) & bypass,memdata,bypassdata);
-            flopr #(1) fmemdone(clk,reset,memen & memdone,memdonef);
-            // TODO: change this so adr bus is only 27. ('Duh moment)
-            flopen #(30) fmemadr(clk,en & ~done & ~memen,{3'b0, adr[26:0]},memadr);
-            flopen #(4) fmembyteen(clk,en & ~done & ~memen,rwb ? 4'b1 : byteen,membyteen);
-            flopen #(1) fmemrwb(clk,en & ~done & ~memen,rwb,memrwb);
+            assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
+            assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en;
+            
+            assign memadr = {3'b0, adr[26:0]};
+            assign memdata = state[1] ? data : 32'bz;
+            assign memen = (|state);
+            assign membyteen = state[0] ? 4'b1 : byteen;
+            assign memrwb = rwb;
+            
+            parameter SREADY = 2'b00;  // Ready
+            parameter SREAD  = 2'b01;  // Read
+            parameter SWRITE = 2'b10;  // Write
+            
+            flopr #(2) fstate(clk,reset,nextstate,state);
+          
+            always @(*)
+              case(state)
+                SREADY: if(en & ~done & rwb)       nextstate <= SREAD;
+                        else if(en & ~rwb) nextstate <= SWRITE;
+                        else                          nextstate <= SREADY;
+                SREAD:  if(memdone) nextstate <= SREADY;
+                        else        nextstate <= SREAD;
+                SWRITE: if(memdone) nextstate <= SREADY;
+                         else        nextstate <= SWRITE;
+                default: nextstate <= SREADY;
+              endcase
 endmodule
 
 module writebuffer(input clk, reset,
