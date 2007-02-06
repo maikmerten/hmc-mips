@@ -14,9 +14,10 @@ module top(input         ph1, ph2, reset,
   wire [31:0] pc, instr, readdata;
   wire instrack, dataack;
   wire [3:0] byteen;
+  wire memtoregM, swc;
   
   // instantiate processor and memories
-  mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, byteen, dataadr, writedata, 
+  mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
   imem imem(pc[12:2], instr); assign instrack = 1; // TODO: make imem a cache
   cache dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
