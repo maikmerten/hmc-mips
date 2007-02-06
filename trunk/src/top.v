@@ -6,7 +6,7 @@
 
 `timescale 1 ns / 1 ps
 
-module top(input         clk, reset,
+module top(input         ph1, ph2, reset,
            input  [7:0]        interrupts,
            output [31:0] writedata, dataadr, 
            output        memwrite);
@@ -16,15 +16,15 @@ module top(input         clk, reset,
   wire [3:0] byteen;
   
   // instantiate processor and memories
-  mips mips(clk, reset, pc, instr, interrupts, memwrite, byteen, dataadr, writedata, 
+  mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
   imem imem(pc[12:2], instr); assign instrack = 1; // TODO: make imem a cache
-  cache dcache(clk, memwrite, dataadr, writedata, byteen, readdata, dataack);
+  cache dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
 
 endmodule
 
 // this is an ideal cache right now
-module cache(input         clk, writeenable,
+module cache(input         ph1, ph2, writeenable,
              input  [31:0] a, writedata, // TODO: Remove lower two bits of a
              input  [3:0]  byteen,
              output [31:0] readdata,
@@ -40,7 +40,7 @@ module cache(input         clk, writeenable,
   // Assume ideal memory
 
   // Assume big endien
-  always @(posedge clk)
+  always @(posedge ph1) //just changed from clk . . . hope it works
     begin
       fakedelay1 <= writeenable;
       fakedelay2 <= fakedelay1;
