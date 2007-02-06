@@ -28,13 +28,12 @@ module top(input         ph1, ph2, reset,
   mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
          //   assign instrack = 1;
-  extmem extmem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
- cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
-
+ // extmem extmem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
+ //cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
+extmem extmem(ph1, ph2, memadr[10:0], memdata, membyteen, memrwb, memen, memdone);
  
- //assign instrack = instrackreal | reset;
-//assign dataack = dataackreal | reset;
-/*
+ assign instrack = instrackreal | reset;
+assign dataack = dataackreal | reset;
   cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrackreal,
                      dataadr[31:2], writedata, byteen, readdata,
                      memwrite, memtoregM, dataackreal,
