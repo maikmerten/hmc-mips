@@ -698,8 +698,6 @@ module exceptionunit(input            clk, reset,
                  // offset everything by one, rendering some of the
                  // subsequent logic incorrect.
     casex(priencout)
-      // rearrange to set priority. all the spec demands is that interrupt
-      // be highest
       3'b000 : exccode <= 5'b00001;
       3'b001 : exccode <= 5'b01100;
       3'b010 : exccode <= 5'b00100;
@@ -714,12 +712,14 @@ endmodule
 module statusregunit(input             clk, reset, writeenable, exception, 
                      input      [31:0] writedata, 
                      input             rfeE,
-                     output reg [31:0] statusreg,
+                     output     [31:0] statusreg,
                      output            re, 
                      output     [7:0]  im,
                      output            swc, isc, iec);
 
   wire cu1, bev, ts, pe, cm, pz, kuo, ieo, kup, iep, kuc;
+  wire iecenable, iecnew;
+  wire [30:0]  statusreghigh;
 
   assign cu1 = 0; // No floating point unit
   assign pe = 0;  // No parity checking
@@ -730,39 +730,29 @@ module statusregunit(input             clk, reset, writeenable, exception,
   assign bev = statusreg[22];  // not currently implemented
   assign ts  = statusreg[21];  // TLB not implemented
   assign {swc, isc, im} = statusreg[17:7];
-  
-  assign iec = statusreg[0];
+
 
   assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode
+  
+  // set up new value for iec.
+  assign iecenable = reset | rfeE | exception;
+  assign iecnew = reset | rfeE;
+  
+  assign statusreg = {statusreghigh, iec};
 
-  //always @ ( posedge clk )
-   // statusreg = 0;
+  // define everything but IEc here.
+     // bit 28 (cu0) will not have effect since we only run in kernel mode
+     // 25 is re
+     // 22 and 21 are bev and ts
+     // 17 to 8 are swc, isc, and im
+  flopen #(31) statusreghighflop(clk, writeenable,
+                             {2'b00, cu1, writedata[28], 2'b00, writedata[26],
+                              2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
+                              2'b00, kuo, ieo, kup, iep, kuc},
+                             statusreghigh);
 
-  always @ ( posedge clk )
-    begin
-      if(writeenable) begin
-        statusreg = writedata;
-        statusreg[31:30] = 0;
-        statusreg[29]    = cu1;
-        // bit 28 (cu0) will not have effect since we only run in kernel mode
-        statusreg[27:26] = 0;
-        // 25 is re
-        statusreg[24:23] = 0;
-        // 22 and 21 are bev and ts
-        statusreg[20] = pe;
-        statusreg[19] = cm;
-        statusreg[18] = pz;
-        // 17 to 8 are swc, isc, and im
-        statusreg[7:6] = 0;
-        statusreg[5:1] = {kuo, ieo, kup, iep, kuc};
-      end
-      if(reset | rfeE) begin
-        statusreg[0] = 1; // iec
-      end else if(exception) begin
-        // if we're handling an exception, ignore interrupts.
-        statusreg[0] = 0; // iec
-      end
-    end
+  flopen #(1) statusregiec(clk, iecenable, iecnew, iec);
+
 endmodule
 
 module causeregunit(input             clk, branchdelay,
