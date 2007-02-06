@@ -18,7 +18,7 @@ module mips(input         ph1, ph2, reset,
             output [31:0] pcF,
             input  [31:0] instrF,
             input  [7:0]  interrupts,
-            output        memwriteM,
+            output        memwriteM, memtoregM, swc,
             output [3:0]  byteenM,
             output [31:0] aluoutM, writedataM,
             input  [31:0] readdataM,
@@ -29,7 +29,7 @@ module mips(input         ph1, ph2, reset,
   wire        regdstE, alusrcE, 
               unsignedD, loadsignedM, rdsrcD, linkD, luiE,
               overflowableE, overflowE,
-              memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW,
+              memtoregE,  memtoregW, regwriteE, regwriteM, regwriteW,
               byteM, hardwordM,
               aeqzD, aeqbD, agtzD, altzD, mdrunE, branchD, jumpregD,
               bdsE, syscallE, breakE, riE, fpu,
@@ -43,7 +43,7 @@ module mips(input         ph1, ph2, reset,
   wire [1:0]  specialregsrcE, hilodisableE;
   wire        hiloaccessD, mdstartE, hilosrcE;
   // Globals
-  wire        re, swc, isc, exception;
+  wire        re, isc, exception;
 
   controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, flushE, flushM,
                aeqzD, aeqbD, agtzD, altzD, mdrunE,
