@@ -42,7 +42,7 @@ module testbenchccontroller;
       reset <= 1; #15; reset <= 0;
       enM <= 0; 
       enF <= 0;
-      swc <= 0;
+      swc <= 1;
     end
 
    always @(posedge clk)
@@ -121,198 +121,169 @@ module cachecontroller(input clk, reset,
                        
                        input swc);
 
-wire [29:0] dadr;
-wire [31:0] ddata;
-wire [3:0] dbyteen;
-wire drwb, den, ddone;
-wire [29:0] dmemadr;
-wire [31:0] dmemdata;
-wire [3:0] dmembyteen;
-wire dmemrwb, dmemen;
-wire dmemdone;
-wire dmemdonewire;
+  wire [29:0] dadr;
+  wire [31:0] ddata;
+  wire [3:0] dbyteen;
+  wire drwb, den, ddone;
+  wire [29:0] dmemadr;
+  wire [31:0] dmemdata;
+  wire [3:0] dmembyteen;
+  wire dmemrwb, dmemen;
+  wire dmemdone;
+  wire dmemdonewire;
 
 
-wire [29:0] iadr;
-wire [31:0] idata;
-wire [3:0] ibyteen;
-wire irwb, ien, idone;
-wire [29:0] imemadr;
-wire [31:0] imemdata;
-wire [3:0] imembyteen;
-wire imemrwb, imemen;
-wire imemdone;
-wire imemdonewire;
+  wire [29:0] iadr;
+  wire [31:0] idata;
+  wire [3:0] ibyteen;
+  wire irwb, ien, idone;
+  wire [29:0] imemadr;
+  wire [31:0] imemdata;
+  wire [3:0] imembyteen;
+  wire imemrwb, imemen;
+  wire imemdone;
+  wire imemdonewire;
 
-wire [29:0] wbadr;
-wire [31:0] wbdata;
-wire [3:0] wbbyteen;
-wire wbrwb, wben, wbdone;
-wire [29:0] wbmemadr;
-wire [31:0] wbmemdata;
-wire [3:0] wbmembyteen;
-wire wbmemen;
-wire wbmemdone;
+  wire [29:0] wbadr;
+  wire [31:0] wbdata;
+  wire [3:0] wbbyteen;
+  wire wbrwb, wben, wbdone;
+  wire [29:0] wbmemadr;
+  wire [31:0] wbmemdata;
+  wire [3:0] wbmembyteen;
+  wire wbmemen;
+  wire wbmemdone;
 
-reg [29:0] memadr;
-wire [31:0] memdata;
-reg [31:0] memdataf;
-reg [3:0] membyteen;
-reg memrwb, memen;
-wire memdone;
+  wire [29:0] memadr;
+  wire [31:0] memdata;
+  reg [31:0] memdataf;
+  wire [3:0] membyteen;
+  wire memrwb;
+  wire memen;
+  wire memdone;
 
-reg don,ion,wbon;
+  wire don,ion,wbon;
 
-// This swaps the output if swc is asserted.
-// The first is the swapped case, second is normal.
-// Inputs:
-assign iadr = (swc) ? adrM  : pcF[31:2];
-assign dadr = (swc) ? pcF[31:2] : adrM;
-assign ien = (swc) ? enM : enF;
-assign den = (swc) ? enF : enM;
-assign ibyteen = (swc) ? byteenM : 4'b1;
-assign dbyteen = (swc) ? 4'b1 : byteenM;
-assign irwb = (swc) ? ~memwriteM : 1'b1;
-assign drwb = (swc) ? 1'b1 : ~memwriteM;
+  // This swaps the output if swc is asserted.
+  // The first is the swapped case, second is normal.
+  // Inputs:
+  assign iadr = (swc) ? adrM  : pcF[31:2];
+  assign dadr = (swc) ? pcF[31:2] : adrM;
+  assign ien = (swc) ? enM : enF;
+  assign den = (swc) ? enF : enM;
+  assign ibyteen = (swc) ? byteenM : 4'b1;
+  assign dbyteen = (swc) ? 4'b1 : byteenM;
+  assign irwb = (swc) ? ~memwriteM : 1'b1;
+  assign drwb = (swc) ? 1'b1 : ~memwriteM;
 
-wire working;
-assign working = wbon | don | ion;
+  wire working;
+  assign working = wbon | don | ion;
 
-// If reading want this to be z,
-// if writing then drive with the data to write.
-assign ddata = (swc | ~memwriteM) ? 32'bz : writedataM;
-assign idata = (~swc | ~memwriteM) ? 32'bz : writedataM;
+  // If reading want this to be z,
+  // if writing then drive with the data to write.
+  assign ddata = (swc | ~memwriteM) ? 32'bz : writedataM;
+  assign idata = (~swc | ~memwriteM) ? 32'bz : writedataM;
 
-// Outputs:
-mux2 #(32) instrFmux(idata,ddata,swc,instrF);
-mux2 #(32) readdataMmux(ddata,idata,swc,readdataM);
-mux2 #(1) instrackFmux(idone,ddone,swc,instrackF);
-mux2 #(1) dataackMmux(ddone,idone,swc,dataackM);
+  // Outputs:
+  mux2 #(32) instrFmux(idata,ddata,swc,instrF);
+  mux2 #(32) readdataMmux(ddata,idata,swc,readdataM);
+  mux2 #(1) instrackFmux(idone,ddone,swc,instrackF);
+  mux2 #(1) dataackMmux(ddone,idone,swc,dataackM);
 
-// Write buffer... for writing.
-// need swap here...
-assign wbadr = (swc) ? (imemrwb ? 32'bz : imemadr) :
-                        (dmemrwb ? 32'bz : dmemadr); 
-assign wbdata = (swc) ? (imemrwb ? 32'bz : imemdata) :
-                        (dmemrwb ? 32'bz : dmemdata); 
-assign wbbyteen = (swc) ? (imemrwb ? 32'bz : imembyteen) :
-                          (dmemrwb ? 32'bz : dmembyteen); 
-assign wben = (swc) ? (imemrwb ? 1'b0 : imemen) :
-                      (dmemrwb ? 1'b0 : dmemen);
-assign dmemdonewire = (~swc & ~dmemrwb) ? wbdone :
-                                          dmemdone;
-assign imemdonewire = (swc & ~imemrwb) ? wbdone :
+  // Write buffer... for writing.
+  // need swap here...
+  assign wbadr = (swc) ? (imemrwb ? 32'bz : imemadr) :
+                          (dmemrwb ? 32'bz : dmemadr); 
+  assign wbdata = (swc) ? (imemrwb ? 32'bz : imemdata) :
+                          (dmemrwb ? 32'bz : dmemdata); 
+  assign wbbyteen = (swc) ? (imemrwb ? 32'bz : imembyteen) :
+                            (dmemrwb ? 32'bz : dmembyteen); 
+  assign wben = (swc) ? (imemrwb ? 1'b0 : imemen) :
+                        (dmemrwb ? 1'b0 : dmemen);
+  assign dmemdonewire = (~swc & ~dmemrwb) ? wbdone :
+                                            dmemdone;
+  assign imemdonewire = (swc & ~imemrwb) ? wbdone :
                                           imemdone;
 
+  // What tells these it is done.            
+  mux2 #(1) wbmemdonemux(1'b0,memdone,wbon,wbmemdone);
+  mux2 #(1) dmemdonemux(1'b0,memdone,don,dmemdone);
+  mux2 #(1) imemdonemux(1'b0,memdone,ion,imemdone);
 
-// Mem assignments for reading (directrly from
-// main memory)
-mux2 memdatamux(memdataf, 32'bz, memrwb, memdata);
-mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
-mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
-mux2 wbmemdatamux(32'bz, memdata, wbon, wbmemdata);
 
-cache dcache(clk, reset, dadr, ddata, dbyteen,
-                         drwb, den, ddone,
-                         dmemadr,dmemdata,dmembyteen,
-                         dmemrwb, dmemen,dmemdonewire);
+  // Mem assignments for reading (directly from
+  // main memory)
+  mux2 memdatamux(wbmemdata, 32'bz, memrwb, memdata);
+  mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
+  mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
+
+  cache dcache(clk, reset, dadr, ddata, dbyteen,
+                           drwb, den, ddone,
+                           dmemadr,dmemdata,dmembyteen,
+                           dmemrwb, dmemen,dmemdonewire);
                          
-cache icache(clk, reset, iadr, idata, ibyteen,
-                         irwb, ien, idone,
-                         imemadr,imemdata,imembyteen,
-                         imemrwb, imemen,imemdonewire);
+  cache icache(clk, reset, iadr, idata, ibyteen,
+                           irwb, ien, idone,
+                           imemadr,imemdata,imembyteen,
+                           imemrwb, imemen,imemdonewire);
 
-// TODO: first one should go to memory multiplexor.
-// we need to split this up... so that it can directly access the buffer.
-//assign dmemdone = (dmemrwb) ? wbdone : wbdone;
+  // TODO: first one should go to memory multiplexor.
+  // we need to split this up... so that it can directly access the buffer.
+  //assign dmemdone = (dmemrwb) ? wbdone : wbdone;
 
-writebuffer writebuf(clk, reset, wbadr, wbdata, wbbyteen,
-                          wben, wbdone,
-                          wbmemadr, wbmemdata, wbmembyteen,
-                          wbmemen, wbmemdone);
+  writebuffer writebuf(clk, reset, wbadr, wbdata, wbbyteen,
+                            wben, wbdone,
+                            wbmemadr, wbmemdata, wbmembyteen,
+                            wbmemen, wbmemdone);
                           
-// TODO: Move mem so it is external.
-mainmem mem(clk, reset, memadr, memdata, membyteen,
-               memrwb, memen, memdone);
-               
-always @(negedge reset)
-begin
-    // Turn off "done" by memory interface
-    //dmemdone <= 0;
-    //imemdone <= 0;
-    //wbmemdone <= 0;
-    // Turn off different acccesses to memory.
-    don <= 0;
-    ion <= 0;
-    wbon <= 0;
-end
+  // TODO: Move mem so it is external.
+  mainmem mem(clk, reset, memadr, memdata, membyteen,
+                 memrwb, memen, memdone);
+  
 
-always @(posedge clk)
-begin
-    if(~working) // If we aren't already working...
-    begin
-        if(wbmemen)
-        begin
-            wbon <= 1;
-            memadr <= wbmemadr;
-            memdataf <= wbmemdata;
-            membyteen <= wbmembyteen;
-            memrwb <= 1'b0;  // write only.
-            memen <= 1;
-        end
-        if(~swc) // Yeah this is really ugly... find a better way.
-        begin  
-          if(dmemen & dmemrwb & ~wbmemen)
-          begin
-             don <= 1;
-             memadr <= dmemadr;
-             membyteen <= dmembyteen;
-             memrwb <= 1'b1;   // read only (writes go to write buffer)
-             memen <= 1;     
-          end
-        
-          if(imemen & imemrwb & ~(wbmemen | dmemen))
-          begin    
-            ion <= 1;
-            memadr <= imemadr;
-            membyteen <= imembyteen;
-            memrwb <= 1'b1;   // read only (writes disallowed)
-            memen <= 1;
-          end
-        end else begin
-          if(imemen & imemrwb & ~wbmemen)
-          begin
-             ion <= 1;
-             memadr <= imemadr;
-             membyteen <= imembyteen;
-             memrwb <= 1'b1;   // read only (writes go to write buffer)
-             memen <= 1;     
-          end
-          if(dmemen & dmemrwb & ~(wbmemen | imemen))
-          begin
-            don <= 1;
-            memadr <= dmemadr;
-            membyteen <= dmembyteen;
-            memrwb <= 1'b1;   // read only (writes disallowed)
-            memen <= 1;
-          end
-      end
-    end else begin    
-      // TODO: remove this level.
-      if(memdone) memen <= 0;
-      if(ddone) don <= 1'b0;
-      if(idone) ion <= 1'b0;
-      if(wbdone) wbon <= 1'b0;
-    end
-    // Has the result of asserting the respective done
-    // for one cycle if memory has acknowledged the operation.
-    //dmemdone <= (memdone) ? don : 1'b0;
-    //imemdone <= (memdone) ? ion : 1'b0;
-    //wbmemdone <= (memdone) ? wbon : 1'b0;
-end
-  flopr #(1) dmemdonef(clk,reset,memdone & don,dmemdone);
-  flopr #(1) imemdonef(clk,reset,memdone & ion,imemdone);
-  flopr #(1) wbmemdonef(clk,reset,memdone & wbon,wbmemdone);
+  parameter SREADY = 2'b00; // Ready state
+  parameter SWB = 2'b01;  // Write buffer on
+  parameter SD = 2'b10;  // Data cache on
+  parameter SI = 2'b11; // Instruction cache on
+
+  reg [1:0] nextstate;
+  wire [1:0] state;
+
+
+  assign wbon = ~state[1] & state[0];
+  assign don = state[1] & ~state[0];
+  assign ion = state[1] & state[0];
+
+  flopr #(2) fstate(clk,reset,nextstate,state);
+
+  mux4 #(30) memadrmux(30'b0,wbmemadr,dmemadr,imemadr,state,memadr);
+  mux4 #(4) membyteenmux(4'b1,wbmembyteen,dmembyteen,imembyteen,state,membyteen);
+  mux4 #(1) memrwbmux(1'b1,1'b0,1'b1,1'b1,state,memrwb);
+  assign memen = (|state);
+
+  always @(*)
+  begin
+      case(state)
+          SREADY: if(wbmemen)  // High priority
+                       nextstate <= SWB;
+                  else if(~swc & dmemen & dmemrwb)  // Med. priority
+                       nextstate <= SD;
+                  else if(swc & imemen & imemrwb)
+                       nextstate <= SI;
+                  else if(~swc & imemen & imemrwb) // Low priority
+                       nextstate <= SI;
+                  else if(swc & dmemen & dmemrwb)
+                       nextstate <= SD;
+                  else nextstate <= SREADY;
+          SWB:    if(memdone) nextstate <= SREADY;
+                  else nextstate <= SWB;
+          SD:     if(memdone) nextstate <= SREADY;
+                  else nextstate <= SD;
+          SI:     if(memdone) nextstate <= SREADY;
+                  else nextstate <= SI;
+          default: nextstate <= SREADY;
+      endcase
+  end
 endmodule
 
 
@@ -324,42 +295,43 @@ module mainmem(input clk, reset,
                inout [31:0] data,
                input [3:0] byteen,
                input rwb, en,
-               output reg done);
-
-integer i;
-
-reg [31:0] mem[4095:0];
-always @(negedge reset)
-  begin
-      for(i = 0; i < 4096; i = i + 1)
-      begin
-         mem[i] = 32'b0;
-      end
-    
-      mem[0] = 32'hDEADBEEF;
-      mem['had] = 32'hBEADBEEF;
-      mem['h4ad] = 32'h21212121;
-      done <= 1;
-      i = 0;
-  end
-
-
-always @(posedge clk)
-  begin
-    i = i + 1;
-    if(en & done)
-    begin
-      i = 0;
-      done <= 0;
-     end
-    if(i == 1 & ~done)
-    begin
-        if(~rwb) mem[adr] <= data;
-        done <= 1;
-    end
-  end
+               output done);
+  
+  integer i;             
+  reg [31:0] mem[4095:0];
+  wire [1:0] state;
+  reg [1:0] nextstate;
 
   assign data = (rwb) ? mem[adr] : 32'bz;
+  assign done = state[1];
+
+  
+  always @(negedge reset)
+    begin
+        for(i = 0; i < 4096; i = i + 1)
+        begin
+           mem[i] = 32'b0;
+        end
+    
+        mem[0] = 32'hDEADBEEF;
+        mem['had] = 32'hBEADBEEF;
+        mem['h4ad] = 32'h21212121;
+    end
+
+
+  flopr #(2) fstate(clk,reset,nextstate,state);
+
+  always @(*)
+  case(state)
+      2'b00: if(en) nextstate <= 2'b01;
+             else nextstate <= 2'b00;
+      2'b01: if(en) nextstate <= 2'b10;
+             else nextstate <= 2'b00;
+      default: nextstate <= 2'b00;
+  endcase
+  
+  always @(posedge clk)
+    if(~rwb) mem[adr] <= data;
 endmodule
           
           
