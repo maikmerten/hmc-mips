@@ -4,6 +4,7 @@
 =Block Diagrams of the MIPS System=
 
 [http://hmc-mips.googlecode.com/svn/trunk/images/mipsoverviewblock.jpg Processor Overview Block Diagram]
+
 [http://hmc-mips.googlecode.com/svn/trunk/images/fetchstageblock.jpg Fetch Stage]
 
 [http://hmc-mips.googlecode.com/svn/trunk/images/decodestageblock.jpg Decode Stage]
@@ -21,7 +22,6 @@
 This drawing shows the datapath as it stood following Carl's modification before the start of the the Fall 2007 semester.
 
 [http://hmc-mips.googlecode.com/svn/trunk/images/mips_datapath_sketch_bw.png Datapath Drawing (png)]
-
 
 
 
