@@ -39,12 +39,12 @@ module testbench;
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
-        reset <= 1; # 15; reset <= 0;
+        reset <= 1; # 30; reset <= 0;
         // Pausing
         if(currentTest == 12 | currentTest == 16) begin
-          # 4985;
+          # 4970;
         end else
-           # 985;
+           # 970;
 
         if(currentSuccess) begin
           $display("Simulation %d succeeded (end time %d)", currentTest, 
