@@ -10,48 +10,57 @@
 
 // Test code for cache controller.
 module testbenchccontroller;
-  reg         clk;
+  reg         ph1, ph2;
   reg         reset;
 
   reg  [31:0] pcF;
   wire [31:0] instrF;
-  reg enF;
+  reg reF;
   wire instrackF;
   
   reg [29:0] adrM;
   reg [31:0] writedataM;
   reg  [3:0]  byteenM;
   wire [31:0] readdataM;
-  reg memwriteM, enM;
+  reg memwriteM, reM;
   wire dataackM;
   
   reg swc;
+    
+  wire [26:0] memadr;
+  wire [31:0] memdata;
+  wire [3:0] membyteen;
+  wire memrwb;
+  wire memen;
+  wire memdone;
   
   integer counter;
 
   // generate clock to sequence tests
   always
     begin
-      #30;
-      clk <= 1; # 5; clk <= 0; # 5;
+        #30;
+      ph1 <= 1; # 4; ph1 <= 0; #1;
+		ph2 <= 1; # 4; ph2 <= 0; #1;
     end
     
   initial
     begin
       counter <= 0;
-      reset <= 1; #15; reset <= 0;
-      enM <= 0; 
-      enF <= 0;
-      swc <= 1;
+      ph2 <= 1;
+      reset <= 1; #15; reset <= 0; ph2 <= 0;
+      reM <= 0; 
+      reF <= 0;
+      swc <= 0;
     end
 
-   always @(posedge clk)
+   always @(posedge ph1)
      begin
        $display("%d", counter);
        case (counter)
          0: begin
             pcF <= 32'hA00012B4;
-            enF <= 1;
+            reF <= 1;
          //   adrM <= 32'h200004Ad;
          //   memwriteM <= 0;
          //   enM <= 1;
@@ -59,14 +68,14 @@ module testbenchccontroller;
               writedataM <= 32'hDDCCBBAA;
               memwriteM <= 1;
               byteenM <= 4'b1111;
-              enM <= 1;
+              reM <= 0;
          end
         2: begin
               adrM <= 30'h000004Ad;
               writedataM <= 32'hDDCCBBAA;
               memwriteM <= 0;
-              enM <= 1;
-            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
+              reM <= 1;
+            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,reF,dataackM,reM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
         end
         // 3: begin
@@ -76,14 +85,14 @@ module testbenchccontroller;
        //   end
          5: begin
              pcF <= 32'hA00012B4;
-             enF <= 1;
-             $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
+             reF <= 1;
+             $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,reF,dataackM,reM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
         end
          default: begin
-            enM <= (dataackM) ? 0 : enM; 
-            enF <= (instrackF) ? 0 : enF;
-            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,enF,dataackM,enM);
+            reM <= (dataackM) ? 0 : reM; 
+            reF <= (instrackF) ? 0 : reF;
+            $display("instrackF: %d (%d), dataackM: %d (%d)",instrackF,reF,dataackM,reM);
             $display("instrF: %h, readdataM: %h", instrF, readdataM);
             if(counter == 15) $stop;
             end
@@ -92,10 +101,15 @@ module testbenchccontroller;
         $display("");
      end
 
-cachecontroller cc(clk, reset, pcF, instrF, enF, instrackF,
+cachecontroller cc(ph1, ph2, reset, pcF[31:2], instrF, reF, instrackF,
                    adrM, writedataM, byteenM, readdataM,
-                   memwriteM, enM, dataackM,
-                   swc);
+                   memwriteM, reM, dataackM,
+                   swc,
+                   memadr,memdata,membyteen,
+                   memrwb,memen,memdone);
+
+mainmem mem(ph1, ph2, reset, memadr, memdata, membyteen,
+                 memrwb, memen, memdone);
 
 endmodule
 
@@ -106,26 +120,38 @@ endmodule
 // instrF = Instruction fetched (instruction data)
 //
 // swc = swap caches.  (0 = normal assignment, 1 = swapped)
-module cachecontroller(input clk, reset,
-                       input [31:0] pcF,
+module cachecontroller(input ph1, ph2, reset,
+                       input [31:2] pcF,
                        output [31:0] instrF,
-                       input enF,
+                       input reF,
                        output instrackF,
                        
                        input [29:0] adrM, 
                        input [31:0] writedataM,
                        input [3:0] byteenM,
                        output [31:0] readdataM,
-                       input memwriteM, enM,
+                       input memwriteM, reM,
                        output dataackM,
                        
-                       input swc);
+                       input swc,
+                       
+                       output [26:0] memadr,
+                       inout [31:0] memdata,
+                       output [3:0] membyteen,
+                       output memrwb,
+                       output memen,
+                       input memdone);
+
+  wire enF, enM;
+  
+  assign enF = reF;
+  assign enM = reM | memwriteM;
 
   wire [29:0] dadr;
   wire [31:0] ddata;
   wire [3:0] dbyteen;
   wire drwb, den, ddone;
-  wire [29:0] dmemadr;
+  wire [26:0] dmemadr;
   wire [31:0] dmemdata;
   wire [3:0] dmembyteen;
   wire dmemrwb, dmemen;
@@ -137,30 +163,22 @@ module cachecontroller(input clk, reset,
   wire [31:0] idata;
   wire [3:0] ibyteen;
   wire irwb, ien, idone;
-  wire [29:0] imemadr;
+  wire [26:0] imemadr;
   wire [31:0] imemdata;
   wire [3:0] imembyteen;
   wire imemrwb, imemen;
   wire imemdone;
   wire imemdonewire;
 
-  wire [29:0] wbadr;
+  wire [26:0] wbadr;
   wire [31:0] wbdata;
   wire [3:0] wbbyteen;
-  wire wbrwb, wben, wbdone;
-  wire [29:0] wbmemadr;
+  wire wben, wbdone;
+  wire [26:0] wbmemadr;
   wire [31:0] wbmemdata;
   wire [3:0] wbmembyteen;
   wire wbmemen;
   wire wbmemdone;
-
-  wire [29:0] memadr;
-  wire [31:0] memdata;
-  reg [31:0] memdataf;
-  wire [3:0] membyteen;
-  wire memrwb;
-  wire memen;
-  wire memdone;
 
   wire don,ion,wbon;
 
@@ -213,16 +231,19 @@ module cachecontroller(input clk, reset,
 
   // Mem assignments for reading (directly from
   // main memory)
-  mux2 memdatamux(wbmemdata, 32'bz, memrwb, memdata);
-  mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
-  mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
+  assign memdata = memrwb ? 32'bz : wbmemdata;
+  assign imemdata = (imemrwb & ion) ? memdata : 32'bz;
+  assign dmemdata = (dmemrwb & don) ? memdata : 32'bz;
+//  mux2 memdatamux(wbmemdata, 32'bz, memrwb, memdata);
+//  mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
+//  mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
 
-  cache dcache(clk, reset, dadr, ddata, dbyteen,
+  cache dcache(ph1, ph2, reset, dadr, ddata, dbyteen,
                            drwb, den, ddone,
                            dmemadr,dmemdata,dmembyteen,
                            dmemrwb, dmemen,dmemdonewire);
                          
-  cache icache(clk, reset, iadr, idata, ibyteen,
+  cache icache(ph1, ph2, reset, iadr, idata, ibyteen,
                            irwb, ien, idone,
                            imemadr,imemdata,imembyteen,
                            imemrwb, imemen,imemdonewire);
@@ -231,15 +252,10 @@ module cachecontroller(input clk, reset,
   // we need to split this up... so that it can directly access the buffer.
   //assign dmemdone = (dmemrwb) ? wbdone : wbdone;
 
-  writebuffer writebuf(clk, reset, wbadr, wbdata, wbbyteen,
+  writebuffer writebuf(ph1, ph2, reset, wbadr, wbdata, wbbyteen,
                             wben, wbdone,
                             wbmemadr, wbmemdata, wbmembyteen,
                             wbmemen, wbmemdone);
-                          
-  // TODO: Move mem so it is external.
-  mainmem mem(clk, reset, memadr, memdata, membyteen,
-                 memrwb, memen, memdone);
-  
 
   parameter SREADY = 2'b00; // Ready state
   parameter SWB = 2'b01;  // Write buffer on
@@ -254,9 +270,9 @@ module cachecontroller(input clk, reset,
   assign don = state[1] & ~state[0];
   assign ion = state[1] & state[0];
 
-  flopr #(2) fstate(clk,reset,nextstate,state);
+  flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
 
-  mux4 #(30) memadrmux(30'b0,wbmemadr,dmemadr,imemadr,state,memadr);
+  mux4 #(27) memadrmux(27'b0,wbmemadr,dmemadr,imemadr,state,memadr);
   mux4 #(4) membyteenmux(4'b1,wbmembyteen,dmembyteen,imembyteen,state,membyteen);
   mux4 #(1) memrwbmux(1'b1,1'b0,1'b1,1'b1,state,memrwb);
   assign memen = (|state);
@@ -290,8 +306,8 @@ endmodule
 
 // MAIN MEMORY
 ///
-module mainmem(input clk, reset,
-               input [29:0] adr,
+module mainmem(input ph1, ph2, reset,
+               input [26:0] adr,
                inout [31:0] data,
                input [3:0] byteen,
                input rwb, en,
@@ -319,7 +335,7 @@ module mainmem(input clk, reset,
     end
 
 
-  flopr #(2) fstate(clk,reset,nextstate,state);
+  flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
 
   always @(*)
   case(state)
@@ -330,13 +346,13 @@ module mainmem(input clk, reset,
       default: nextstate <= 2'b00;
   endcase
   
-  always @(posedge clk)
+  always @(posedge ph1)
     if(~rwb) mem[adr] <= data;
 endmodule
           
           
 // 4kB cache memory + tag (20) [51:32] + valid (1-bit) [52]
-module cacheram(input clk,
+module cacheram(input ph1, ph2,
   input [9:0] adr,
   input rwb,
   input [52:0] din,
@@ -344,7 +360,7 @@ module cacheram(input clk,
   
   reg [52:0] mem[1023:0];
   
-  always @(posedge clk)
+  always @(posedge ph1, ph2)
     if(~rwb) mem[adr] <= din;
     
   assign dout = mem[adr];
@@ -353,14 +369,14 @@ endmodule
 // 4kB CACHE
 //
 // TODO: Forward requests to write buffer.
-module cache(input clk, reset,
+module cache(input ph1, ph2, reset,
              input [29:0] adr,
              inout [31:0] data,
              input [3:0] byteen,
              input rwb, en,
              output done,
              
-             output [29:0] memadr, 
+             output [26:0] memadr, 
              inout  [31:0] memdata,
              output [3:0] membyteen,
              output memrwb,
@@ -383,7 +399,7 @@ module cache(input clk, reset,
             reg [1:0] nextstate;
             wire [1:0] state;
             
-            cacheram cacheram(clk,tag,cacheramrwb,{validnew,tagdatanew,cachelinenew},
+            cacheram cacheram(ph1, ph2,tag,cacheramrwb,{validnew,tagdatanew,cachelinenew},
                                                   {valid,tagdata,cacheline});
 
             // Valid if writing all or this is a read... and the memory is done.
@@ -400,7 +416,7 @@ module cache(input clk, reset,
             assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
             assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en;
             
-            assign memadr = {3'b0, adr[26:0]};
+            assign memadr = adr[26:0];
             assign memdata = state[1] ? data : 32'bz;
             assign memen = (|state);
             assign membyteen = state[0] ? 4'b1 : byteen;
@@ -410,7 +426,7 @@ module cache(input clk, reset,
             parameter SREAD  = 2'b01;  // Read
             parameter SWRITE = 2'b10;  // Write
             
-            flopr #(2) fstate(clk,reset,nextstate,state);
+            flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
           
             always @(*)
               case(state)
@@ -422,23 +438,23 @@ module cache(input clk, reset,
                 SWRITE: if(memdone) nextstate <= SREADY;
                          else        nextstate <= SWRITE;
                 default: nextstate <= SREADY;
-              endcase
+          endcase
 endmodule
 
-module writebuffer(input clk, reset,
-                   input [29:0] adr,
+module writebuffer(input ph1, ph2, reset,
+                   input [26:0] adr,
                    input [31:0] data,
                    input [3:0] byteen,
                    input en,
                    output done,
                    
-                   output [29:0] memadr,
+                   output [26:0] memadr,
                    output [31:0] memdata,
                    output [3:0] membyteen,
                    output memen,
                    input memdone);
    wire [31:0] bufdata[3:0];
-   wire [29:0] bufadr[3:0];
+   wire [26:0] bufadr[3:0];
    wire [3:0] bufbyteen[3:0];
    wire bufen[3:0];      // Flag to indicate whether buffer entry has
                               // valid data.
@@ -450,13 +466,13 @@ module writebuffer(input clk, reset,
    assign done = ~bufen[ptr];   // If we have a free space available.
    assign writeready = (memdone | ~memen) & bufen[writeptr];
    
-   flopenr #(2) ptrf(clk, reset, en & done, ptr + 1'b1, ptr);
-   flopenr #(2) writeptrf(clk, reset, writeready, writeptr + 1'b1, writeptr);
+   flopenr #(2) ptrf(ph1, ph2, reset, en & done, ptr + 1'b1, ptr);
+   flopenr #(2) writeptrf(ph1, ph2, reset, writeready, writeptr + 1'b1, writeptr);
    
-   flopenr #(30) memadrf(clk, reset, writeready, bufadr[writeptr], memadr);
-   flopenr #(32) memdataf(clk, reset, writeready, bufdata[writeptr], memdata);
-   flopenr #(4) membyteenf(clk, reset, writeready, bufbyteen[writeptr], membyteen);
-   flopenr #(1) memenf(clk, reset, memdone | ~memen, bufen[writeptr], memen);
+   flopenr #(27) memadrf(ph1, ph2, reset, writeready, bufadr[writeptr], memadr);
+   flopenr #(32) memdataf(ph1, ph2, reset, writeready, bufdata[writeptr], memdata);
+   flopenr #(4) membyteenf(ph1, ph2, reset, writeready, bufbyteen[writeptr], membyteen);
+   flopenr #(1) memenf(ph1, ph2, reset, memdone | ~memen, bufen[writeptr], memen);
   
    dec2 ptrdec(ptr,ptrs);
    dec2 writeptrdec(writeptr,writeptrs);
@@ -467,13 +483,13 @@ module writebuffer(input clk, reset,
    genvar i;
    generate
      for(i = 0; i < 4; i = i + 1) begin:fbuf
-       flopenr #(1) fbufen(clk,reset,((en & done) & ptrs[i]) | ((memdone | ~memen) & writeptrs[i]), 
+       flopenr #(1) fbufen(ph1, ph2,reset,((en & done) & ptrs[i]) | ((memdone | ~memen) & writeptrs[i]), 
                                  (en & done) & ptrs[i],bufen[i]);
-       flopenr #(32) fbufdata(clk,reset,(en & done) & ptrs[i], 
+       flopenr #(32) fbufdata(ph1, ph2,reset,(en & done) & ptrs[i], 
                                  data,bufdata[i]);
-       flopenr #(30) fbufadr(clk,reset,(en & done) & ptrs[i], 
+       flopenr #(27) fbufadr(ph1, ph2,reset,(en & done) & ptrs[i], 
                                  adr,bufadr[i]);
-       flopenr #(4) fbufbyteen(clk,reset,(en & done) & ptrs[i], 
+       flopenr #(4) fbufbyteen(ph1, ph2,reset,(en & done) & ptrs[i], 
                                  byteen,bufbyteen[i]);
      end
    endgenerate
