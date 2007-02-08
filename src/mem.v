@@ -128,9 +128,12 @@ module cachecontroller(input ph1, ph2, reset,
 
   // Mem assignments for reading (directly from
   // main memory)
-  assign memdata = memrwb ? 32'bz : wbmemdata;
-  assign imemdata = (imemrwb & ion) ? memdata : 32'bz;
-  assign dmemdata = (dmemrwb & don) ? memdata : 32'bz;
+  //assign memdata = memrwb ? 32'bz : wbmemdata;
+  //assign imemdata = (imemrwb & ion) ? memdata : 32'bz;
+  //assign dmemdata = (dmemrwb & don) ? memdata : 32'bz;
+  tribuf memdatatri(~memrwb, wbmemdata, memdata);
+  tribuf dmemdatatri(dmemrwb & don, memdata, dmemdata);
+  tribuf imemdatatri(imemrwb & ion, memdata, imemdata);
 //  mux2 memdatamux(wbmemdata, 32'bz, memrwb, memdata);
 //  mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
 //  mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
@@ -311,17 +314,17 @@ module cache(input ph1, ph2, reset,
             assign #1 bypass = adr[29] & adr[27];
             
             wire [31:0] data2;
-            assign data2 = (|state) ? memdata : cacheline;
+            assign #1 data2 = (|state) ? memdata : cacheline;
             tribuf datatri(rwb,data2,data);
             //assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
             assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en;
             
-            assign memadr = adr[26:0];
+            assign #1 memadr = adr[26:0];
             tribuf memdatatri(~rwb,data,memdata);
             //assign memdata = state[1] ? data : 32'bz;
-            assign memen = (|state);
-            assign membyteen = state[0] ? 4'b1 : byteen;
-            assign memrwb = rwb;
+            assign #1 memen = (|state);
+            assign #1 membyteen = state[0] ? 4'b1 : byteen;
+            assign #1 memrwb = rwb;
             
             parameter SREADY = 2'b00;  // Ready
             parameter SREAD  = 2'b01;  // Read
