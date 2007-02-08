@@ -810,7 +810,7 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
   assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
 
   // Cache miss delays
-  assign #1 datamissM = memtoregM & ~dataackM;
+  assign #1 datamissM = ~dataackM;
 
   // Accessing HI and LO cannot happen during a multiply
   assign #1 multdivDE = hiloaccessD & mdrunE;

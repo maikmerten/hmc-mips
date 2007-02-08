@@ -249,5 +249,5 @@ module tribuf #(parameter WIDTH = 32)
                 output [WIDTH-1:0] y);
     wire [WIDTH-1:0] highz;
     assign highz = {WIDTH{1'bz}};
-    assign y = en ? a : highz;         
+    assign #1 y = en ? a : highz;        
 endmodule
