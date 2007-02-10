@@ -62,14 +62,14 @@ module testbench;
     
   initial
     begin
-      interrupts[0] <= 0; #17400;
+      interrupts[0] <= 0; #75400;
       interrupts[0] <= 1; #10;
       interrupts[0] <= 0;
     end
       
   initial
     begin
-      interrupts[1] <= 0; #17100; 
+      interrupts[1] <= 0; #75100; 
       interrupts[1] <= 1; #10; 
       interrupts[1] <= 0; #90;
       interrupts[1] <= 1; #10;

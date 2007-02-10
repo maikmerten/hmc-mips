@@ -59,7 +59,8 @@ module mips(input         ph1, ph2, reset,
                adesableE, adelableE, halfwordE, rfeE,
                specialregsrcE, hilodisableE,
                hiloaccessD, mdstartE, hilosrcE);
-  datapath dp(ph1, ph2, reset, memtoregE, memtoregM, memtoregW, byteM, halfwordM,
+  datapath dp(ph1, ph2, reset, memtoregE, memtoregM, memwriteM, memtoregW, 
+              byteM, halfwordM,
               branchD, jumpregD,
               unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
               regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
@@ -375,7 +376,8 @@ module cop0dec(input [5:0] op,
 endmodule
 
 module datapath(input         ph1, ph2, reset,
-                input         memtoregE, memtoregM, memtoregW, byteM, halfwordM,
+                input         memtoregE, memtoregM, memwriteM, memtoregW, 
+                input         byteM, halfwordM,
                 input         branchD, jumpregD, unsignedD, loadsignedM,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
@@ -420,9 +422,10 @@ module datapath(input         ph1, ph2, reset,
   wire        adelthrownF, adelthrownD;
 
   // hazard detection
-  hazard    h(rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
+  hazard    h(ph1, ph2, reset,
+              rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
-              memtoregE, memtoregM, branchD, jumpregD,
+              memtoregE, memtoregM, memwriteM,  branchD, jumpregD,
               instrackF, dataackM, exception, hiloaccessD, mdrunE,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM);
@@ -783,10 +786,12 @@ endmodule
 
 
 
-module hazard(input  [4:0]     rsD, rtD, rsE, rtE, 
+module hazard(input            ph1, ph2, reset,
+              input  [4:0]     rsD, rtD, rsE, rtE, 
               input  [4:0]     writeregE, writeregM, writeregW,
               input            regwriteE, regwriteM, regwriteW,
-              input            memtoregE, memtoregM, branchD, jumpregD,
+              input            memtoregE, memtoregM, memwriteM, 
+              input            branchD, jumpregD,
               input            instrackF, dataackM, exception,
               input            hiloaccessD, mdrunE,
               output           forwardaD, forwardbD,
@@ -795,6 +800,8 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               output           flushD, flushE, flushM);
 
   wire lwstallD, branchstallD, instrmissF, datamissM, multdivDE;
+
+  wire executecleared;
 
   // forwarding sources to D stage (branch equality)
   assign forwardaD = (rsD !=0 & rsD == writeregM & regwriteM);
@@ -829,31 +836,50 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               memtoregM & ((writeregM == rsD) | 
                           (writeregM == rtD)));
 
-  assign #1 stalledexception = exception & (instrmissF | datamissM);
-  assign #1 activeexception = exception & ~(instrmissF | datamissM);
+  assign #1 memstallexception = exception & (instrmissF | datamissM);
+
+  // If we are in a branch stall then we need to progress to the next stage
+  assign #1 brstallexception =   exception & executecleared;
+
+  // Keep track of whether the execute stage is blank
+  flopr #(1) execclearreg(ph1, ph2, reset, (flushE | executecleared) & stallD, 
+                          executecleared);
+
+  assign #1 activeexception = exception & ~memstallexception & 
+                              ~brstallexception;
 
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
                      | instrmissF; // Stall on instruction cache miss
-  assign #1 stallF =   stallD;     // stalling D stalls all previous stages
+  assign #1 stallF =  stallD;     // stalling D stalls all previous stages
 
-  assign #1 {stallE, stallM, stallW} = {3{datamissM | stalledexception}};
+  assign #1 stallE = datamissM | memstallexception; //instrmissF | datamissM;
+
+  
+
+  assign #1 {stallM, stallW} = {2{datamissM}};
 
   assign #1 flushD = activeexception;  // Exceptions invalidate the decode stage
 
-  assign #1 flushE = ~datamissM
+  assign #1 flushE =  (~datamissM & stallD & ~memstallexception) | 
+                      activeexception;
+      /*~datamissM
                       & ( stallD       // stalling D flushes next stage 
-                         | activeexception // flush decoder on all exceptions
-                         | instrmissF) // If the instruction cache is stalling,
-                                    // we must hold the decode stage as is, but
-                                    // prevent its operations from repeating
-                      & ~stalledexception; // Don't flush E when an exception is
-                                           // stalled, it is what is holding 
-                                           // our exception!
-                                            
-  // flush memory stage when we need to throw out an ALU computation, such as
+                         | activeexception); // flush decoder on all exceptions
+ */
+  // flush memory stage when we need to throw out an ALU exception, such as
   // when there is an arithmetic overflow
-  assign #1 flushM = activeexception; 
 
+  // Keeps track of when we have finished going through the Memory stage (this
+  // is necessary for handling stalls)
+
+  assign #1 flushM = ~stallM & memstallexception;
+
+/*  assign #1 flushM = (~datamissM & (memtoregM | memwriteM)) &
+                     (  stallE             // We aren't ready to read from E
+                      | activeexception);  // E was an exception so we have
+                                           // invalid data and we must be
+                                           // idompotent
+*/
   // *** not necessary to stall D stage on store if source comes from load;
   // *** instead, another bypass network could be added from W to M
 endmodule
