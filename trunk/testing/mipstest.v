@@ -172,7 +172,7 @@ module testbench;
           end
         9:
           if(memwrite) begin
-            if(dataadr === 32'hc & writedata === 32'h0c) begin
+            if(dataadr === 32'hbfc0000c & writedata === 32'h0c) begin
               currentSuccess <= 1;
             end else begin
               $display("Writing value %d to address %h", writedata, dataadr);
