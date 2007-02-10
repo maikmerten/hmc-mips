@@ -42,9 +42,9 @@ module testbench;
         reset <= 1; # 30; reset <= 0;
         // Pausing
         if(currentTest == 12 | currentTest == 16) begin
-          # 4970;
+          # 14970;
         end else
-           # 970;
+           # 4970;
 
         if(currentSuccess) begin
           $display("Simulation %d succeeded (end time %d)", currentTest, 
