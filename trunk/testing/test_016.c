@@ -12,7 +12,7 @@
 #include <limits.h>
 
 //  In order to run the first function, first initialize stack pointer
-asm("li $sp,0xf0");
+asm("li $sp,0x200");
 
 void test_016()
 {

@@ -15,7 +15,7 @@ main:   lui   $2, 0x8000        # $2 = 0x80000000 = (largest negative number)
         lui   $3, 0x8000        # $3 = 0x80000000 = (largest negative number)
         add   $2, $2, $3        # $2 = $2 + $3 = 0 (cause overflow exception)
                                 # (jump to exception code)
-        sw    $4, 0($7)         # should write 12 to address 0x12
+        sw    $4, 0($7)         # should write 12 to address 0xbfc0000c
 end:    beq   $0, $0, end       # loop forever
         nop
 
