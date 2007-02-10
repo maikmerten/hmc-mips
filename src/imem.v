@@ -24,39 +24,39 @@ module extmem(input ph1, ph2,
     begin
       // TODO: Zero out memory each time
       $readmemh("testing/test_000.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_001.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_002.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_003.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_004.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_005.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_006.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_007.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_008.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_009.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_010.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_011.dat",RAM);
-      #1000;
+      #5000;
       $readmemh("testing/test_012.dat",RAM);
-      #5000;
+      #15000;
       $readmemh("testing/test_013.dat",RAM);
-      #1000;
-      $readmemh("testing/test_014.dat",RAM);
-      #1000;
-      $readmemh("testing/test_015.dat",RAM);
-      #1000;
-      $readmemh("testing/test_016.dat",RAM);
       #5000;
+      $readmemh("testing/test_014.dat",RAM);
+      #5000;
+      $readmemh("testing/test_015.dat",RAM);
+      #5000;
+      $readmemh("testing/test_016.dat",RAM);
+      #15000;
     end
     
     assign data = (rwb) ? RAM[adr] : 32'bz;
