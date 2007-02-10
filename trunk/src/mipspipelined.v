@@ -171,7 +171,7 @@ module controller(input        ph1, ph2, reset, exception,
 
   // pipeline registers
   floprc #(1) regD(ph1, ph2, reset, ~stallD, {bdsF}, {bdsD});
-  floprc #(32) regE(ph1, ph2, reset, flushE,
+  flopenrc #(32) regE(ph1, ph2, reset, ~stallE, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
@@ -186,12 +186,12 @@ module controller(input        ph1, ph2, reset, exception,
 		              adesableE, adelableE, adelthrownE,
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
                   specialregsrcE, rfeE});
-  floprc #(7) regM(ph1, ph2, reset, flushM,
+  flopenrc #(7) regM(ph1, ph2, reset, ~stallM, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
                   byteE, halfwordE},
                   {memtoregM, memwriteM, regwriteM, cop0writeM, loadsignedM,
                   byteM, halfwordM});
-  flopr #(3) regW(ph1, ph2, reset, 
+  flopenr #(3) regW(ph1, ph2, reset, ~stallW,
                   {memtoregM, regwriteM, cop0writeM},
                   {memtoregW, regwriteW, cop0writeW});
 endmodule
