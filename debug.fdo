@@ -10,6 +10,7 @@ vlib work
 vlog  "src/components.v"
 vlog  "src/multdiv.v"
 vlog  "src/mipspipelined.v"
+vlog  "src/mem.v"
 vlog  "src/imem.v"
 vlog  "src/top.v"
 vlog  "testing/mipstest.v"
