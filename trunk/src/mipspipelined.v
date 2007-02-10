@@ -872,7 +872,7 @@ module hazard(input            ph1, ph2, reset,
   // Keeps track of when we have finished going through the Memory stage (this
   // is necessary for handling stalls)
 
-  assign #1 flushM = ~stallM & memstallexception;
+  assign #1 flushM = (~stallM & memstallexception) | activeexception;
 
 /*  assign #1 flushM = (~datamissM & (memtoregM | memwriteM)) &
                      (  stallE             // We aren't ready to read from E
