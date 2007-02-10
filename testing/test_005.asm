@@ -11,9 +11,10 @@
 
 .set noreorder
 
-main:   li    $3, 0xbfc00014    # $3 = 0xbfc00014
+main:   li    $3, 0xbfc00018    # $3 = 0xbfc00018
+        # note: li is a pseudo instruction that takes 2 actual instructions
         addi  $2, $0, 0         # $2 = 0
-        jalr  $7, $3            # Link 0xbfc00010 into $7, jump to 0xbfc00014
+        jalr  $7, $3            # Link 0xbfc00014 into $7, jump to 0xbfc00018
                                 # (this is r3dest)
         addi  $2, $2, 1         # Branch delay slot, so $2++ = 1
         addi  $2, $2, 0x10      # Should not be taken
@@ -23,7 +24,8 @@ r3dest: #jal   j1                # jump to j1 (0x8 << 2) and put 0x1c in $31
         .word   0x0cff0008  
         addi  $2, $2, 1         # Branch delay slot, so $2++ = 2
         addi  $2, $2, 0x20      # Should not be taken
-j1:     bltz  $7, b1            # Should not be taken
+j1:     sub   $7, $3, $7        # $7 = $3 - $7 = 0xbfc00018 - 0xbfc00014 = 0x4
+        bltz  $7, b1            # Should not be taken
         addi  $2, $2, 1         # Branch delay slot, so $2++ = 3
         addi  $2, $2, 1         # $2++ = 4
 b1:     bgtz  $7, b2            # Should be taken
