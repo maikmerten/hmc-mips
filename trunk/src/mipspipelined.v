@@ -829,24 +829,27 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               memtoregM & ((writeregM == rsD) | 
                           (writeregM == rtD)));
 
+  assign #1 stalledexception = exception & (instrackF | datamissM);
+  assign #1 activeexception = exception & ~(instrackF | datamissM);
+
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
                      | instrmissF; // Stall on instruction cache miss
   assign #1 stallF =   stallD;     // stalling D stalls all previous stages
 
-  assign #1 {stallE, stallM, stallW} = {3{datamissM}};
+  assign #1 {stallE, stallM, stallW} = {3{datamissM | stalledexception}};
 
-  assign #1 flushD = exception;  // All exceptions invalidate the decode stage
+  assign #1 flushD = activeexception;  // Exceptions invalidate the decode stage
 
   assign #1 flushE = ~datamissM &  
                      ( stallD       // stalling D flushes next stage 
-                      | exception   // flush decoder on all exceptions
+                      | activeexception   // flush decoder on all exceptions
                       | instrmissF);// If the instruction cache is stalling us, 
                                     // we must hold the decode stage as is, but
                                     // prevent its operations from repeating
                                             
   // flush memory stage when we need to throw out an ALU computation, such as
   // when there is an arithmetic overflow
-  assign #1 flushM = exception; 
+  assign #1 flushM = activeexception; 
 
   // *** not necessary to stall D stage on store if source comes from load;
   // *** instead, another bypass network could be added from W to M
