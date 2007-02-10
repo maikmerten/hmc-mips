@@ -36,7 +36,7 @@ module mips(input         ph1, ph2, reset,
               adesableE, adelableE, adelthrownE, misaligned;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
-  wire        stallD, flushE, flushM;
+  wire        stallD, stallE, stallM, stallW, flushE, flushM;
   wire [31:0] cop0readdataE, writedataW;
   wire [31:0] pcD, pcE;
   wire [4:0]  writeregW;
@@ -45,7 +45,8 @@ module mips(input         ph1, ph2, reset,
   // Globals
   wire        re, isc, exception;
 
-  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, stallD,
+  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, 
+               stallD, stallE, stallM, stallW,
                flushE, flushM, aeqzD, aeqbD, agtzD, altzD, mdrunE,
                memtoregE, memtoregM, memtoregW, memwriteM, 
                byteM, halfwordM, branchD,
@@ -69,7 +70,7 @@ module mips(input         ph1, ph2, reset,
               aluoutM, writedataM, readdataM, instrackF, dataackM, 
               exception,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
-              stallD, flushE, flushM, overflowE,
+              stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
               writedataW, writeregW, byteenM, misalignedhE, misalignedwE, 
               adelthrownE, mdrunE);
 
@@ -85,7 +86,7 @@ endmodule
 module controller(input        ph1, ph2, reset, exception,
                   input  [5:0] opD, functD,
                   input  [4:0] rsD, rtD,
-                  input        stallD, flushE, flushM,
+                  input        stallD, stallE, stallM, stallW, flushE, flushM,
                   input        aeqzD, aeqbD, agtzD, altzD, mdrunE,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
                   output       byteM, halfwordM,
@@ -395,7 +396,7 @@ module datapath(input         ph1, ph2, reset,
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
-                output        stallD, flushE, flushM, overflowE,
+                output        stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
                 output [3:0]  byteenM,
@@ -424,7 +425,7 @@ module datapath(input         ph1, ph2, reset,
               memtoregE, memtoregM, branchD, jumpregD,
               instrackF, dataackM, exception, hiloaccessD, mdrunE,
               forwardaD, forwardbD, forwardaE, forwardbE,
-              stallF, stallD, flushD, flushE, flushM);
+              stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM);
 
 
   fetchstage fetchstage(// inputs 
@@ -449,14 +450,15 @@ module datapath(input         ph1, ph2, reset,
                           aeqbD, aeqzD, agtzD, altzD);
 
   // Decode to Execute stage register
-  floprc #(32) r1E(ph1, ph2, reset, flushE, srca2D, srcaE); // TODO: was srcaD and  
-  floprc #(32) r2E(ph1, ph2, reset, flushE, srcb2D, srcbE); // srcbD so double check
-  floprc #(32) r3E(ph1, ph2, reset, flushE, signimmD, signimmE);
-  floprc #(5)  r4E(ph1, ph2, reset, flushE, rsD, rsE);
-  floprc #(5)  r5E(ph1, ph2, reset, flushE, rtD, rtE);
-  floprc #(5)  r6E(ph1, ph2, reset, flushE, rd2D, rdE);
-  floprc #(32) r9E(ph1, ph2, reset, flushE, pcD, pcE);
-  floprc #(1)  r10E(ph1, ph2, reset, flushE, adelthrownD, adelthrownE);
+  flopenrc #(32) r1E(ph1, ph2, reset, ~stallE, flushE, srca2D, srcaE); 
+  flopenrc #(32) r2E(ph1, ph2, reset, ~stallE, flushE, srcb2D, srcbE); 
+  flopenrc #(32) r3E(ph1, ph2, reset, ~stallE, flushE, signimmD, signimmE);
+  flopenrc #(5)  r4E(ph1, ph2, reset, ~stallE, flushE, rsD, rsE);
+  flopenrc #(5)  r5E(ph1, ph2, reset, ~stallE, flushE, rtD, rtE);
+  flopenrc #(5)  r6E(ph1, ph2, reset, ~stallE, flushE, rd2D, rdE);
+  flopenrc #(32) r9E(ph1, ph2, reset, ~stallE, flushE, pcD, pcE);
+  flopenrc #(1)  r10E(ph1, ph2, reset, ~stallE, flushE, adelthrownD, 
+      adelthrownE);
   
   executestage executestage(// inputs
                             ph1, ph2, reset, alusrcE, 
@@ -471,9 +473,9 @@ module datapath(input         ph1, ph2, reset,
                             misalignedhE, mdrunE);
 
   // Execute to Memory stage register
-  floprc #(32) r1M(ph1, ph2, reset, flushM, srcb2E, writedataM);
-  floprc #(32) r2M(ph1, ph2, reset, flushM, aluoutE, aluoutM);
-  floprc #(5)  r3M(ph1, ph2, reset, flushM, writeregE, writeregM);
+  flopenrc #(32) r1M(ph1, ph2, reset, ~stallM, flushM, srcb2E, writedataM);
+  flopenrc #(32) r2M(ph1, ph2, reset, ~stallM, flushM, aluoutE, aluoutM);
+  flopenrc #(5)  r3M(ph1, ph2, reset, ~stallM, flushM, writeregE, writeregM);
 
   memorystage memorystage(// inputs
                           byteM, halfwordM, loadsignedM, 
@@ -482,10 +484,10 @@ module datapath(input         ph1, ph2, reset,
                           writedata2M, readdata2M, byteenM);
 
   // Writeback stage
-  flopr #(32) r1W(ph1, ph2, reset, aluoutM, aluoutW);
-  flopr #(32) r2W(ph1, ph2, reset, readdata2M, readdataW);
-  flopr #(5)  r3W(ph1, ph2, reset, writeregM, writeregW);
-  flopr #(32) r4W(ph1, ph2, reset, writedataM, writedataW);
+  flopenr #(32) r1W(ph1, ph2, reset, ~stallW, aluoutM, aluoutW);
+  flopenr #(32) r2W(ph1, ph2, reset, ~stallW, readdata2M, readdataW);
+  flopenr #(5)  r3W(ph1, ph2, reset, ~stallW, writeregM, writeregW);
+  flopenr #(32) r4W(ph1, ph2, reset, ~stallW, writedataM, writedataW);
 
   mux2 #(32)  resmux(aluoutW, readdataW, memtoregW, resultW);
 
@@ -789,7 +791,8 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               input            hiloaccessD, mdrunE,
               output           forwardaD, forwardbD,
               output     [1:0] forwardaE, forwardbE,
-              output           stallF, stallD, flushD, flushE, flushM);
+              output           stallF, stallD, stallE, stallM, stallW, 
+              output           flushD, flushE, flushM);
 
   wire lwstallD, branchstallD, instrmissF, datamissM, multdivDE;
 
@@ -829,6 +832,8 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
                      | instrmissF; // Stall on instruction cache miss
   assign #1 stallF =   stallD;     // stalling D stalls all previous stages
+
+  assign #1 {stallE, stallM, stallW} = {3{datamissM}};
 
   assign #1 flushD = exception;  // All exceptions invalidate the decode stage
 
