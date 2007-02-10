@@ -19,6 +19,13 @@ module extmem(input ph1, ph2,
   //  reg  [31:0] RAM[63:0];  // USE THIS FOR SYNTHESIS
   wire [1:0] state;
   reg [1:0] nextstate;
+  wire [7:0] byte1, byte2, byte3, byte4;
+  
+  assign byte1 = byteen[0] ?  data[7:0] : RAM[adr][7:0];
+  assign byte2 = byteen[1] ?  data[15:8] : RAM[adr][15:8];
+  assign byte3 = byteen[2] ?  data[23:16] : RAM[adr][23:16];
+  assign byte4 = byteen[3] ?  data[31:24] : RAM[adr][31:24];
+  
   
   initial
     begin
@@ -75,6 +82,8 @@ module extmem(input ph1, ph2,
     endcase
     
     always @(posedge ph1)
-      if(~rwb) RAM[adr] <= data;
+      if(~rwb) begin
+          RAM[adr] <= {byte4, byte3, byte2, byte1};
+      end
 endmodule
 
