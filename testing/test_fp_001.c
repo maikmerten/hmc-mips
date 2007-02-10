@@ -11,9 +11,15 @@
  * point in software (since it is not implemented on this chip in hardware.)
  */
 
-sm("li $sp,0xf0");
+asm("li $sp,0xf0");
 
 void test_fp_1()
 {
+	float f1 = 3.14;
+	float f2 = 2.0;
+	float result_add = 1;
+	float result_mult = 1;
 
+	result_add = f1 + f2;
+	result_mult = f1 * f2;
 }

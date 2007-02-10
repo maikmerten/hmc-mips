@@ -5,7 +5,7 @@
  # Cc1 defaults:
 
  # Cc1 arguments (-G value = 8, Cpu = 3000, ISA = 1):
- # -quiet -dumpbase -Wall -o
+ # -quiet -dumpbase -msoft-float -Wall -o
 
 gcc2_compiled.:
 __gnu_compiled_c:
