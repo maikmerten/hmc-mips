@@ -36,7 +36,7 @@ module mips(input         ph1, ph2, reset,
               adesableE, adelableE, adelthrownE, misaligned;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
-  wire        flushE, flushM;
+  wire        stallD, flushE, flushM;
   wire [31:0] cop0readdataE, writedataW;
   wire [31:0] pcD, pcE;
   wire [4:0]  writeregW;
@@ -45,8 +45,8 @@ module mips(input         ph1, ph2, reset,
   // Globals
   wire        re, isc, exception;
 
-  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, flushE, flushM,
-               aeqzD, aeqbD, agtzD, altzD, mdrunE,
+  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, stallD,
+               flushE, flushM, aeqzD, aeqbD, agtzD, altzD, mdrunE,
                memtoregE, memtoregM, memtoregW, memwriteM, 
                byteM, halfwordM, branchD,
                alusrcE, unsignedD, loadsignedM,
@@ -69,14 +69,14 @@ module mips(input         ph1, ph2, reset,
               aluoutM, writedataM, readdataM, instrackF, dataackM, 
               exception,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
-              flushE, flushM, overflowE,
-              writedataW, writeregW, byteenM, misalignedh, misalignedw, 
+              stallD, flushE, flushM, overflowE,
+              writedataW, writeregW, byteenM, misalignedhE, misalignedwE, 
               adelthrownE, mdrunE);
 
   coprocessor0 cop0(ph1, ph2, reset, cop0writeW, rdE, writeregW, writedataW, 
                     overflowableE, overflowE, pcE, bdsE,
                     syscallE, breakE, riE, fpuE,
-                    adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
+                    adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE,
                     halfwordE, rfeE, interrupts, 
                     cop0readdataE, re, swc, isc, exception
                     );
@@ -85,7 +85,7 @@ endmodule
 module controller(input        ph1, ph2, reset, exception,
                   input  [5:0] opD, functD,
                   input  [4:0] rsD, rtD,
-                  input        flushE, flushM,
+                  input        stallD, flushE, flushM,
                   input        aeqzD, aeqbD, agtzD, altzD, mdrunE,
                   output       memtoregE, memtoregM, memtoregW, memwriteM,
                   output       byteM, halfwordM,
@@ -169,7 +169,7 @@ module controller(input        ph1, ph2, reset, exception,
 
 
   // pipeline registers
-  floprc #(1) regD(ph1, ph2, reset, flushE, {bdsF}, {bdsD});
+  floprc #(1) regD(ph1, ph2, reset, ~stallD, {bdsF}, {bdsD});
   floprc #(32) regE(ph1, ph2, reset, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
@@ -395,11 +395,11 @@ module datapath(input         ph1, ph2, reset,
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
-                output        flushE, flushM, overflowE,
+                output        stallD, flushE, flushM, overflowE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
                 output [3:0]  byteenM,
-                output        misalignedh, misalignedw, adelthrownE, mdrunE);
+                output        misalignedhE, misalignedwE, adelthrownE, mdrunE);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
@@ -467,8 +467,8 @@ module datapath(input         ph1, ph2, reset,
                             srcaE, srcbE, resultW, aluoutM, signimmE, pcE,
                             cop0readdataE, 
                             // outputs
-                            srcb2E, aluoutE, writeregE, overflowE, misalignedw, 
-                            misalignedh, mdrunE);
+                            srcb2E, aluoutE, writeregE, overflowE, misalignedwE, 
+                            misalignedhE, mdrunE);
 
   // Execute to Memory stage register
   floprc #(32) r1M(ph1, ph2, reset, flushM, srcb2E, writedataM);
@@ -567,7 +567,7 @@ module executestage(input         ph1, ph2, reset, alusrcE,
                                   cop0readdataE, 
                     output [31:0] srcb2E, aluoutE,
                     output [4:0]  writeregE,
-                    output        overflowE, misalignedw, misalignedh, mdrunE);
+                    output        overflowE, misalignedwE, misalignedhE, mdrunE);
 
   wire [31:0] srca2E, srcb3E;
   wire [31:0] aluresultE, shiftresultE, pcplus8E, specialregE, 
@@ -589,8 +589,8 @@ module executestage(input         ph1, ph2, reset, alusrcE,
   mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, specialregE, 
                         aluoutsrcE, aluoutE);
 
-  assign misalignedw = aluoutE[1] | aluoutE[0];
-  assign misalignedh = aluoutE[0];
+  assign misalignedwE = aluoutE[1] | aluoutE[0];
+  assign misalignedhE = aluoutE[0];
 
 endmodule
 
@@ -633,7 +633,7 @@ module coprocessor0(input             ph1, ph2, reset,
                     input             bdsE,
                     input             syscallE, breakE, riE, fpuE,
                     input             adesableE, adelableE, adelthrownE, 
-                    input             misalignedh, misalignedw, halfwordE, rfeE,
+                    input             misalignedhE, misalignedwE, halfwordE, rfeE,
                     input      [7:0]  interrupts,
                     output reg [31:0] readvalue,
                     output            re,   // reverse endianess
@@ -648,7 +648,7 @@ module coprocessor0(input             ph1, ph2, reset,
 
   exceptionunit excu(ph1, ph2, reset, overflowableE, overflowE, 
                      syscallE, breakE, riE, fpuE,
-                     adesableE, adelableE, adelthrownE, misalignedh, misalignedw,
+                     adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE,
                      halfwordE, iec, interrupts, im,
                      exception, exccode);
                      
@@ -674,7 +674,7 @@ module exceptionunit(input            ph1, ph2, reset,
                      input            overflowableE, overflowE,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
-                     input            misalignedh, misalignedw, halfwordE,
+                     input            misalignedhE, misalignedwE, halfwordE,
                      input            iec, //SR(IEc)
                      input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
                      output           exception,
@@ -684,8 +684,8 @@ module exceptionunit(input            ph1, ph2, reset,
     wire  [2:0] priencout;
     
     assign overflow = overflowableE & overflowE;
-    assign adel = (adelableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh)) | adelthrownE;
-    assign ades =  adesableE & (!halfwordE & (misalignedh | misalignedw) | misalignedh);
+    assign adel = (adelableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE)) | adelthrownE;
+    assign ades =  adesableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE);
     assign interrupt = iec & ( |(im & interrupts));
     assign exception = |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
     
@@ -826,16 +826,17 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
               memtoregM & ((writeregM == rsD) | 
                           (writeregM == rtD)));
 
-  assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE;
-  assign #1 stallF =   stallD      // stalling D stalls all previous stages
+  assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
                      | instrmissF; // Stall on instruction cache miss
+  assign #1 stallF =   stallD;     // stalling D stalls all previous stages
 
-  assign #1 flushD =   instrmissF  // Flush decoder if the instruction is not 
-                                   // yet available to enter the decode stage
-                     | exception;  // All exceptions invalidate the decod stage
+  assign #1 flushD = exception;  // All exceptions invalidate the decode stage
 
-  assign #1 flushE =   stallD | exception; // stalling D flushes next stage 
-                                            // flush decoder on all exceptions
+  assign #1 flushE =   stallD      // stalling D flushes next stage 
+                     | exception   // flush decoder on all exceptions
+                     | instrmissF; // If the instruction cache is stalling us, 
+                                   // we must hold the decode stage as is, but
+                                   // prevent its operations from repeating
                                             
   // flush memory stage when we need to throw out an ALU computation, such as
   // when there is an arithmetic overflow
@@ -969,7 +970,8 @@ module regfile(input         ph1, ph2,
   // write third port on falling edge of clock
   // register 0 hardwired to 0
 
-  always @(negedge ph1, ph2)
+  // TODO: Fix the clock to work with the two phases
+  always @(negedge ph1)
     if (we3) rf[wa3] <= wd3;
 
   assign #1 rd1 = (ra1 != 0) ? rf[ra1] : 0;
