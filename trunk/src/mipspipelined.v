@@ -837,11 +837,12 @@ module hazard(input  [4:0]     rsD, rtD, rsE, rtE,
 
   assign #1 flushD = exception;  // All exceptions invalidate the decode stage
 
-  assign #1 flushE =   stallD      // stalling D flushes next stage 
-                     | exception   // flush decoder on all exceptions
-                     | instrmissF; // If the instruction cache is stalling us, 
-                                   // we must hold the decode stage as is, but
-                                   // prevent its operations from repeating
+  assign #1 flushE = ~datamissM &  
+                     ( stallD       // stalling D flushes next stage 
+                      | exception   // flush decoder on all exceptions
+                      | instrmissF);// If the instruction cache is stalling us, 
+                                    // we must hold the decode stage as is, but
+                                    // prevent its operations from repeating
                                             
   // flush memory stage when we need to throw out an ALU computation, such as
   // when there is an arithmetic overflow
