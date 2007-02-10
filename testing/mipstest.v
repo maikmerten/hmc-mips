@@ -62,20 +62,32 @@ module testbench;
     
   initial
     begin
-      interrupts[0] <= 0; #75400;
+      interrupts[0] <= 0; #75800;
+      interrupts[0] <= 1; #50;
+      interrupts[0] <= 0;
+/* original      interrupts[0] <= 0; #75400;
       interrupts[0] <= 1; #10;
       interrupts[0] <= 0;
+*/
     end
       
   initial
     begin
-      interrupts[1] <= 0; #75100; 
+      interrupts[1] <= 0; #75500; 
+      interrupts[1] <= 1; #50;    // Cause exception 1
+      interrupts[1] <= 0; #900;   // Wait for handler to exit
+      interrupts[1] <= 1; #50;    // Cause exception 2
+      interrupts[1] <= 0; #100;   // Send interupt high (but during handler)
+      interrupts[1] <= 1; #50;    // So doesn't influence handler
+      interrupts[1] <= 0;
+/* original      interrupts[1] <= 0; #75100; 
       interrupts[1] <= 1; #10; 
       interrupts[1] <= 0; #90;
       interrupts[1] <= 1; #10;
       interrupts[1] <= 0; #240;
       interrupts[1] <= 1; #10;
       interrupts[1] <= 0;
+*/
     end
     
   initial

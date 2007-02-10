@@ -6,10 +6,7 @@
 #
 # Created: 1/20/07
 #
-#   Additional exception tests.
-#   Just throws exceptions one after the other, and makes sure that we gather
-#   the proper number of exceptions. Not terribly rigorous, but ought to be 
-#   enough for now.
+# Interrupt testing
 
 .set noreorder
 

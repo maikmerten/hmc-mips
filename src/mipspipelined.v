@@ -43,7 +43,7 @@ module mips(input         ph1, ph2, reset,
   wire [1:0]  specialregsrcE, hilodisableE;
   wire        hiloaccessD, mdstartE, hilosrcE;
   // Globals
-  wire        re, isc, exception;
+  wire        re, isc, exception, activeexception;
 
   controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, 
                stallD, stallE, stallM, stallW,
@@ -73,13 +73,13 @@ module mips(input         ph1, ph2, reset,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
               stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
               writedataW, writeregW, byteenM, misalignedhE, misalignedwE, 
-              adelthrownE, mdrunE);
+              adelthrownE, mdrunE, activeexception);
 
   coprocessor0 cop0(ph1, ph2, reset, cop0writeW, rdE, writeregW, writedataW, 
                     overflowableE, overflowE, pcE, bdsE,
                     syscallE, breakE, riE, fpuE,
                     adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE,
-                    halfwordE, rfeE, interrupts, 
+                    halfwordE, rfeE, interrupts, activeexception,
                     cop0readdataE, re, swc, isc, exception
                     );
 endmodule
@@ -398,11 +398,13 @@ module datapath(input         ph1, ph2, reset,
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
-                output        stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
+                output        stallD, stallE, stallM, stallW, 
+                output        flushE, flushM, overflowE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
                 output [3:0]  byteenM,
-                output        misalignedhE, misalignedwE, adelthrownE, mdrunE);
+                output        misalignedhE, misalignedwE, adelthrownE, mdrunE,
+                output        activeexception);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
@@ -428,7 +430,8 @@ module datapath(input         ph1, ph2, reset,
               memtoregE, memtoregM, memwriteM,  branchD, jumpregD,
               instrackF, dataackM, exception, hiloaccessD, mdrunE,
               forwardaD, forwardbD, forwardaE, forwardbE,
-              stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM);
+              stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM,
+              activeexception);
 
 
   fetchstage fetchstage(// inputs 
@@ -640,11 +643,14 @@ module coprocessor0(input             ph1, ph2, reset,
                     input             adesableE, adelableE, adelthrownE, 
                     input             misalignedhE, misalignedwE, halfwordE, rfeE,
                     input      [7:0]  interrupts,
+                    // activeexception is high during an exception once all the
+                    // necessary stalls have completed
+                    input             activeexception,
                     output reg [31:0] readvalue,
                     output            re,   // reverse endianess
                                       swc,  // swap caches
                                       isc,  // isolate cache
-                                      exception );
+                                      exception);
 
   wire [31:0] statusreg, causereg, epc;
   wire [7:0]  im;    // Interupt mask
@@ -657,12 +663,13 @@ module coprocessor0(input             ph1, ph2, reset,
                      halfwordE, iec, interrupts, im,
                      exception, exccode);
                      
-  epcunit       epcu(ph1, ph2, exception, bdsE, pcE, epc);
+  epcunit       epcu(ph1, ph2, activeexception, bdsE, pcE, epc);
   
-  statusregunit sr(ph1, ph2, reset, cop0writeW & (writeaddress == 5'b01100), exception, 
-                   writecop0W, rfeE, statusreg, re, im, swc, isc, iec);
+  statusregunit sr(ph1, ph2, reset, cop0writeW & (writeaddress == 5'b01100), 
+                   activeexception, writecop0W, rfeE, statusreg, 
+                   re, im, swc, isc, iec);
   causeregunit  cr(ph1, ph2, bdsE, interrupts, exccode, 
-                   exception, /* write enable determined by exception */
+                   activeexception, /* write enable determined by exception */
                    causereg);
    
   // All cop0 registers can be read
@@ -797,7 +804,7 @@ module hazard(input            ph1, ph2, reset,
               output           forwardaD, forwardbD,
               output     [1:0] forwardaE, forwardbE,
               output           stallF, stallD, stallE, stallM, stallW, 
-              output           flushD, flushE, flushM);
+              output           flushD, flushE, flushM, activeexception);
 
   wire lwstallD, branchstallD, instrmissF, datamissM, multdivDE;
 

@@ -9,6 +9,8 @@ add wave -noupdate -format Literal -radix hexadecimal /testbench/dataadr
 add wave -noupdate -format Logic -radix hexadecimal /testbench/memwrite
 add wave -noupdate -format Logic /testbench/dut/mips/dp/stallF
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/pcF
+add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/cop0/pcE
+add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/cop0/epc
 add wave -noupdate -format Literal -radix hexadecimal /testbench/dut/mips/instrF
 add wave -noupdate -format Logic /testbench/dut/mips/dp/decodestage/aeqbD
 add wave -noupdate -format Logic /testbench/dut/mips/dp/decodestage/aeqzD
@@ -69,7 +71,7 @@ add wave -noupdate -format Logic /testbench/dut/mips/dp/h/forwardbD
 add wave -noupdate -format Logic /testbench/dut/mips/dp/h/flushE
 add wave -noupdate -format Logic /testbench/dut/mips/dp/h/forwardaD
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {45158758 ps} 0}
+WaveRestoreCursors {{Cursor 1} {76810893 ps} 0}
 configure wave -namecolwidth 294
 configure wave -valuecolwidth 73
 configure wave -justifyvalue left
@@ -83,4 +85,4 @@ configure wave -gridperiod 1
 configure wave -griddelta 40
 configure wave -timeline 0
 update
-WaveRestoreZoom {45110186 ps} {45207330 ps}
+WaveRestoreZoom {76762321 ps} {76859465 ps}
