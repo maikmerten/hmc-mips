@@ -15,6 +15,8 @@
 # Notes:
 # Original code by
 # David_Harris@hmc.edu 9 November 2005 
+#
+# npinckney@hmc.edu 9 February 2007 - Modified write addresses to not interfere with instructions.
 
 .set noreorder
 
@@ -33,11 +35,11 @@ main:   addi $2, $0, 5          # initialize $2 = 5           20020005
 around: slt  $4, $7, $2         # $4 = 3 < 5 = 1              00e2202a
         add  $7, $4, $5         # $7 = 1 + 11 = 12            00853820
         sub  $7, $7, $2         # $7 = 12 - 5 = 7             00e23822
-        sw   $7, 68($3)         # [80] = 7                    ac670044
+        sw   $7, 500($3)         # [512] = 7                    ac670044
         lw   $2, 80($0)         # $2 = [80] = 7               8c020050
         j    end                # should be taken             08000014
         nop                     # Avoid branch slot           00000000
         addi $2, $0, 1          # shouldn't happen            20020001
-end:    sw   $2, 84($0)         # write adr 84 = 7            ac020054
+end:    sw   $2, 516($0)         # write adr 516 = 7            ac020054
 loop:   beq  $0, $0, loop       # loop forever                10000000
         nop                     # Avoid branch slot           00000000
