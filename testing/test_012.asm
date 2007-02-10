@@ -10,7 +10,7 @@
 gcc2_compiled.:
 __gnu_compiled_c:
  #APP
-	li $sp,0xf0
+	li $sp,0x200
  #NO_APP
 	.text
 	.align	2
