@@ -18,10 +18,10 @@ main:   li    $3, 0xbfc00018    # $3 = 0xbfc00018
                                 # (this is r3dest)
         addi  $2, $2, 1         # Branch delay slot, so $2++ = 1
         addi  $2, $2, 0x10      # Should not be taken
-r3dest: #jal   j1                # jump to j1 (0x8 << 2) and put 0x1c in $31
+r3dest: #jal   j1                # jump to j1 (0x9 << 2) and put 0x20 in $31
         # Hardcode the instruction, the assembler wants to make it PIC
         #.word   0x0c000008 # This location doesn't account for cache
-        .word   0x0cff0008  
+        .word   0x0cff0009
         addi  $2, $2, 1         # Branch delay slot, so $2++ = 2
         addi  $2, $2, 0x20      # Should not be taken
 j1:     sub   $7, $3, $7        # $7 = $3 - $7 = 0xbfc00018 - 0xbfc00014 = 0x4
