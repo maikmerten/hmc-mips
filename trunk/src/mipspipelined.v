@@ -856,39 +856,35 @@ module hazard(input            ph1, ph2, reset,
                               ~brstallexception;
 
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
-                     | instrmissF; // Stall on instruction cache miss
+                     | instrmissF; 
+
   assign #1 stallF =  stallD;     // stalling D stalls all previous stages
 
-  assign #1 stallE = datamissM | memstallexception; //instrmissF | datamissM;
+  // E needs all the freedom it can get to let its instrucitons through.  only
+  // a data miss or a pending exception caused by the E stage itself can 
+  // prevent instructions from continuing down the pipeline.
+  assign #1 stallE = datamissM | memstallexception; 
 
-  
-
+  // The only reason to hold up Memory and Writeback are when they don't have
+  // their own data yet
   assign #1 {stallM, stallW} = {2{datamissM}};
 
+  // We kill D only when an exception is flushing the processor
   assign #1 flushD = activeexception;  // Exceptions invalidate the decode stage
 
+  // We kill E whenever an exception is taking place, or when we have to stallD,
+  // so long as the reason we are stalling D is not related to an exception
+  // caused by E nor a data (not instruction) miss
   assign #1 flushE =  (~datamissM & stallD & ~memstallexception) | 
                       activeexception;
-      /*~datamissM
-                      & ( stallD       // stalling D flushes next stage 
-                         | activeexception); // flush decoder on all exceptions
- */
-  // flush memory stage when we need to throw out an ALU exception, such as
-  // when there is an arithmetic overflow
-
-  // Keeps track of when we have finished going through the Memory stage (this
-  // is necessary for handling stalls)
-
+ 
+  // Kill M so long as we aren't waiting for an operation to data memory.  If
+  // E is waiting for the instruction cache before it can throw an exception, we
+  // need to still flush M.  Finally, once an exception really happens, we have
+  // to flush M because the instruction that was in E before this is not allowed
+  // to have any affect.
   assign #1 flushM = (~stallM & memstallexception) | activeexception;
 
-/*  assign #1 flushM = (~datamissM & (memtoregM | memwriteM)) &
-                     (  stallE             // We aren't ready to read from E
-                      | activeexception);  // E was an exception so we have
-                                           // invalid data and we must be
-                                           // idompotent
-*/
-  // *** not necessary to stall D stage on store if source comes from load;
-  // *** instead, another bypass network could be added from W to M
 endmodule
 
 module branchcontroller(input             reset, exception, jump, branch, link,
