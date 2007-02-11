@@ -66,6 +66,8 @@ module extmem(input ph1, ph2,
       #15000;
       $readmemh("testing/test_017.dat",RAM);
       #250000;
+      $readmemh("testing/test_018.dat",RAM);
+      #5000;
     end
     
     assign data = (rwb) ? RAM[adr] : 32'bz;
