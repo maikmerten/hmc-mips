@@ -741,7 +741,7 @@ module statusregunit(input             ph1, ph2, reset, writeenable, exception,
   assign re  = statusreg[25];  // reverse endianness
   assign bev = statusreg[22];  // not currently implemented
   assign ts  = statusreg[21];  // TLB not implemented
-  assign {swc, isc, im} = statusreg[17:7];
+  assign {swc, isc, im} = statusreg[17:8];
 
 
   assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode

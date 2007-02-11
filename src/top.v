@@ -30,7 +30,7 @@ module top(input         ph1, ph2, reset,
          //   assign instrack = 1;
  // extmem extmem(ph1, ph2, pc[12:2], instr, 4'b1, 1'b1, 1'b1, instrack);
  //cacheideal dcache(ph1, ph2, memwrite, dataadr, writedata, byteen, readdata, dataack);
-extmem extmem(ph1, ph2, memadr[10:0], memdata, membyteen, memrwb, memen, memdone);
+extmem extmem(ph1, ph2, memadr[12:0], memdata, membyteen, memrwb, memen, memdone);
  
  assign instrack = instrackreal | reset;
 assign dataack = dataackreal | reset;

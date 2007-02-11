@@ -8,14 +8,14 @@
 
                  
 module extmem(input ph1, ph2,
-               input [10:0] adr,
+               input [12:0] adr,
                inout [31:0] data,
                input [3:0] byteen,
                input rwb, en,
                output done);
 
   // 0x200 = 2^10 = 1024
-  reg  [31:0] RAM[1023:0];
+  reg  [31:0] RAM[8191:0];
   //  reg  [31:0] RAM[63:0];  // USE THIS FOR SYNTHESIS
   wire [1:0] state;
   reg [1:0] nextstate;
@@ -64,6 +64,8 @@ module extmem(input ph1, ph2,
       #5000;
       $readmemh("testing/test_016.dat",RAM);
       #15000;
+      $readmemh("testing/test_017.dat",RAM);
+      #250000;
     end
     
     assign data = (rwb) ? RAM[adr] : 32'bz;

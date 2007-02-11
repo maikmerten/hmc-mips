@@ -251,14 +251,14 @@ module mainmem(input ph1, ph2, reset,
 endmodule
           
           
-// 4kB cache memory + tag (20) [51:32] + valid (1-bit) [52]
+// 1kB cache memory + tag (22) [53:32] + valid (1-bit) [54]
 module cacheram(input ph1, ph2,
-  input [9:0] adr,
+  input [7:0] adr,
   input rwb,
-  input [52:0] din,
-  output [52:0] dout);
+  input [54:0] din,
+  output [54:0] dout);
   
-  reg [52:0] mem[1023:0];
+  reg [54:0] mem[255:0];
   
   always @(posedge ph1)
     if(~rwb) mem[adr] <= din;
@@ -284,15 +284,15 @@ module cache(input ph1, ph2, reset,
              input memdone);
             
             wire [31:0] cacheline;
-            wire [19:0] tagdata;
+            wire [21:0] tagdata;
             wire        valid;
             wire [31:0] cachelinenew;
-            wire [19:0] tagdatanew;
+            wire [21:0] tagdatanew;
             wire        validnew;
             wire        cacheramrwb;
             
-            wire [9:0] tag;
-            wire [19:0] adrmsb;
+            wire [7:0] tag;
+            wire [21:0] adrmsb;
             wire incache;
             wire bypass;
             
@@ -308,8 +308,8 @@ module cache(input ph1, ph2, reset,
             assign #1 validnew = ((& byteen) | state[0]) & memdone;
             assign #1 cacheramrwb = ~(|state) | bypass;
                      
-            assign tag = adr[9:0];
-            assign adrmsb = adr[29:10];
+            assign tag = adr[7:0];
+            assign adrmsb = adr[29:8];
             assign #1 incache = (tagdata == adrmsb) & valid;
             assign #1 bypass = adr[29] & adr[27];
             
