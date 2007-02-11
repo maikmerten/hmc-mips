@@ -34,7 +34,7 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 17;
+      numTests = 18;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
@@ -43,6 +43,8 @@ module testbench;
         // Pausing
         if(currentTest == 12 | currentTest == 16) begin
           # 14970;
+        end else if(currentTest == 17) begin
+            # 249970;
         end else
            # 4970;
 
@@ -253,6 +255,14 @@ module testbench;
               //$display("Writing value %d to address %h at time %d", writedata,
               // dataadr, counter);
             end
+          end
+      17:
+          if(memwrite) begin
+              if(writedata === 32'hdeadbeef & dataadr === 0) begin
+                  currentSuccess <= 1;
+              end else begin
+                  $display("Writing value %h to address %h", writedata, dataadr);
+              end
           end
 //        default:
       endcase
