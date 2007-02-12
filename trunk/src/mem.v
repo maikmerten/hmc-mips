@@ -317,7 +317,7 @@ module cache(input ph1, ph2, reset,
             assign #1 data2 = (|state) ? memdata : cacheline;
             tribuf datatri(rwb,data2,data);
             //assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
-            assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en;
+            assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en | reset;
             
             assign #1 memadr = adr[26:0];
             tribuf memdatatri(~rwb,data,memdata);
