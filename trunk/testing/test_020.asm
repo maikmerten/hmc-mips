@@ -2,11 +2,11 @@
 # Nathaniel Pinckney
 # Spring, 2007
 #
-# Test 019
+# Test 020
 #
 # Created: 2/11/07
 #
-#   Tests basic read/write functionality of cache system
+#   Tests basic read/write functionality of data cache
 #   and write buffer.
 #
 # Steps:
@@ -15,6 +15,8 @@
 #  
 # 2. Test cached writes.  Then reads values back from memory and
 #    verifies correct values.
+#
+# 3. Does a unbuffered write and then read, to check value is correct.
 
 .set noreorder
 
