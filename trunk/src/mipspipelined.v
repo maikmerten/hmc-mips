@@ -73,7 +73,7 @@ module mips(input         ph1, ph2, reset,
               opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
               stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
               writedataW, writeregW, byteenM, misalignedhE, misalignedwE, 
-              adelthrownE, mdrunE, activeexception);
+              adelthrownE, mdrunE, activeexception,re);
 
   coprocessor0 cop0(ph1, ph2, reset, cop0writeW, rdE, writeregW, writedataW, 
                     overflowableE, overflowE, pcE, bdsE,
@@ -404,7 +404,8 @@ module datapath(input         ph1, ph2, reset,
                 output [4:0]  writeregW,
                 output [3:0]  byteenM,
                 output        misalignedhE, misalignedwE, adelthrownE, mdrunE,
-                output        activeexception);
+                output        activeexception,
+                input         re);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
@@ -487,7 +488,7 @@ module datapath(input         ph1, ph2, reset,
                           byteM, halfwordM, loadsignedM, 
                           writedataM, readdataM, aluoutM, 
                           // outputs
-                          writedata2M, readdata2M, byteenM);
+                          writedata2M, readdata2M, byteenM,re);
 
   // Writeback stage
   flopenr #(32) r1W(ph1, ph2, reset, ~stallW, aluoutM, aluoutW);
@@ -605,26 +606,31 @@ endmodule
 module memorystage(input         byteM, halfwordM, loadsignedM, 
                    input  [31:0] writedataM, readdataM, aluoutM, 
                    output [31:0] writedata2M, readdata2M, 
-                   output [3:0]  byteenM);
+                   output [3:0]  byteenM,
+                   input re);
 
   wire [3:0]  bytebyteenM, halfwordbyteenM;
   wire [7:0]  rbyteM;
   wire [15:0] rhalfwordM;
-  wire [31:0] rbyteextM, rhalfwordextM;
+  wire [31:0] rbyteextM, rhalfwordextM; 
+  wire [1:0] aluoutMre;
+
+  // aluoutM with invert for reverse endian mode.
+  mux2 #(2) aloutMmux(aluoutM[1:0],~aluoutM[1:0],re,aluoutMre);
 
   mux3 #(32) wdatamux(writedataM, {writedataM[15:0], writedataM[15:0]}, 
                       {writedataM[7:0], writedataM[7:0], writedataM[7:0], 
                        writedataM[7:0]}, 
                       {byteM, halfwordM}, writedata2M);
   // Byte encoding logic for store operations
-  dec2 bytebyteendec(aluoutM[1:0], bytebyteenM);
-  mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutM[1], halfwordbyteenM);
+  dec2 bytebyteendec(aluoutMre[1:0], bytebyteenM);
+  mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutMre[1], halfwordbyteenM);
   mux3 #(4) byteenmux(4'b1111, halfwordbyteenM, bytebyteenM, 
                       {byteM, halfwordM}, byteenM);
   // Load conversions
   mux4 #(8) rbytemux(readdataM[7:0], readdataM[15:8], readdataM[23:16], 
-                        readdataM[31:24], aluoutM[1:0], rbyteM);
-  mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutM[1],
+                        readdataM[31:24], aluoutMre[1:0], rbyteM);
+  mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutMre[1],
                           rhalfwordM);
   signext #(8, 32) rbytesignext(rbyteM, loadsignedM, rbyteextM);
   signext #(16, 32) rhalfwsignext(rhalfwordM, loadsignedM, rhalfwordextM);
@@ -758,7 +764,7 @@ module statusregunit(input             ph1, ph2, reset, writeenable, exception,
      // 22 and 21 are bev and ts
      // 17 to 8 are swc, isc, and im
   flopenr #(31) statusreghighflop(ph1, ph2, reset, writeenable,
-                             {2'b00, cu1, writedata[28], 2'b00, writedata[26],
+                             {2'b00, cu1, writedata[28], 2'b00, writedata[25],
                               2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
                               2'b00, kuo, ieo, kup, iep, kuc},
                              statusreghigh);
