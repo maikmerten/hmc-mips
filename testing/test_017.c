@@ -11,6 +11,8 @@
 
 #include <limits.h>
 
+int test2(void);
+
 // This is the boot loader code...
   // swap
   asm("swapon: addi  $9, $0, 1;
@@ -46,7 +48,7 @@
        bnez $10,loop2");
 
 //  In order to run the first function, first initialize stack pointer
-asm("li $sp,0x200");
+asm("li $sp,0x300");
 
 // And jumped to the cached address for main()
 // Note: the jumped address must be changed manually, labels
@@ -59,110 +61,31 @@ void test()
 {
    long *successptr;
    int i;
-   unsigned char *ptr;
+   long *ptr;
+   int temp;
 
+   ptr = (long *) 0x300;
+   for(i = 0; i < 0xf; i++) {
+	   *ptr = i;
+	   ptr += 1;
+   }  
+
+   ptr = (long *) 0x300;
+   for(i = 0; i < 0xf; i++) {
+	   temp = *ptr;
+	   ptr += 1;
+   }
+   
    successptr = (long *) 0x0;
-
-   *successptr = 0xdeadbeef;
+   *successptr = test2() + i;
    while(1);
-
-   /*
-  asm("addi  $9, $0, 1;
-      sll $9,$9,17
-      mtc0  $9, $12;
-      nop;
-      nop;
-      nop"
-      :
-      :
-      : "$8", "$9");
-
-  asm("addi  $9, $0, 0;
-      mtc0  $9, $12;
-      nop;
-      nop;
-      nop"
-      :
-      :
-      : "$8", "$9");
-*/
-  
-   /*
-   // Swap the caches
-  asm("addi  $9, $0, -1        # $3 = 0xffffffff
-      mtc0  $9, $12
-      nop;
-      nop;
-      nop"
-      :
-      :
-      : "$8", "$9");
- */
-   /*
-   // Swap the caches
-  asm("mfc0 $8,$12;
-      addi $9,$0,1;
-      sll $9,$9,$17;
-      xor $8,$8,$9;
-      nop;
-      nop;
-      nop;
-      mtc0 $8,$12;
-      nop;
-      nop;
-      nop"
-      :
-      :
-      : "$8", "$9");
-      */
-
 }
 
-  /*
-void test_017()
-{
-  int i;
-
-  long *cachedptr, *uncachedptr;
-  cachedptr = (long *) 0x200;
-  uncachedptr = (long *) 0xbfc00200;
-  for(i = 0; i < 2; i++) {
-	*cachedptr = *uncachedptr;
-	cachedptr += 1;
-	uncachedptr += 1;
-  }
-
-  testfunc();
+int test2(void) {
+	int a = 0xdead0000;
+	int b = 0x0000bee0;
+	int c = a+b;
+	return c;
 }
 
-  */
-/*
-void testfunc() {
-  long *testvar;
-  long *ptr;
 
-  testvar = 0x0;
-  ptr = 0xbfc00200;
-
-  *ptr = 0xdeadbeef;
-  ptr = 0x00000200;
-  *testvar = *ptr;
-}
-  */      
-/*
-// Initializes caches, by invalidating them.
-// When it returns, it returns to a cached instruction address.
-// Currently only clears from 0x200 and above.
-// We could have this just read everything into cache...
-void init_cache() {
-	int i;
-	long *cachedptr, *uncachedptr;
-	cachedptr = (long *) 0x0;
-	uncachedptr = (long *) 0xbfc00000;
-	for(i = 0; i < 1024; i++) {
-		*cachedptr = *uncachedptr;
-		cachedptr += 1;
-		uncachedptr += 1;
-	}
-}
-*/
