@@ -266,9 +266,8 @@ module cacheram(input ph1, ph2,
   assign dout = mem[adr];
 endmodule
 
-// 4kB CACHE
+// 1kB CACHE
 //
-// TODO: Forward requests to write buffer.
 module cache(input ph1, ph2, reset,
              input [29:0] adr,
              inout [31:0] data,
@@ -342,8 +341,9 @@ module cache(input ph1, ph2, reset,
                 SWRITE: if(memdone) nextstate <= SREADY;
                          else        nextstate <= SWRITE;
                 default: nextstate <= SREADY;
-          endcase
+              endcase
 endmodule
+
 
 module writebuffer(input ph1, ph2, reset,
                    input [26:0] adr,
@@ -361,7 +361,7 @@ module writebuffer(input ph1, ph2, reset,
    wire [26:0] bufadr[3:0];
    wire [3:0] bufbyteen[3:0];
    wire bufen[3:0];      // Flag to indicate whether buffer entry has
-                              // valid data.
+                         // valid data.
    
    wire [1:0] ptr,writeptr;
    wire [3:0] ptrs,writeptrs;  // TODO: this could easily be a shift register...
@@ -370,6 +370,7 @@ module writebuffer(input ph1, ph2, reset,
    assign done = ~bufen[ptr];   // If we have a free space available.
    assign writeready = (memdone | ~memen) & bufen[writeptr];
    
+   // TODO: put a inc() in here.
    flopenr #(2) ptrf(ph1, ph2, reset, en & done, ptr + 1'b1, ptr);
    flopenr #(2) writeptrf(ph1, ph2, reset, writeready, writeptr + 1'b1, writeptr);
    
@@ -381,9 +382,6 @@ module writebuffer(input ph1, ph2, reset,
    dec2 ptrdec(ptr,ptrs);
    dec2 writeptrdec(writeptr,writeptrs);
   
-  
-   // TODO: this is really really not elegant.  We should change this
-   // so the buffers are just mux'd out to the memory instead.
    genvar i;
    generate
      for(i = 0; i < 4; i = i + 1) begin:fbuf
