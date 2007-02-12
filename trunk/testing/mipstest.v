@@ -34,7 +34,7 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 20;
+      numTests = 24;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
@@ -261,7 +261,7 @@ module testbench;
               if(writedata === 32'hdeadbeef & dataadr === 0) begin
                   currentSuccess <= 1;
               end else begin
-                  //$display("Writing value %h to address %h", writedata, dataadr);
+//                  $display("Writing value %h to address %h", writedata, dataadr);
               end
           end 
       18:
@@ -280,6 +280,38 @@ module testbench;
               $display("Writing value %d to address %h", writedata, dataadr);
             end
           end
+      20:
+          if(memwrite) begin
+              if(writedata === 32'hdeadbeef & dataadr === 0) begin
+                  currentSuccess <= 1;
+              end else begin
+             //     $display("Writing value %h to address %h", writedata, dataadr);
+              end
+          end 
+      21:
+          if(memwrite) begin
+              if(writedata === 32'hdeadbeef & dataadr === 0) begin
+                  currentSuccess <= 1;
+              end else begin
+       //           $display("Writing value %h to address %h", writedata, dataadr);
+              end
+          end 
+      22:
+          if(memwrite) begin
+              if(writedata === 32'hdeadbeef & dataadr === 0) begin
+                  currentSuccess <= 1;
+              end else begin
+                  $display("Writing value %h to address %h", writedata, dataadr);
+              end
+          end 
+      23:
+          if(memwrite) begin
+              if(writedata === 32'hdeadbeef & dataadr === 0) begin
+                  currentSuccess <= 1;
+              end else begin
+  //                $display("Writing value %h to address %h", writedata, dataadr);
+              end
+          end 
 //        default:
       endcase
     end

@@ -1,13 +1,16 @@
 //------------------------------------------------
 // imem.v
+// npinckney@hmc.edu 12 Feburary 2007
 // David_Harris@hmc.edu 23 October 2005
 // Instruction memory used by MIPS processors
 //------------------------------------------------
+//
+// Assumes big endian
 
 `timescale 1 ns / 1 ps
 
                  
-module extmem(input ph1, ph2,
+module extmem(input ph1, ph2,reset,
                input [12:0] adr,
                inout [31:0] data,
                input [3:0] byteen,
@@ -69,6 +72,14 @@ module extmem(input ph1, ph2,
       $readmemh("testing/test_018.dat",RAM);
       #5000;
       $readmemh("testing/test_019.dat",RAM);
+      #5000;
+      $readmemh("testing/test_020.dat",RAM);
+      #5000;
+      $readmemh("testing/test_021.dat",RAM);
+      #5000;
+      $readmemh("testing/test_022.dat",RAM);
+      #5000;
+      $readmemh("testing/test_023.dat",RAM);
       #5000;
     end
     
