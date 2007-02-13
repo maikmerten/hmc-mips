@@ -52,7 +52,7 @@ module topmips(input         ph1, ph2, reset,
   // instantiate processor and cache
   mips mips(ph1, ph2, reset, pc, instr, interrupts, memwrite, memtoregM, swc, byteen, dataadr, writedata, 
             readdata, instrack, dataack);
-  cachecontroller cc(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrack,
+  memsys memsys(ph1, ph2, reset, pc[31:2], instr, 1'b1, instrack,
                      dataadr[31:2], writedata, byteen, readdata,
                      memwrite, memtoregM, dataack,
                      swc,

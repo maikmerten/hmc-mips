@@ -17,7 +17,7 @@
 // instrF = Instruction fetched (instruction data)
 //
 // swc = swap caches.  (0 = normal assignment, 1 = swapped)
-module cachecontroller(input ph1, ph2, reset,
+module memsys(input ph1, ph2, reset,
                        input [31:2] pcF,
                        output [31:0] instrF,
                        input reF,
@@ -203,54 +203,110 @@ module cachecontroller(input ph1, ph2, reset,
 endmodule
 
 
-
-// MAIN MEMORY
-///
-module mainmem(input ph1, ph2, reset,
-               input [26:0] adr,
-               inout [31:0] data,
-               input [3:0] byteen,
-               input rwb, en,
-               output done);
-  
-  integer i;             
-  reg [31:0] mem[4095:0];
-  wire [1:0] state;
-  reg [1:0] nextstate;
-
-  assign data = (rwb) ? mem[adr] : 32'bz;
-  assign done = state[1];
-
-  
-  always @(negedge reset)
-    begin
-        for(i = 0; i < 4096; i = i + 1)
-        begin
-           mem[i] = 32'b0;
-        end
-    
-        mem[0] = 32'hDEADBEEF;
-        mem['had] = 32'hBEADBEEF;
-        mem['h4ad] = 32'h21212121;
-    end
-
-
-  flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
-
-  always @(*)
-  case(state)
-      2'b00: if(en) nextstate <= 2'b01;
-             else nextstate <= 2'b00;
-      2'b01: if(en) nextstate <= 2'b10;
-             else nextstate <= 2'b00;
-      default: nextstate <= 2'b00;
-  endcase
-  
-  always @(posedge ph1)
-    if(~rwb) mem[adr] <= data;
+// cache: a 1kB cache
+module cache(input ph1, ph2, reset,
+             input [29:0] adr,
+             inout [31:0] data,
+             input [3:0] byteen,
+             input rwb, en,
+             output done,
+             
+             output [26:0] memadr, 
+             inout  [31:0] memdata,
+             output [3:0] membyteen,
+             output memrwb,
+             output memen,
+             input memdone);
+            
+  wire [31:0] readdata;
+            
+  // Cache ram ports
+  wire [31:0] cacheline;
+  wire [21:0] tagdata;
+  wire        valid;
+  wire [31:0] cachelinenew;
+  wire [21:0] tagdatanew;
+  wire        validnew;
+  wire        cacheramrwb;
+            
+  // Control signals
+  wire bypass;
+  wire waiting;
+  wire reading;
+            
+  cacheram cacheram(ph1, ph2, adr[7:0],cacheramrwb,
+                    {validnew,tagdatanew,cachelinenew},
+                    {valid,tagdata,cacheline});
+  cachecontroller cachec(ph1, ph2, reset, adr[29:8], en, rwb,
+                         tagdata, valid, memdone, 
+                         bypass, waiting, reading, done);
+            
+  // Cache ram controls.  Cache ram doesn't have an enable,
+  // just cacheramrwb goes low for writing.
+  // We write if we're using memory (waiting)
+  // and not bypassing.  (Remember rwb = 0 for a write)
+  assign #1 cacheramrwb = ~waiting | bypass;
+  mux2 #(32) cachelinemux(data,memdata,reading,cachelinenew);
+  assign #1 tagdatanew = adr[29:8];
+  assign #1 validnew = ((& byteen) | reading) & memdone;  // valid if reading or writing all
+                                                                    // bytes.
+  // Memory controls                  
+  assign #1 memadr = adr[26:0];
+  mux2 #(4) membyteenmux(byteen, 4'b1, reading, membyteen);
+  assign #1 memrwb = rwb;
+  assign #1 memen = waiting;
+            
+  // Bi-directional data port
+  mux2 #(32) readdatamux(cacheline, memdata, waiting, readdata);
+  tribuf #(32) datatri(rwb,readdata,data);
+  tribuf #(32) memdatatri(~rwb,data,memdata);
 endmodule
+
+
+// cachecontroller: controls the cache for reading/writing.
+module cachecontroller(input ph1, ph2, reset,
+              input [29:8] adr,
+              input en, rwb,
+              
+              input [21:0] tagdata,
+              input valid,
+              
+              input memdone,
+              
+              output bypass,
+              output waiting,
+              output reading,
+              output done);
+
+    reg [1:0] nextstate;
+    wire [1:0] state;
+
+    assign #1 bypass = adr[29] & adr[27];
+    assign #1 waiting = (|state);
+    assign reading = state[0];  
+    assign #1 incache = (tagdata == adr[29:8]) & valid;
+    assign #1 done = (incache & rwb & ~bypass) | (waiting & memdone) | ~en | reset;
+
+    parameter SREADY = 2'b00;  // Ready
+    parameter SREAD  = 2'b01;  // Read
+    parameter SWRITE = 2'b10;  // Write
+            
+    flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
           
-          
+    always @(*)
+      case(state)
+         SREADY:  if(~done & rwb) nextstate <= SREAD;
+                  else if(~done & ~rwb) nextstate <= SWRITE;
+                  else        nextstate <= SREADY;
+         SREAD:   if(memdone) nextstate <= SREADY;
+                  else        nextstate <= SREAD;
+         SWRITE:  if(memdone) nextstate <= SREADY;
+                  else        nextstate <= SWRITE;
+         default: nextstate <= SREADY;
+       endcase
+endmodule
+
+
 // 1kB cache memory + tag (22) [53:32] + valid (1-bit) [54]
 module cacheram(input ph1, ph2,
   input [7:0] adr,
@@ -266,85 +322,9 @@ module cacheram(input ph1, ph2,
   assign dout = mem[adr];
 endmodule
 
-// 1kB CACHE
-//
-module cache(input ph1, ph2, reset,
-             input [29:0] adr,
-             inout [31:0] data,
-             input [3:0] byteen,
-             input rwb, en,
-             output done,
-             
-             output [26:0] memadr, 
-             inout  [31:0] memdata,
-             output [3:0] membyteen,
-             output memrwb,
-             output memen,
-             input memdone);
-            
-            wire [31:0] cacheline;
-            wire [21:0] tagdata;
-            wire        valid;
-            wire [31:0] cachelinenew;
-            wire [21:0] tagdatanew;
-            wire        validnew;
-            wire        cacheramrwb;
-            
-            wire [7:0] tag;
-            wire [21:0] adrmsb;
-            wire incache;
-            wire bypass;
-            
-            reg [1:0] nextstate;
-            wire [1:0] state;
-            
-            cacheram cacheram(ph1, ph2,tag,cacheramrwb,{validnew,tagdatanew,cachelinenew},
-                                                  {valid,tagdata,cacheline});
 
-            // Valid if writing all or this is a read... and the memory is done.
-            assign #1 cachelinenew = state[0] ? memdata : data;
-            assign #1 tagdatanew = adrmsb;
-            assign #1 validnew = ((& byteen) | state[0]) & memdone;
-            assign #1 cacheramrwb = ~(|state) | bypass;
-                     
-            assign tag = adr[7:0];
-            assign adrmsb = adr[29:8];
-            assign #1 incache = (tagdata == adrmsb) & valid;
-            assign #1 bypass = adr[29] & adr[27];
-            
-            wire [31:0] data2;
-            assign #1 data2 = (|state) ? memdata : cacheline;
-            tribuf datatri(rwb,data2,data);
-            //assign data = rwb ? ((|state) ? memdata : cacheline) : 32'bz;
-            assign #1 done = (incache & rwb & ~bypass) | ((|state) & memdone) | ~en | reset;
-            
-            assign #1 memadr = adr[26:0];
-            tribuf memdatatri(~rwb,data,memdata);
-            //assign memdata = state[1] ? data : 32'bz;
-            assign #1 memen = (|state);
-            assign #1 membyteen = state[0] ? 4'b1 : byteen;
-            assign #1 memrwb = rwb;
-            
-            parameter SREADY = 2'b00;  // Ready
-            parameter SREAD  = 2'b01;  // Read
-            parameter SWRITE = 2'b10;  // Write
-            
-            flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
-          
-            always @(*)
-              case(state)
-                SREADY: if(en & ~done & rwb)       nextstate <= SREAD;
-                        else if(en & ~rwb) nextstate <= SWRITE;
-                        else                          nextstate <= SREADY;
-                SREAD:  if(memdone) nextstate <= SREADY;
-                        else        nextstate <= SREAD;
-                SWRITE: if(memdone) nextstate <= SREADY;
-                         else        nextstate <= SWRITE;
-                default: nextstate <= SREADY;
-              endcase
-endmodule
-
-
+// writebuffer:  The write buffer, for storing
+// data to write to external memory.
 module writebuffer(input ph1, ph2, reset,
                    input [26:0] adr,
                    input [31:0] data,
@@ -360,11 +340,11 @@ module writebuffer(input ph1, ph2, reset,
    wire [31:0] bufdata[3:0];
    wire [26:0] bufadr[3:0];
    wire [3:0] bufbyteen[3:0];
-   wire bufen[3:0];      // Flag to indicate whether buffer entry has
-                         // valid data.
+   wire bufen[3:0];             // Flags to indicate whether buffer entries have
+                                // valid data.
    
    wire [1:0] ptr,writeptr;
-   wire [3:0] ptrs,writeptrs;  // TODO: this could easily be a shift register...
+   wire [3:0] ptrs,writeptrs;   // TODO: this could easily be a shift register...
    wire writeready;
    
    assign done = ~bufen[ptr];   // If we have a free space available.
