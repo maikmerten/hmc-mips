@@ -27,3 +27,7 @@ Tests bypassing the cache by:
 *Test 24*
 
 This test is similar to test 22 except it first enables the RE bit (reverse endian) in the status register.  It also loads half-word values instead of word values.
+
+*Test 25*
+
+Tests data with identical tags (i.e. lower 8 bits of address are the same) but different data/address locations (upper bits of address are different).
