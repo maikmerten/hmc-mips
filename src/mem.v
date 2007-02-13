@@ -40,9 +40,6 @@ module memsys(input ph1, ph2, reset,
                        input memdone);
 
   wire enF, enM;
-  
-  assign enF = reF;
-  assign enM = reM | memwriteM;
 
   wire [29:0] dadr;
   wire [31:0] ddata;
@@ -53,8 +50,7 @@ module memsys(input ph1, ph2, reset,
   wire [3:0] dmembyteen;
   wire dmemrwb, dmemen;
   wire dmemdone;
-  wire dmemdonewire;
-
+  wire dmemdonemem;
 
   wire [29:0] iadr;
   wire [31:0] idata;
@@ -65,7 +61,7 @@ module memsys(input ph1, ph2, reset,
   wire [3:0] imembyteen;
   wire imemrwb, imemen;
   wire imemdone;
-  wire imemdonewire;
+  wire imemdonemem;
 
   wire [26:0] wbadr;
   wire [31:0] wbdata;
@@ -77,105 +73,103 @@ module memsys(input ph1, ph2, reset,
   wire wbmemen;
   wire wbmemdone;
 
+  wire [1:0] state;  // don,ion,wbon are decoded state.
   wire don,ion,wbon;
+  
+  assign enF = reF;
+  assign enM = reM | memwriteM;
 
   // This swaps the output if swc is asserted.
   // The first is the swapped case, second is normal.
   // Inputs:
-  assign iadr = (swc) ? adrM  : pcF[31:2];
-  assign dadr = (swc) ? pcF[31:2] : adrM;
-  assign ien = (swc) ? enM : enF;
-  assign den = (swc) ? enF : enM;
-  assign ibyteen = (swc) ? byteenM : 4'b1;
-  assign dbyteen = (swc) ? 4'b1 : byteenM;
-  assign irwb = (swc) ? ~memwriteM : 1'b1;
-  assign drwb = (swc) ? 1'b1 : ~memwriteM;
-
-  wire working;
-  assign working = wbon | don | ion;
-
+  // * I/D-cache mux *
+  cmux2 #(30) adrmux(adrM,pcF[31:2],swc,dadr,iadr);
+  cmux2 #(4) byteenmux(byteenM,4'b1,swc,dbyteen,ibyteen);
+  cmux2 #(1) rwbmux(~memwriteM,1'b1,swc,drwb,irwb);
+  cmux2 #(1) enmux(enM,enF,swc,den,ien);
   // If reading want this to be z,
   // if writing then drive with the data to write.
-  assign ddata = (swc | ~memwriteM) ? 32'bz : writedataM;
-  assign idata = (~swc | ~memwriteM) ? 32'bz : writedataM;
+  tribuf #(32) ddatatri(~swc & memwriteM,writedataM,ddata);
+  tribuf #(32) idatatri(swc & memwriteM,writedataM,idata);
+  // I/D Outputs:
+  cmux2 #(32) datamux(ddata,idata,swc,readdataM,instrF);
+  cmux2 #(1) donemux(ddone,idone,swc,dataackM,instrackF);
 
-  // Outputs:
-  mux2 #(32) instrFmux(idata,ddata,swc,instrF);
-  mux2 #(32) readdataMmux(ddata,idata,swc,readdataM);
-  mux2 #(1) instrackFmux(idone,ddone,swc,instrackF);
-  mux2 #(1) dataackMmux(ddone,idone,swc,dataackM);
+  // * Write buffer muxes *
+  tribuf #(27) wbadrd(~swc & ~dmemrwb, dmemadr, wbadr);
+  tribuf #(27) wbadri(swc & ~imemrwb, imemadr, wbadr);
+  tribuf #(32) wbdatad(~swc & ~dmemrwb, dmemdata, wbdata);
+  tribuf #(32) wbdatai(swc & ~imemrwb, imemdata, wbdata);
+  tribuf #(4) wbbyteend(~swc & ~dmemrwb, dmembyteen, wbbyteen);
+  tribuf #(4) wbbyteeni(swc & ~imemrwb, imembyteen, wbbyteen);
+  tribuf #(1) wbend(~swc & ~dmemrwb, dmemen, wben);
+  tribuf #(1) wbeni(swc & ~imemrwb, imemen, wben);
+  tribuf #(1) wbenz((swc & imemrwb) | (~swc & dmemrwb), 1'b0, wben);
+  // Dones.  Intercepts and connects to write buffer
+  // if appropriate.  The swc's are because only the
+  // cache acting for data can write.
+  mux2 #(1) dmemdonemux(dmemdonemem, wbdone, ~swc & ~dmemrwb, dmemdone);
+  mux2 #(1) imemdonemux(imemdonemem, wbdone, swc & ~imemrwb, imemdone);
 
-  // Write buffer... for writing.
-  // need swap here...
-  assign wbadr = (swc) ? (imemrwb ? 32'bz : imemadr) :
-                          (dmemrwb ? 32'bz : dmemadr); 
-  assign wbdata = (swc) ? (imemrwb ? 32'bz : imemdata) :
-                          (dmemrwb ? 32'bz : dmemdata); 
-  assign wbbyteen = (swc) ? (imemrwb ? 32'bz : imembyteen) :
-                            (dmemrwb ? 32'bz : dmembyteen); 
-  assign wben = (swc) ? (imemrwb ? 1'b0 : imemen) :
-                        (dmemrwb ? 1'b0 : dmemen);
-  assign dmemdonewire = (~swc & ~dmemrwb) ? wbdone :
-                                            dmemdone;
-  assign imemdonewire = (swc & ~imemrwb) ? wbdone :
-                                          imemdone;
-
-  // What tells these it is done.            
+  // * Muxes for memory *
+  // Memory adr, byteen, rwb
+  mux4 #(27) memadrmux(27'b0,wbmemadr,dmemadr,imemadr,state,memadr);
+  mux4 #(4) membyteenmux(4'b1,wbmembyteen,dmembyteen,imembyteen,state,membyteen);
+  mux4 #(1) memrwbmux(1'b1,1'b0,1'b1,1'b1,state,memrwb);
+  // Memory data
+  tribuf memdatatri(wbon, wbmemdata, memdata);           // wb writes
+  tribuf dmemdatatri(dmemrwb & don, memdata, dmemdata);  // data reads
+  tribuf imemdatatri(imemrwb & ion, memdata, imemdata);  // instruction reads
+  // Memory dones         
   mux2 #(1) wbmemdonemux(1'b0,memdone,wbon,wbmemdone);
-  mux2 #(1) dmemdonemux(1'b0,memdone,don,dmemdone);
-  mux2 #(1) imemdonemux(1'b0,memdone,ion,imemdone);
-
-
-  // Mem assignments for reading (directly from
-  // main memory)
-  //assign memdata = memrwb ? 32'bz : wbmemdata;
-  //assign imemdata = (imemrwb & ion) ? memdata : 32'bz;
-  //assign dmemdata = (dmemrwb & don) ? memdata : 32'bz;
-  tribuf memdatatri(~memrwb, wbmemdata, memdata);
-  tribuf dmemdatatri(dmemrwb & don, memdata, dmemdata);
-  tribuf imemdatatri(imemrwb & ion, memdata, imemdata);
-//  mux2 memdatamux(wbmemdata, 32'bz, memrwb, memdata);
-//  mux2 imemdatamux(32'bz, memdata, ion & imemrwb, imemdata);
-//  mux2 dmemdatamux(32'bz, memdata, don & dmemrwb, dmemdata);
-
+  mux2 #(1) dmemdonememmux(1'b0,memdone,don,dmemdonemem);
+  mux2 #(1) imemdonememmux(1'b0,memdone,ion,imemdonemem);
+  
   cache dcache(ph1, ph2, reset, dadr, ddata, dbyteen,
                            drwb, den, ddone,
                            dmemadr,dmemdata,dmembyteen,
-                           dmemrwb, dmemen,dmemdonewire);
+                           dmemrwb, dmemen,dmemdone);
                          
   cache icache(ph1, ph2, reset, iadr, idata, ibyteen,
                            irwb, ien, idone,
                            imemadr,imemdata,imembyteen,
-                           imemrwb, imemen,imemdonewire);
-
-  // TODO: first one should go to memory multiplexor.
-  // we need to split this up... so that it can directly access the buffer.
-  //assign dmemdone = (dmemrwb) ? wbdone : wbdone;
+                           imemrwb, imemen,imemdone);
 
   writebuffer writebuf(ph1, ph2, reset, wbadr, wbdata, wbbyteen,
                             wben, wbdone,
                             wbmemadr, wbmemdata, wbmembyteen,
                             wbmemen, wbmemdone);
+  
+  memsyscontroller memsysc(ph1, ph2, reset,
+                           wbmemen, dmemen, imemen,
+                           dmemrwb, imemrwb,
+                           memdone, swc,
+                           state, wbon, don, ion,
+                           memen);
+endmodule
 
+
+module memsyscontroller(input ph1, ph2, reset,
+                        input wbmemen, dmemen, imemen,
+                        input dmemrwb, imemrwb,
+                        input memdone, swc,
+                        output [1:0] state,
+                        output wbon, don, ion,
+                        output memen);
+
+  reg [1:0] nextstate;
+  wire [3:0] onnext;
+  
   parameter SREADY = 2'b00; // Ready state
   parameter SWB = 2'b01;  // Write buffer on
   parameter SD = 2'b10;  // Data cache on
   parameter SI = 2'b11; // Instruction cache on
 
-  reg [1:0] nextstate;
-  wire [1:0] state;
-
-
-  assign wbon = ~state[1] & state[0];
-  assign don = state[1] & ~state[0];
-  assign ion = state[1] & state[0];
+  dec2 statedec(nextstate,onnext);
+  flopr #(3) fon(ph1, ph2, reset, onnext[3:1], {ion,don,wbon});
+  flopr #(1) fmemen(ph1, ph2, reset, (|nextstate), memen);
 
   flopr #(2) fstate(ph1, ph2,reset,nextstate,state);
-
-  mux4 #(27) memadrmux(27'b0,wbmemadr,dmemadr,imemadr,state,memadr);
-  mux4 #(4) membyteenmux(4'b1,wbmembyteen,dmembyteen,imembyteen,state,membyteen);
-  mux4 #(1) memrwbmux(1'b1,1'b0,1'b1,1'b1,state,memrwb);
-  assign memen = (|state);
 
   always @(*)
   begin
@@ -343,16 +337,18 @@ module writebuffer(input ph1, ph2, reset,
    wire bufen[3:0];             // Flags to indicate whether buffer entries have
                                 // valid data.
    
-   wire [1:0] ptr,writeptr;
-   wire [3:0] ptrs,writeptrs;   // TODO: this could easily be a shift register...
+   wire [1:0] ptr,writeptr,ptrnext,writeptrnext;
+   wire [3:0] ptrs,writeptrs;
    wire writeready;
+   wire [1:0] junk; // This doesn't go anywhere, carryouts from the two incs
    
    assign done = ~bufen[ptr];   // If we have a free space available.
    assign writeready = (memdone | ~memen) & bufen[writeptr];
    
-   // TODO: put a inc() in here.
-   flopenr #(2) ptrf(ph1, ph2, reset, en & done, ptr + 1'b1, ptr);
-   flopenr #(2) writeptrf(ph1, ph2, reset, writeready, writeptr + 1'b1, writeptr);
+   inc #(2) ptrinc(ptr,ptrnext,junk[0]);
+   inc #(2) writeptrinc(writeptr,writeptrnext,junk[1]);
+   flopenr #(2) ptrf(ph1, ph2, reset, en & done, ptrnext, ptr);
+   flopenr #(2) writeptrf(ph1, ph2, reset, writeready, writeptrnext, writeptr);
    
    flopenr #(27) memadrf(ph1, ph2, reset, writeready, bufadr[writeptr], memadr);
    flopenr #(32) memdataf(ph1, ph2, reset, writeready, bufdata[writeptr], memdata);
