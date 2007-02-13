@@ -251,3 +251,14 @@ module tribuf #(parameter WIDTH = 32)
     assign highz = {WIDTH{1'bz}};
     assign #1 y = en ? a : highz;        
 endmodule
+
+// Complementary mux
+module cmux2 #(parameter WIDTH = 32)
+             (input  [WIDTH-1:0] d0, d1, 
+              input              s,
+              output [WIDTH-1:0] y1,
+              output [WIDTH-1:0] y2);
+
+  assign #1 y1 = s ? d1 : d0;
+  assign #1 y2 = s ? d0 : d1;
+endmodule
