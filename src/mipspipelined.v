@@ -30,61 +30,96 @@ module mips(input         ph1, ph2, reset,
               unsignedD, loadsignedM, rdsrcD, linkD, luiE,
               overflowableE, overflowE,
               memtoregE,  memtoregW, regwriteE, regwriteM, regwriteW,
-              byteM, hardwordM,
+              byteM, halfwordM,
               aeqzD, aeqbD, agtzD, altzD, mdrunE, branchD, jumpregD,
-              bdsE, syscallE, breakE, riE, fpu,
-              adesableE, adelableE, adelthrownE, misaligned;
+              bdsE, syscallE, breakE, riE, fpuE,
+              adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE;
   wire [2:0]  alushcontrolE;
   wire [1:0]  pcbranchsrcD, aluoutsrcE, pcsrcFD;
   wire        stallD, stallE, stallM, stallW, flushE, flushM;
   wire [31:0] cop0readdataE, writedataW;
-  wire [31:0] pcD, pcE;
+  wire [31:0] pcE;
   wire [4:0]  writeregW;
   wire [1:0]  specialregsrcE, hilodisableE;
   wire        hiloaccessD, mdstartE, hilosrcE;
   // Globals
-  wire        re, isc, exception, activeexception;
+  wire        re, isc, pendingexception, activeexception;
 
-  controller c(ph1, ph2, reset, exception, opD, functD, rsD, rtD, 
-               stallD, stallE, stallM, stallW,
-               flushE, flushM, aeqzD, aeqbD, agtzD, altzD, mdrunE,
-               memtoregE, memtoregM, memtoregW, memwriteM, 
-               byteM, halfwordM, branchD,
-               alusrcE, unsignedD, loadsignedM,
-               regdstE, regwriteE, regwriteM, 
-               regwriteW, jumpD, jumpregD, overflowableE,
-               aluoutsrcE, alushcontrolE, linkD, luiE,
-               rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, bdsE,
-               syscallE, breakE, riE, fpuE,
-               adesableE, adelableE, halfwordE, rfeE,
-               specialregsrcE, hilodisableE,
-               hiloaccessD, mdstartE, hilosrcE);
-  datapath dp(ph1, ph2, reset, memtoregE, memtoregM, memwriteM, memtoregW, 
-              byteM, halfwordM,
-              branchD, jumpregD,
-              unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
-              regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
-              rdsrcD, 
-              specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
-              pcsrcFD, pcbranchsrcD, alushcontrolE, cop0readdataE,
-              pcF, pcE, instrF,
-              aluoutM, writedataM, readdataM, instrackF, dataackM, 
-              exception,
-              opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
-              stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
-              writedataW, writeregW, byteenM, misalignedhE, misalignedwE, 
-              adelthrownE, mdrunE, activeexception,re);
+  controller c(/* inputs */
+                 /* from off chip */
+                 ph1, ph2, reset, 
+                 /* from datapath */
+                 pendingexception, 
+                 opD, functD, rsD, rtD, 
+                 stallD, stallE, stallM, stallW,
+                 flushE, flushM, 
+                 aeqzD, aeqbD, agtzD, altzD, mdrunE,
 
-  coprocessor0 cop0(ph1, ph2, reset, cop0writeW, rdE, writeregW, writedataW, 
-                    overflowableE, overflowE, pcE, bdsE,
-                    syscallE, breakE, riE, fpuE,
-                    adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE,
-                    halfwordE, rfeE, interrupts, activeexception,
-                    cop0readdataE, re, swc, isc, exception
-                    );
+               /* outputs (All the control signals) */
+                 memtoregE, memtoregM, memtoregW, memwriteM, 
+                 byteM, halfwordM, branchD,
+                 alusrcE, unsignedD, loadsignedM,
+                 regdstE, regwriteE, regwriteM, 
+                 regwriteW, jumpD, jumpregD, overflowableE,
+                 aluoutsrcE, alushcontrolE, linkD, luiE,
+                 rdsrcD, pcsrcFD, pcbranchsrcD, cop0writeW, bdsE,
+                 syscallE, breakE, riE, fpuE,
+                 adesableE, adelableE, halfwordE, rfeE,
+                 specialregsrcE, hilodisableE,
+                 hiloaccessD, mdstartE, hilosrcE);
+
+  datapath dp(/* inputs */
+                /* from off chip */
+                ph1, ph2, reset, instrF, 
+                /* from cache */
+                readdataM, instrackF, dataackM, 
+                /* from controller */
+                memtoregE, memtoregM, memwriteM, memtoregW, 
+                byteM, halfwordM,
+                branchD, jumpregD,
+                unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
+                regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
+                rdsrcD, 
+                specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
+                pcsrcFD, pcbranchsrcD, alushcontrolE, 
+                /* from coprocessor 0 */
+                cop0readdataE, pendingexception, re, 
+              /* outputs */
+                /* to off chip */
+                pcF, aluoutM, 
+                /* to cache */
+                writedataM, byteenM, 
+                /* to controller */
+                opD, functD, rsD, rtD, rdE, aeqzD, aeqbD, agtzD, altzD, 
+                stallD, stallE, stallM, stallW, flushE, flushM, overflowE,
+                mdrunE, 
+                /* to coprocessor 0 */
+                misalignedhE, misalignedwE, adelthrownE, pcE, 
+                writedataW, writeregW, 
+                /* to controller and coprocessor 0 */
+                activeexception);
+
+  coprocessor0 cop0(/* inputs */
+                      /* from off chip */
+                      ph1, ph2, reset, interrupts, 
+                      /* from coprocessor 0 */
+                      cop0writeW, overflowableE, 
+                      /* from datapath */
+                      rdE, writeregW, writedataW, 
+                      overflowE, pcE, bdsE, activeexception,
+                      adelthrownE, misalignedhE, misalignedwE,
+                      /* from controller */
+                      syscallE, breakE, riE, fpuE,
+                      adesableE, adelableE, 
+                      halfwordE, rfeE, 
+                    /* outputs */
+                      /* to datapath */
+                      cop0readdataE, pendingexception, re, 
+                      /* to cache */
+                      swc, isc);
 endmodule
 
-module controller(input        ph1, ph2, reset, exception,
+module controller(input        ph1, ph2, reset, pendingexception,
                   input  [5:0] opD, functD,
                   input  [4:0] rsD, rtD,
                   input        stallD, stallE, stallM, stallW, flushE, flushM,
@@ -112,7 +147,7 @@ module controller(input        ph1, ph2, reset, exception,
              useshifterD, cop0readD, cop0writeD, rfeD,
              loadsignedD, loadsignedE,
 	           syscallD, breakD, riD, fpuD,
-             adesableD, adelableD, adelthrownD,
+             adesableD, adelableD, 
              mdstartD, hilosrcD,
              hiloreadD, hiloselD;
   wire       byteD, halfwordD, byteE;
@@ -121,7 +156,7 @@ module controller(input        ph1, ph2, reset, exception,
   wire [2:0] alushcontmaindecD, alushcontrolD;
   wire       memwriteE;
   wire       cop0opD, cop0writeE, cop0writeM;
-  wire       bsdF, bdsD;
+  wire       bdsF, bdsD;
 
   assign #1 regwriteD = mainregwrite | linkD | cop0readD;
   assign #1 regdstD = maindecregdstD | cop0writeD;
@@ -144,8 +179,8 @@ module controller(input        ph1, ph2, reset, exception,
 
   branchdec bd(opD, rtD, functD, jumpD, branchD, ltD, gtD, eqD, brsrcD, linkD);
 
-  branchcontroller  bc(reset, exception, jumpD, branchD, linkD, aeqzD, aeqbD, 
-                       agtzD, altzD, 
+  branchcontroller  bc(reset, pendingexception, jumpD, branchD, linkD, 
+                       aeqzD, aeqbD, agtzD, altzD, 
                        ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD,
                        jumpregD);
   
@@ -172,19 +207,19 @@ module controller(input        ph1, ph2, reset, exception,
 
   // pipeline registers
   floprc #(1) regD(ph1, ph2, reset, ~stallD, {bdsF}, {bdsD});
-  flopenrc #(32) regE(ph1, ph2, reset, ~stallE, flushE,
+  flopenrc #(31) regE(ph1, ph2, reset, ~stallE, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
 		              syscallD, breakD, riD, fpuD,
-		              adesableD, adelableD, adelthrownD,
+		              adesableD, adelableD, 
                   mdstartD, hilosrcD, hiloselD, hilodisablealushD, 
                   specialregsrcD, rfeD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
 		              syscallE, breakE, riE, fpuE,
-		              adesableE, adelableE, adelthrownE,
+		              adesableE, adelableE, 
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
                   specialregsrcE, rfeE});
   flopenrc #(7) regM(ph1, ph2, reset, ~stallM, flushM,
@@ -376,6 +411,9 @@ module cop0dec(input [5:0] op,
 endmodule
 
 module datapath(input         ph1, ph2, reset,
+                input  [31:0] instrF,
+                input  [31:0] readdataM, 
+                input         instrackF, dataackM, 
                 input         memtoregE, memtoregM, memwriteM, memtoregW, 
                 input         byteM, halfwordM,
                 input         branchD, jumpregD, unsignedD, loadsignedM,
@@ -390,22 +428,21 @@ module datapath(input         ph1, ph2, reset,
                 input  [1:0]  pcsrcFD, pcbranchsrcD,
                 input  [2:0]  alushcontrolE,
                 input  [31:0] cop0readdataE,
-                output [31:0] pcF, pcE,
-                input  [31:0] instrF,
+                input         pendingexception, re,
+                output [31:0] pcF,
                 output [31:0] aluoutM, writedata2M,
-                input  [31:0] readdataM, 
-                input         instrackF, dataackM, exception,
+                output [3:0]  byteenM, 
                 output [5:0]  opD, functD,
                 output [4:0]  rsD, rtD, rdE,
                 output        aeqzD, aeqbD, agtzD, altzD,
                 output        stallD, stallE, stallM, stallW, 
                 output        flushE, flushM, overflowE,
+                output        mdrunE, 
+                output        misalignedhE, misalignedwE, adelthrownE,
+                output [31:0] pcE,
                 output [31:0] writedataW,
                 output [4:0]  writeregW,
-                output [3:0]  byteenM,
-                output        misalignedhE, misalignedwE, adelthrownE, mdrunE,
-                output        activeexception,
-                input         re);
+                output        activeexception);
 
   wire        forwardaD, forwardbD;
   wire [1:0]  forwardaE, forwardbE;
@@ -418,7 +455,7 @@ module datapath(input         ph1, ph2, reset,
   wire [31:0] signimmD, signimmE;
   wire [31:0] srca2D, srcaE;
   wire [31:0] srcb2D, srcbE, srcb2E;
-  wire [31:0] pcplus8D, instrD;
+  wire [31:0] instrD;
   wire [31:0] aluoutE, aluoutW;
   wire [31:0] readdataW, resultW;
   wire [31:0] pcD;
@@ -429,7 +466,7 @@ module datapath(input         ph1, ph2, reset,
               rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, memwriteM,  branchD, jumpregD,
-              instrackF, dataackM, exception, hiloaccessD, mdrunE,
+              instrackF, dataackM, pendingexception, hiloaccessD, mdrunE,
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM,
               activeexception);
@@ -639,24 +676,19 @@ module memorystage(input         byteM, halfwordM, loadsignedM,
 endmodule
 
 module coprocessor0(input             ph1, ph2, reset,
-                    input             cop0writeW, 
+                    input      [7:0]  interrupts,
+                    input             cop0writeW, overflowableE, 
                     input      [4:0]  readaddress, writeaddress,
                     input      [31:0] writecop0W,
-                    input             overflowableE, overflowE,
+                    input             overflowE,
                     input      [31:0] pcE,
-                    input             bdsE,
+                    input             bdsE, activeexception, adelthrownE,
+                    input             misalignedhE, misalignedwE,
                     input             syscallE, breakE, riE, fpuE,
-                    input             adesableE, adelableE, adelthrownE, 
-                    input             misalignedhE, misalignedwE, halfwordE, rfeE,
-                    input      [7:0]  interrupts,
-                    // activeexception is high during an exception once all the
-                    // necessary stalls have completed
-                    input             activeexception,
-                    output reg [31:0] readvalue,
-                    output            re,   // reverse endianess
-                                      swc,  // swap caches
-                                      isc,  // isolate cache
-                                      exception);
+                    input             adesableE, adelableE, halfwordE, rfeE,
+                    output reg [31:0] cop0readdataE, 
+                    output            pendingexception, 
+                    output            re, swc, isc);   // isolate cache
 
   wire [31:0] statusreg, causereg, epc;
   wire [7:0]  im;    // Interupt mask
@@ -665,9 +697,10 @@ module coprocessor0(input             ph1, ph2, reset,
 
   exceptionunit excu(ph1, ph2, reset, overflowableE, overflowE, 
                      syscallE, breakE, riE, fpuE,
-                     adesableE, adelableE, adelthrownE, misalignedhE, misalignedwE,
+                     adesableE, adelableE, adelthrownE, 
+                     misalignedhE, misalignedwE,
                      halfwordE, iec, interrupts, im,
-                     exception, exccode);
+                     pendingexception, exccode);
                      
   epcunit       epcu(ph1, ph2, activeexception, bdsE, pcE, epc);
   
@@ -681,10 +714,10 @@ module coprocessor0(input             ph1, ph2, reset,
   // All cop0 registers can be read
   always @ ( * )
     case(readaddress)
-      5'b01100: readvalue <= statusreg;
-      5'b01101: readvalue <= causereg;
-      5'b01110: readvalue <= epc;
-      default:  readvalue <= 32'hxxxxxxxx;
+      5'b01100: cop0readdataE <= statusreg;
+      5'b01101: cop0readdataE <= causereg;
+      5'b01110: cop0readdataE <= epc;
+      default:  cop0readdataE <= 32'hxxxxxxxx;
     endcase
 endmodule 
 
@@ -695,7 +728,7 @@ module exceptionunit(input            ph1, ph2, reset,
                      input            misalignedhE, misalignedwE, halfwordE,
                      input            iec, //SR(IEc)
                      input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
-                     output           exception,
+                     output           pendingexception,
                      output reg [4:0] exccode);
 
     wire       overflow, adel, ades, interrupt;
@@ -705,7 +738,7 @@ module exceptionunit(input            ph1, ph2, reset,
     assign adel = (adelableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE)) | adelthrownE;
     assign ades =  adesableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE);
     assign interrupt = iec & ( |(im & interrupts));
-    assign exception = |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
+    assign pendingexception = |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
     
     prienc_8  excprienc({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE},
                         priencout);
@@ -727,7 +760,8 @@ module exceptionunit(input            ph1, ph2, reset,
     endcase
 endmodule
 
-module statusregunit(input             ph1, ph2, reset, writeenable, exception, 
+module statusregunit(input             ph1, ph2, reset, writeenable, 
+                     input             activeexception, 
                      input      [31:0] writedata, 
                      input             rfeE,
                      output     [31:0] statusreg,
@@ -753,7 +787,7 @@ module statusregunit(input             ph1, ph2, reset, writeenable, exception,
   assign {kuo, ieo, kup, iep, kuc} = 5'b0; // No user vs kernel mode
   
   // set up new value for iec.
-  assign iecenable = reset | rfeE | exception;
+  assign iecenable = reset | rfeE | activeexception;
   assign iecnew = reset | rfeE;
   
   assign statusreg = {statusreghigh, iec};
@@ -784,7 +818,7 @@ module causeregunit(input             ph1, ph2, branchdelay,
                               interrupts, 1'b0, exccode, 2'b00}, causereg);
 endmodule
 
-module epcunit(input             ph1, ph2, exception, bdsE,
+module epcunit(input             ph1, ph2, activeexception, bdsE,
                input      [31:0] pcE,
                output     [31:0] epc);
 
@@ -792,7 +826,7 @@ module epcunit(input             ph1, ph2, exception, bdsE,
   
   adder         pcadd3(pcE, 32'hfffffffc, pcEminus4);
   mux2 #(32)    epcmux(pcE, pcEminus4, bdsE, epcnext);
-  flopen #(32)  epcreg(ph1, ph2, exception, epcnext, epc);
+  flopen #(32)  epcreg(ph1, ph2, activeexception, epcnext, epc);
   
                
 endmodule
@@ -805,7 +839,7 @@ module hazard(input            ph1, ph2, reset,
               input            regwriteE, regwriteM, regwriteW,
               input            memtoregE, memtoregM, memwriteM, 
               input            branchD, jumpregD,
-              input            instrackF, dataackM, exception,
+              input            instrackF, dataackM, pendingexception,
               input            hiloaccessD, mdrunE,
               output           forwardaD, forwardbD,
               output     [1:0] forwardaE, forwardbE,
@@ -822,10 +856,12 @@ module hazard(input            ph1, ph2, reset,
 
   // forwarding sources to E stage (ALU)
   assign forwardaE[1] = (rsE != 0) & (rsE == writeregM & regwriteM);
-  assign forwardaE[0] = (rsE != 0) & (rsE == writeregW & regwriteW) & !forwardaE[1];
+  assign forwardaE[0] = (rsE != 0) & (rsE == writeregW & regwriteW) & 
+                          !forwardaE[1];
   
   assign forwardbE[1] = (rtE != 0) & (rtE == writeregM & regwriteM);
-  assign forwardbE[0] = (rtE != 0) & (rtE == writeregW & regwriteW) & !forwardaE[1];
+  assign forwardbE[0] = (rtE != 0) & (rtE == writeregW & regwriteW) 
+                          & !forwardaE[1];
 
   // stalls  
 
@@ -849,16 +885,20 @@ module hazard(input            ph1, ph2, reset,
               memtoregM & ((writeregM == rsD) | 
                           (writeregM == rtD)));
 
-  assign #1 memstallexception = exception & (instrmissF | datamissM);
+  assign #1 memstallexception = pendingexception & (instrmissF | datamissM);
 
   // If we are in a branch stall then we need to progress to the next stage
-  assign #1 brstallexception =   exception & executecleared;
+  assign #1 brstallexception =   pendingexception & executecleared;
 
   // Keep track of whether the execute stage is blank
   flopr #(1) execclearreg(ph1, ph2, reset, (flushE | executecleared) & stallD, 
                           executecleared);
 
-  assign #1 activeexception = exception & ~memstallexception & 
+  // NOTE: activeexception actually drives the true "exception" which is used
+  // all over the chip and must be sent back to the coprocessor.  Consider how
+  // this is routed carefully as it is likely part of the processor's critical
+  // path.
+  assign #1 activeexception = pendingexception & ~memstallexception & 
                               ~brstallexception;
 
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
@@ -893,7 +933,7 @@ module hazard(input            ph1, ph2, reset,
 
 endmodule
 
-module branchcontroller(input             reset, exception, jump, branch, link,
+module branchcontroller(input             reset, pendingexception, jump, branch, link,
                         input             aeqz, aeqb, agtz, altz,
                         input             lt, gt, eq, src,
                         output            rdsrc, 
@@ -914,8 +954,8 @@ module branchcontroller(input             reset, exception, jump, branch, link,
   // 2'b01 exception vector
   // 2'b10 PC+4
   // 2'b11 branch
-  assign #1 pcsrc = {~reset & ~exception, 
-                        ~reset & (exception | jump 
+  assign #1 pcsrc = {~reset & ~pendingexception, 
+                        ~reset & (pendingexception | jump 
                         | (branch & ((src & abcompare) | (~src & azcompare))))};
 
   // pcbranchsrc

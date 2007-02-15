@@ -29,7 +29,6 @@ module extmem(input ph1, ph2,reset,
   assign byte3 = byteen[2] ?  data[23:16] : RAM[adr][23:16];
   assign byte4 = byteen[3] ?  data[31:24] : RAM[adr][31:24];
   
-  
   initial
     begin
       // TODO: Zero out memory each time
@@ -86,7 +85,7 @@ module extmem(input ph1, ph2,reset,
       $readmemh("testing/test_025.dat",RAM);
       #5000;
     end
-    
+
     assign data = (rwb) ? RAM[adr] : 32'bz;
     //assign done = state[1];
     assign done = 1'b1;
