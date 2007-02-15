@@ -32,35 +32,40 @@ We'll call the module requesting a memory operation the _master_ and the module 
 
 When the slaves input pins (adr, data if necessary, rwb, etc..) are valid, the master asserts enable.  Enable must be asserted for the entire duration of the operation.  The slave will execute the operation and after completion, when the output pins have valid data, the slave asserts done.  There will always be at least a one cycle latency between the master asserting enable and the slave asserting done, except between the nips processor and the cache (for reading).  This is to complete a valid cached memory read within one cycle.
 
-== Cache Controller ==
+== Memsys ==
 
-The cache controller interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping.  The interface is as follows (controller's point of view):
+The MIPS memory system (memsys) interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping.  Memsys is composed of a memsys controller, the two caches, and the write buffer.  The interface is as follows (memsys's point of view):
 {{{
-input clk, reset,
-input [31:0] pcF,
+input ph1, ph2, reset,
+input [31:2] pcF,
 output [31:0] instrF,
-input enF,
+input reF,
 output instrackF,
                        
 input [29:0] adrM, 
 input [31:0] writedataM,
 input [3:0] byteenM,
 output [31:0] readdataM,
-input memwriteM, enM,
+input memwriteM, reM,
 output dataackM,
                        
-input swc
+input swc,
+                       
+output [26:0] memadr,
+inout [31:0] memdata,
+output [3:0] membyteen,
+output memrwb,
+output memen,
+input memdone
 }}}
 
-Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary for the data and instruction caches to both have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
+Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary for the data and instruction caches to have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
 
-Since the main memory only has one data and address bus, the cache controller is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
+Since the main memory only has one data and address bus, the memsys is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
   #  Write buffer write
   #  Data cache read
   #  Instruction cache read
-The precedence is implemented using combinational logic and a multiplexer.  The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write.
-
-If a data memory write occurs at the same time as an instruction memory read, the instruction memory read will occur first.  This is due to latency of writing to the write buffer and then the write buffer writing to memory.  This cycle latency may be improved in the future.
+The precedence is implemented using combinational logic and a multiplexer.  The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write.  When a component is using the external memory, the memory and component are multiplexed directly together, so once the memory asserts done the component's memdone will be high.  After one cycle, memsys disconnects the component and the memory, and connects a low to the memdone input of the component.
   
 == Cache ==
 
