@@ -18,7 +18,7 @@ The memory subsystem is composed of the following subunits:
 
 A block diagram of this is shown below:
 
-[http://hmc-mips.googlecode.com/svn/trunk/images/mem.gif Memory System Overview]
+http://hmc-mips.googlecode.com/svn/trunk/images/mem.gif
 
 == Interface ==
 
