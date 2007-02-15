@@ -134,7 +134,7 @@ input rwb, en,
 output done)
 }}}
 
-If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.
+If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.  Done can be asserted in as short as the same cycle, so the memory should not drive done high until it truly is.
 
 
 =Memory Maps=
