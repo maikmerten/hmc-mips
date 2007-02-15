@@ -30,7 +30,7 @@ done (signifies that memory operation is complete)
 
 We'll call the module requesting a memory operation the _master_ and the module executing the operation the _slave_.  For example, normally the mips processor is the master and the cache the slave.  When a cache is writing to the write buffer, the cache is the master and the write buffer is the slave.
 
-When the slaves input pins (adr, data if necessary, rwb, etc..) are valid, the master asserts enable.  Enable must be asserted for the entire duration of the operation (Todo: this may no longer be true. check this).  The slave will execute the operation and after completion, when the output pins have valid data, the slave asserts done.  There will always be at least a one cycle latency between the master asserting enable and the slave asserting done, except between the nips processor and the cache (for reading).  This is to complete a valid cached memory read within one cycle.
+When the slaves input pins (adr, data if necessary, rwb, etc..) are valid, the master asserts enable.  Enable must be asserted for the entire duration of the operation.  The slave will execute the operation and after completion, when the output pins have valid data, the slave asserts done.  There will always be at least a one cycle latency between the master asserting enable and the slave asserting done, except between the nips processor and the cache (for reading).  This is to complete a valid cached memory read within one cycle.
 
 == Cache Controller ==
 
@@ -64,7 +64,7 @@ If a data memory write occurs at the same time as an instruction memory read, th
   
 == Cache ==
 
-There will be two identical caches, one for instructions and one for data.  Each cache will be 4kB in size and synchronous.  The cache will be of the following type:
+Both caches are identical, one for instructions and one for data.  Each cache will be 1kB in size and synchronous.  The cache will be of the following type:
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
@@ -126,15 +126,15 @@ The memory subsystem expects a single main memory interface.  The exact timings 
 The interface from the main memory's view is:
 
 {{{
-input clk
-input [26:0] adr,
+input ph1, ph2,
+input [31:0] adr,
 inout [31:0] data,
 input [3:0] byteen,
 input rwb, en,
-output reg done
+output done)
 }}}
 
-If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.
+If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.
 
 
 =Memory Maps=
