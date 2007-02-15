@@ -10,7 +10,7 @@ This specifies the memory subsystem, including the data and instruction cache, m
 
 The memory subsystem is composed of the following subunits:
 
-  * Two identical 4kB caches, one for data and one for instructions.
+  * Two identical 1kB caches, one for data and one for instructions.
   * A cache controller, to interface the process with the cache and main memory.
   * A write buffer to reduce number of stalls when writing to main memory.
   * The main system memory.
@@ -144,7 +144,7 @@ For simplicity, data and program memory are mapped the same.  Note that the prog
   * kseg0 (cached program/data memory): 0x8000 0000 - 0x9FFF FFFF
   * kseg1 (uncached program/data memory):  0xA000 0000 - 0xBFFF FFFF
 
-Hence, if the 1st and 3rd most significant bit of the address is high, memory is cached, otherwise it bypasses the cache.  The address is physically mapped by removing the top three bits.
+In practice, the cache only checks if the 1st and 3rd most significant bit of the address is high to bypass the cache, otherwise the data is cached.  The address is physically mapped by removing the top three bits.
 
 = Programming Guidelines =
 
@@ -157,3 +157,43 @@ The processor starts from 0xBFC0 0000 (508MB physically mapped;kseg1/uncached). 
   # Set swc low to swap instruction and data cache to normal arrangement
   # Repeat step 3
   # Jump to a cached instruction address
+
+The following code will do this:
+
+{{{
+  // swap
+  asm("swapon: addi  $9, $0, 1;
+      sll $9,$9,17
+      mtc0  $9, $12;
+      nop;
+      nop;
+      nop");
+  
+  // Invalidate entire instruction cache
+  asm("addi $10, $0, 256;
+       addi $11, $0, 0x400;
+       loop1:
+       sb $0,0($11);
+       addi $11,$11,4;
+       addi $10,$10,-1;
+       bnez $10,loop1");
+
+  // unswap
+  asm("swapoff: addi  $9, $0, 0;
+      mtc0  $9, $12;
+      nop;
+      nop;
+      nop");
+
+  // Invalidate entire data cache
+  asm("addi $10, $0, 256;
+       addi $11, $0, 0x400;
+       loop2:
+       sb $0,0($11);
+       addi $11,$11,4;
+       addi $10,$10,-1;
+       bnez $10,loop2");
+
+}}}
+
+After invalidating the cache, the bootloader should jump to a cached instruction address.
