@@ -13,9 +13,12 @@ The memory subsystem is composed of the following subunits:
   * Two identical 1kB caches, one for data and one for instructions.
   * A cache controller, to interface the process with the cache and main memory.
   * A write buffer to reduce number of stalls when writing to main memory.
-  * The main system memory.
+  * A memsys controller which contains the above plus mechanisms to multiplex data between the above components, the processor, and external memory.
 
-A memory read or write is selected and started, via the cache controller, with the rwb (read/write bar) bit and en (enable) bit, respectively.  The cache controller signals a completed operation by asserting the done bit.  The interface to external memory is similar, where the cache controller expects external memory to have rwb, en, and done bits.  
+
+A block diagram of this is shown below:
+
+[http://hmc-mips.googlecode.com/svn/trunk/images/mem.gif Memory System Overview]
 
 == Interface ==
 
