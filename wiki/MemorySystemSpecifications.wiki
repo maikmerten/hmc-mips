@@ -81,7 +81,7 @@ Both caches are identical, one for instructions and one for data.  Each cache wi
   * Support cache bypassing (via upper bits of memory address).  This is explained in the memory map below.
   * Support cache swapping (using the swc bit available in the status register).  This swaps the instruction and data cache so that the instruction cache can be invalidated.
 
-Since each cache is 4kB and a word (32-bit) is 4 bytes, each cache can hold 1024 words.  A tag must be associated with each word, representing the lower bits of the address. 1024 = 2^10, so each tag is 10-bits long.  The tag has to hold the upper bits of the address, and all addresses should word aligned, hence 32 - 10 - 2 = 20 bits.  Additionally, a "valid" bit must be associated with each tag.  The total width of each cache slot is then 20 + 1 + 32 = 53 bits.
+Since each cache is 1kB and a word (32-bit) is 4 bytes, each cache can hold 256 words.  A tag must be associated with each word, representing the lower bits of the address. 256 = 2^8, so each tag is 8-bits long.  The tag data must hold the upper bits of the address, and all addresses should word aligned, hence 32 - 8 - 2 = 22 bits.  Additionally, a "valid" bit must be associated with each tag.  The total width of each cache slot is then 22 + 1 + 32 = 55 bits.  256*55 = 14080 or 1.7kB.  The cache slots are stored in a _cacheram_ module, and the controls are generated from a _cachecontroller_ module.
 
 Each cache communicates through the following interface (from the cache's pov):
 {{{
