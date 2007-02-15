@@ -142,7 +142,7 @@ input rwb, en,
 output done)
 }}}
 
-If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.  Done can be asserted in as short as the same cycle, so the memory should not drive done high until it truly is.
+If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.  Done can be asserted in as short as the same cycle, so the memory should not drive done high until it truly is.  Note that there are only 27 address bits bits from memsys, so 3 MSB's and 2 LSB's (since word addressed) of the external memory's address are driven low.
 
 
 =Memory Maps=
