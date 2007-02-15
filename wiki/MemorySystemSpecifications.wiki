@@ -204,4 +204,13 @@ The following code will do this:
 
 }}}
 
-After invalidating the cache, the bootloader should jump to a cached instruction address.
+After invalidating the cache, the bootloader should jump to a cached instruction address.  Such as 
+{{{
+asm("addi $8, $0, 116
+     jr $8");
+}}}
+to jump to address 0x74 (this is outside of the range of the memory map listed above, but recall that in practice the cache only checks if the addressed should be bypassed).  _jr_ must be used so that the upper bits of the PC change (unlike _jmp_).  Also, the stack pointer should be initialized:
+{{{
+asm("li $sp,0x300");
+}}}
+which initializes to 0x300.
