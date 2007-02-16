@@ -3,7 +3,6 @@
 // npinckney@hmc.edu  January 2007
 // Memory subsystem of mips microprocessor
 //
-// WORK IN PROGRESS
 //------------------------------------------------
 
 `timescale 1 ns / 1 ps

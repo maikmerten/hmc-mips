@@ -1,7 +1,9 @@
 //------------------------------------------------
 // top.v
-// npinckney@hmc.edu 12 February 2007
 // David_Harris@hmc.edu 9 November 2005
+// npinckney@hmc.edu 12 February 2007
+// Carl Nygaard carlpny at gmail dot com 2007
+//
 // Top level system including MIPS and memories
 //------------------------------------------------
 

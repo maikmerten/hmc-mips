@@ -8,12 +8,14 @@
 // Matt Totino mtotino at hmc.edu 2007
 // Nathaniel Pinckney npinckney at gmail dot com 2007
 //
+// Harvey Mudd College
+//
 // Pipelined MIPS processor
+//
 //------------------------------------------------
 
 `timescale 1 ns / 1 ps
 
-// pipelined MIPS processor
 module mips(input         ph1, ph2, reset,
             output [31:0] pcF,
             input  [31:0] instrF,
@@ -74,11 +76,11 @@ module mips(input         ph1, ph2, reset,
                 /* from cache */
                 readdataM, instrackF, dataackM, 
                 /* from controller */
-                memtoregE, memtoregM, memwriteM, memtoregW, 
+                memtoregE, memtoregM, memtoregW, 
                 byteM, halfwordM,
                 branchD, jumpregD,
                 unsignedD, loadsignedM, alusrcE, regdstE, regwriteE, 
-                regwriteM, regwriteW, jumpD, aluoutsrcE, linkD, luiE,
+                regwriteM, regwriteW, aluoutsrcE, luiE,
                 rdsrcD, 
                 specialregsrcE, hilodisableE, hiloaccessD, mdstartE, hilosrcE,
                 pcsrcFD, pcbranchsrcD, alushcontrolE, 
@@ -146,7 +148,7 @@ module controller(input        ph1, ph2, reset, pendingexception,
              alushdecoverflowableD, maindecoverflowableD, overflowableD,
              useshifterD, cop0readD, cop0writeD, rfeD,
              loadsignedD, loadsignedE,
-	           syscallD, breakD, riD, fpuD,
+             syscallD, breakD, riD, fpuD,
              adesableD, adelableD, 
              mdstartD, hilosrcD,
              hiloreadD, hiloselD;
@@ -171,20 +173,27 @@ module controller(input        ph1, ph2, reset, pendingexception,
              rtypeD,
              riD, fpuD, adesableD, adelableD, cop0opD);
 
+  // Decodes most alu, shifter, and multiply/divide instructions
   alushdec  ad(functD, rtypeD, maindecuseshifterD, alushcontmaindecD, 
                useshifterD,
                alushcontrolD, alushdecoverflowableD, syscallD, breakD,
                mdstartD, hilosrcD, hiloreadD, hiloselD, 
                hilodisablealushD);
 
+  // Choose which HI or LO register(s) should be written to
+  hilocontrol hiloc(mdrunE, hilodisablealushE, hilodisableE);
+
+  // Decodes instructions for branching
   branchdec bd(opD, rtD, functD, jumpD, branchD, ltD, gtD, eqD, brsrcD, linkD);
 
+  // Decides the actual behavior of branching
   branchcontroller  bc(reset, pendingexception, jumpD, branchD, linkD, 
                        aeqzD, aeqbD, agtzD, altzD, 
                        ltD, gtD, eqD, brsrcD, rdsrcD, pcsrcFD, pcbranchsrcD,
                        jumpregD);
   
-  cop0dec c0dec(opD, rsD, functD, cop0opD, cop0readD, cop0writeD, rfeD); 
+  // Decodes a few coprocessor 0 related instructions
+  cop0dec c0dec(rsD, functD, cop0opD, cop0readD, cop0writeD, rfeD); 
 
   // Chooses which component is selected as aluout
   // 2'b00 for alu
@@ -201,9 +210,6 @@ module controller(input        ph1, ph2, reset, pendingexception,
   // 2'b10 for LO
   assign #1 specialregsrcD = {hiloreadD & hiloselD, hiloreadD & ~hiloselD};
 
-  // Choose which HI or LO register(s) should be written to
-  hilocontrol hiloc(mdrunE, hilodisablealushE, hilodisableE);
-
 
   // pipeline registers
   floprc #(1) regD(ph1, ph2, reset, ~stallD, {bdsF}, {bdsD});
@@ -211,15 +217,15 @@ module controller(input        ph1, ph2, reset, pendingexception,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
-		              syscallD, breakD, riD, fpuD,
-		              adesableD, adelableD, 
+                  syscallD, breakD, riD, fpuD,
+                  adesableD, adelableD, 
                   mdstartD, hilosrcD, hiloselD, hilodisablealushD, 
                   specialregsrcD, rfeD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
-		              syscallE, breakE, riE, fpuE,
-		              adesableE, adelableE, 
+                  syscallE, breakE, riE, fpuE,
+                  adesableE, adelableE, 
                   mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
                   specialregsrcE, rfeE});
   flopenrc #(7) regM(ph1, ph2, reset, ~stallM, flushM,
@@ -284,7 +290,7 @@ module maindec(input  [5:0] op,
     endcase
 endmodule
 
-// ALU and Shifter decoders
+// ALU, Shifter, and multiply/divide decoders
 module alushdec(input      [5:0] funct,
                 input            rtype, maindecuseshifter, 
                 input      [2:0] alushmaincontrol,
@@ -377,10 +383,7 @@ module branchdec(input  [5:0] op,
           5'b00001: controls <= 7'b0101100;   // BGEZ
           5'b10000: controls <= 7'b0110001;   // BLTZAL
           5'b10001: controls <= 7'b0101101;   // BGEZAL
-          default:  begin
-            controls <= 7'bxxxxxxx;   // Error, unsupported instruction
-            $display("ERROR: invalid opcode 1 instruction");
-          end
+          default:  controls <= 7'bxxxxxxx;   // Unsupported instruction
         endcase
       6'b000100: controls <= 7'b0100110;      // BEQ
       6'b000101: controls <= 7'b0111010;      // BNE
@@ -394,12 +397,11 @@ module hilocontrol(input        mdrunE,
                    input  [1:0] hilodisablealushE,
                    output [1:0] hilodisableE);
 
-  assign hilodisableE = mdrunE ? 2'b00 : hilodisablealushE;
+  mux2 #(2) hilodismux(hilodisablealushE, 2'b00, mdrunE, hilodisableE);
 
 endmodule
 
-module cop0dec(input [5:0] op,
-               input [4:0] rs,
+module cop0dec(input [4:0] rs,
                input [5:0] funct,
                input       cop0op,
                output      cop0read, cop0write, rfe);
@@ -414,14 +416,13 @@ module datapath(input         ph1, ph2, reset,
                 input  [31:0] instrF,
                 input  [31:0] readdataM, 
                 input         instrackF, dataackM, 
-                input         memtoregE, memtoregM, memwriteM, memtoregW, 
+                input         memtoregE, memtoregM, memtoregW, 
                 input         byteM, halfwordM,
                 input         branchD, jumpregD, unsignedD, loadsignedM,
                 input         alusrcE, regdstE,
                 input         regwriteE, regwriteM, regwriteW, 
-                input         jumpD, 
                 input  [1:0]  aluoutsrcE, 
-                input         linkD, luiE,
+                input         luiE,
                 input         rdsrcD, 
                 input  [1:0]  specialregsrcE, hilodisableE,
                 input         hiloaccessD, mdstartE, hilosrcE,
@@ -462,11 +463,13 @@ module datapath(input         ph1, ph2, reset,
   wire        adelthrownF, adelthrownD;
 
   // hazard detection
-  hazard    h(ph1, ph2, reset,
+  hazard    h(// inputs
+              ph1, ph2, reset,
               rsD, rtD, rsE, rtE, writeregE, writeregM, writeregW, 
               regwriteE, regwriteM, regwriteW, 
-              memtoregE, memtoregM, memwriteM,  branchD, jumpregD,
+              memtoregE, memtoregM, branchD, jumpregD,
               instrackF, dataackM, pendingexception, hiloaccessD, mdrunE,
+              // outputs
               forwardaD, forwardbD, forwardaE, forwardbE,
               stallF, stallD, stallE, stallM, stallW, flushD, flushE, flushM,
               activeexception);
@@ -549,8 +552,9 @@ module fetchstage(input             ph1, ph2, reset, stallF,
 
   parameter RESETVECTORUNCACHED = 32'hbfc00000;
   parameter EXCEPTIONVECTORUNCACHED = 32'hbfc00100;
-  // Curretly, cached exceptions are not supported
-  parameter EXCEPTIONVECTORCACHED = 32'h9fc00100;  // TODO: Double-check value
+  // Cached exceptions are NOT supported, but if they were, this address could
+  // be used as the target
+  parameter EXCEPTIONVECTORCACHED = 32'h9fc00100;
 
   // next PC logic (operates in fetch and decode)
   mux4 #(32)  pcmux(RESETVECTORUNCACHED, EXCEPTIONVECTORUNCACHED,
@@ -559,7 +563,8 @@ module fetchstage(input             ph1, ph2, reset, stallF,
   // Fetch stage logic
   flopen #(32) pcreg(ph1, ph2, ~stallF, pcnextF, pcF);
   adder       pcadd1(pcF, 32'b100, pcplus4F);
-  // misaligned fetch logic
+
+  // misaligned fetch error detection logic
   assign     adelthrownF = pcF[0] | pcF[1];
 
 endmodule
@@ -589,18 +594,30 @@ module decodestage(input         ph1, ph2, unsignedD, rdsrcD,
   regfile     rf(ph1, ph2, regwriteW, rsD, rtD, writeregW,
                  resultW, srcaD, srcbD);
 
-  signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
+  // forward register file values in place of its outputs when necessary
   mux2 #(32)  forwardadmux(srcaD, aluoutM, forwardaD, srca2D);
   mux2 #(32)  forwardbdmux(srcbD, aluoutM, forwardbD, srcb2D);
-  // PCSpim uses pcD, gcc/assembler use pcplus4D, we'll stick with pcplus4D
+
+  // branch selection
+  signext #(16,32) se(instrD[15:0], ~unsignedD, signimmD);
   adder btadd(pcplus4D, {signimmD[29:0], 2'b00}, branchtargetD);
+
+  // tell the controller the results of register-register and register-zero
+  // comparisons so it can pick pcbranchsrcD
   eqcmp aeqbcmp(srca2D, srcb2D, aeqbD);
   eqzerocmp aeqzcmp(srca2D, aeqzD);
   gtzerocmp agtzcmp(srca2D, agtzD);
   ltzerocmp altzcmp(srca2D, altzD);
+
+  // pick off the next branch location (the fetch stage picks between
+  // pcnextbrFD, pcplus4FD, and the reset or exception addresses)
   mux3 #(32)  pcbranchmux(branchtargetD, {pcplus4D[31:28], instrD[25:0], 2'b00},
                           srca2D, pcbranchsrcD, pcnextbrFD);
+
+  // some linking instructions only link to register $31, so we must be able to
+  // switch the destination registerd between rdD and 31
   mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
+
 endmodule
 
 module executestage(input         ph1, ph2, reset, alusrcE, 
@@ -613,30 +630,55 @@ module executestage(input         ph1, ph2, reset, alusrcE,
                                   cop0readdataE, 
                     output [31:0] srcb2E, aluoutE,
                     output [4:0]  writeregE,
-                    output        overflowE, misalignedwE, misalignedhE, mdrunE);
+                    output        overflowE, misalignedwE, misalignedhE, 
+                                  mdrunE);
 
   wire [31:0] srca2E, srcb3E;
   wire [31:0] aluresultE, shiftresultE, pcplus8E, specialregE, 
               hiE, loE;
 
+  // when it becomes available, soon-to-be-in-the-register-file data is
+  // forwarded from the Memory and Writeback stages
   mux3 #(32)  forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
   mux3 #(32)  forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
+
+  // immediate operations take in the sign-extended immediate value from the
+  // decode stage
   mux2 #(32)  srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
+
   alu         alu(srca2E, srcb3E, alushcontrolE, aluresultE, overflowE);
   shifter     shifter(srca2E, srcb3E, alushcontrolE, luiE, signimmE[10:6],
                       shiftresultE);
-  mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
-  adder       pcadd2(pcE, 32'b1000, pcplus8E);
+
+  // Multiply and divide operate separately from the main processor. mdstartE
+  // launches the unit into action, driving mdrunE low.  Once it finishes, 
+  // mdrunE will go low.  While mdrunE is high, the hazard unit stalls any
+  // other instructions that access/use the mdunit.
   mdunit md(ph1, ph2, reset,
             srca2E, srcb3E, alushcontrolE, mdstartE, hilosrcE, hilodisableE,
             hiE, loE, mdrunE);
+
+  // pcplus8E is needed for linking operations (the return address is one past
+  // the operation executed in the branch delay slot)
+  adder       pcadd2(pcE, 32'b1000, pcplus8E);
+
+  // specialregE is choosen among several low latency registers coming from the
+  // multdiv unit and coprocessor 0
   mux3 #(32)  specialregmux(cop0readdataE, hiE, loE, specialregsrcE, 
                             specialregE);
+
+  // the grand-daddy mux that selects aluoutE -- the computational result of the
+  // given instruction
   mux4 #(32)  aluoutmux(aluresultE, shiftresultE, pcplus8E, specialregE, 
                         aluoutsrcE, aluoutE);
 
+  // all exceptions must be thrown by the end of the Executate stage, so we look
+  // for memory alighment problems with the Memory stage one step ahead of time.
   assign misalignedwE = aluoutE[1] | aluoutE[0];
   assign misalignedhE = aluoutE[0];
+
+  // pick which register results may be saved to
+  mux2 #(5)   wrmux(rtE, rdE, regdstE, writeregE);
 
 endmodule
 
@@ -650,27 +692,42 @@ module memorystage(input         byteM, halfwordM, loadsignedM,
   wire [7:0]  rbyteM;
   wire [15:0] rhalfwordM;
   wire [31:0] rbyteextM, rhalfwordextM; 
-  wire [1:0] aluoutMre;
+  wire [1:0] aluoutreM;
 
-  // aluoutM with invert for reverse endian mode.
-  mux2 #(2) aloutMmux(aluoutM[1:0],~aluoutM[1:0],re,aluoutMre);
+  // the lower 2 bits of the address are complemented when in reverse endian 
+  // mode (reverse endian means big endian in this case)
+  assign #1 aluoutreM = {2{re}} ^ aluoutM[1:0];
 
-  mux3 #(32) wdatamux(writedataM, {writedataM[15:0], writedataM[15:0]}, 
-                      {writedataM[7:0], writedataM[7:0], writedataM[7:0], 
-                       writedataM[7:0]}, 
+  // We can be writing a byte, halfword (two bytes) or word (4 bytes).
+  // byteen masks which bytes will be written two, so we can just repeat each of
+  // the desired output values.  Whichever location is enabled by byteen will
+  // get the values.
+  mux3 #(32) wdatamux(writedataM, {2{writedataM[15:0]}}, {4{writedataM[7:0]}},
                       {byteM, halfwordM}, writedata2M);
-  // Byte encoding logic for store operations
-  dec2 bytebyteendec(aluoutMre[1:0], bytebyteenM);
-  mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutMre[1], halfwordbyteenM);
+
+  // Byte encoding logic for store operations -- determine the byte mask,
+  // byteenM based on the address and whether we are doing a byte, halfword, or
+  // word-sized operation.  Misaligned addresses will have been caught as an
+  // exception in the execute stage.
+  dec2 bytebyteendec(aluoutreM[1:0], bytebyteenM);
+  mux2 #(4) halfwbyteendec(4'b0011, 4'b1100, aluoutreM[1], halfwordbyteenM);
   mux3 #(4) byteenmux(4'b1111, halfwordbyteenM, bytebyteenM, 
                       {byteM, halfwordM}, byteenM);
-  // Load conversions
+
+  // load conversions -- upon reading a word from cache, we must grab the
+  // appropriate portion to store to a register.
+
+  // in the case of a load byte, we mux between the 4 available bytes
   mux4 #(8) rbytemux(readdataM[7:0], readdataM[15:8], readdataM[23:16], 
-                        readdataM[31:24], aluoutMre[1:0], rbyteM);
-  mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutMre[1],
+                        readdataM[31:24], aluoutreM[1:0], rbyteM);
+  // a word has two halfwords
+  mux2 #(16) rhalfwordmux(readdataM[15:0], readdataM[31:16], aluoutreM[1],
                           rhalfwordM);
+
+  // if the load is signed, we must sign-extend the results
   signext #(8, 32) rbytesignext(rbyteM, loadsignedM, rbyteextM);
   signext #(16, 32) rhalfwsignext(rhalfwordM, loadsignedM, rhalfwordextM);
+
   mux3 #(32) readmux(readdataM, rhalfwordextM, rbyteextM, {byteM, halfwordM},
                      readdata2M);
 endmodule
@@ -694,7 +751,6 @@ module coprocessor0(input             ph1, ph2, reset,
   wire [7:0]  im;    // Interupt mask
   wire [4:0]  exccode;
 
-
   exceptionunit excu(ph1, ph2, reset, overflowableE, overflowE, 
                      syscallE, breakE, riE, fpuE,
                      adesableE, adelableE, adelthrownE, 
@@ -703,7 +759,7 @@ module coprocessor0(input             ph1, ph2, reset,
                      pendingexception, exccode);
                      
   epcunit       epcu(ph1, ph2, activeexception, bdsE, pcE, epc);
-  
+ 
   statusregunit sr(ph1, ph2, reset, cop0writeW & (writeaddress == 5'b01100), 
                    activeexception, writecop0W, rfeE, statusreg, 
                    re, im, swc, isc, iec);
@@ -711,7 +767,7 @@ module coprocessor0(input             ph1, ph2, reset,
                    activeexception, /* write enable determined by exception */
                    causereg);
    
-  // All cop0 registers can be read
+  // All cop0 registers can be copied into the register file
   always @ ( * )
     case(readaddress)
       5'b01100: cop0readdataE <= statusreg;
@@ -726,28 +782,40 @@ module exceptionunit(input            ph1, ph2, reset,
                      input            syscallE, breakE, riE, fpuE,
                      input            adesableE, adelableE, adelthrownE, 
                      input            misalignedhE, misalignedwE, halfwordE,
-                     input            iec, //SR(IEc)
-                     input [7:0]      interrupts, im, //interrupt inputs, SR(IM)
+                     input            iec, 
+                     input [7:0]      interrupts, im,
                      output           pendingexception,
                      output reg [4:0] exccode);
 
     wire       overflow, adel, ades, interrupt;
     wire  [2:0] priencout;
-    
+
+    // Note that all exceptions happen during the exectute stage and the final
+    // say in whether an exception is active is set by the hazard unit as
+    // "activeexception."  Also, an exception happens in the same cycle as it is
+    // occurs, meaning the processor does not use a clock cycle to execute the
+    // exception, rather it happens all at once.
+   
+    // Various possible exception conditions
     assign overflow = overflowableE & overflowE;
-    assign adel = (adelableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE)) | adelthrownE;
-    assign ades =  adesableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE);
+    assign adel = 
+       (adelableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE))
+        | adelthrownE;
+    assign ades = 
+       adesableE & (!halfwordE & (misalignedhE | misalignedwE) | misalignedhE);
     assign interrupt = iec & ( |(im & interrupts));
-    assign pendingexception = |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
-    
-    prienc_8  excprienc({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE},
-                        priencout);
-                        
-    
-    
-  always @ ( * ) // Using posedge ph1, ph2 would add extra clock sycle and likely 
-                 // offset everything by one, rendering some of the
-                 // subsequent logic incorrect.
+
+    // Any of the folowing flags can cause an exception
+    assign pendingexception = 
+        |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
+   
+    // To pick which of the 8 possible exceptions occured, send them threw
+    // a priority encoder
+    prienc_8  excprienc({interrupt, overflow, adel, ades, syscallE, breakE, 
+                        riE, fpuE}, priencout);
+                       
+  // Take the results of that encoder into mux 8 to set the cause register
+  always @ ( * ) 
     casex(priencout)
       3'b000 : exccode <= 5'b00001;
       3'b001 : exccode <= 5'b01100;
@@ -775,11 +843,11 @@ module statusregunit(input             ph1, ph2, reset, writeenable,
 
   assign cu1 = 0; // No floating point unit
   assign pe = 0;  // No parity checking
-  assign cm = 0;  // Isolated cache feature, not yet implemented
+  assign cm = 0;  // Isolated cache feature, not implemented
   assign pz = 0;  // Archaic parity feature, not implemented
 
   assign re  = statusreg[25];  // reverse endianness
-  assign bev = statusreg[22];  // not currently implemented
+  assign bev = statusreg[22];  // not implemented
   assign ts  = statusreg[21];  // TLB not implemented
   assign {swc, isc, im} = statusreg[17:8];
 
@@ -797,47 +865,49 @@ module statusregunit(input             ph1, ph2, reset, writeenable,
      // 25 is re
      // 22 and 21 are bev and ts
      // 17 to 8 are swc, isc, and im
-  flopenr #(31) statusreghighflop(ph1, ph2, reset, writeenable,
-                             {2'b00, cu1, writedata[28], 2'b00, writedata[25],
-                              2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
-                              2'b00, kuo, ieo, kup, iep, kuc},
-                             statusreghigh);
+  flopenr #(31) srhigh(ph1, ph2, reset, writeenable,
+                       {2'b00, cu1, writedata[28], 2'b00, writedata[25],
+                        2'b00, writedata[22:21], pe, cm, pz, writedata[17:8],
+                        2'b00, kuo, ieo, kup, iep, kuc}, statusreghigh);
 
-  flopen #(1) statusregiec(ph1, ph2, iecenable, iecnew, iec);
+  // this flop cannot have a reset!
+  flopen #(1) srlo(ph1, ph2, iecenable, iecnew, iec);
 
 endmodule
 
 module causeregunit(input             ph1, ph2, branchdelay,
                     input      [7:0]  interrupts,
                     input      [4:0]  exccode,
-                    input             writeenable,
+                    input             activeexception,
                     output     [31:0] causereg);
 
-  flopen #(32) causeregflop (ph1, ph2, writeenable,
-                             {branchdelay, 1'b0, 14'b00000000000000,
-                              interrupts, 1'b0, exccode, 2'b00}, causereg);
+  // The cause register is triggered by and exception
+  flopen #(32) causeregflop (ph1, ph2, activeexception,
+                             {branchdelay, 15'b0, interrupts, 1'b0, exccode, 
+                              2'b00}, causereg);
 endmodule
 
+// Store EPC - the program counter of and exception
 module epcunit(input             ph1, ph2, activeexception, bdsE,
                input      [31:0] pcE,
                output     [31:0] epc);
 
-  wire [31:0]   pcEminus4, epcnext;
-  
-  adder         pcadd3(pcE, 32'hfffffffc, pcEminus4);
-  mux2 #(32)    epcmux(pcE, pcEminus4, bdsE, epcnext);
+  wire [31:0]   pcminus4E, epcnext;
+
+  // If the exception occurs on an instruction in the branch delay slot of
+  // another instruction, then we must point to the instruction before it.
+  adder         pcadd3(pcE, 32'hfffffffc, pcminus4E);
+  mux2 #(32)    epcmux(pcE, pcminus4E, bdsE, epcnext);
   flopen #(32)  epcreg(ph1, ph2, activeexception, epcnext, epc);
-  
                
 endmodule
-
 
 
 module hazard(input            ph1, ph2, reset,
               input  [4:0]     rsD, rtD, rsE, rtE, 
               input  [4:0]     writeregE, writeregM, writeregW,
               input            regwriteE, regwriteM, regwriteW,
-              input            memtoregE, memtoregM, memwriteM, 
+              input            memtoregE, memtoregM, 
               input            branchD, jumpregD,
               input            instrackF, dataackM, pendingexception,
               input            hiloaccessD, mdrunE,
@@ -863,68 +933,78 @@ module hazard(input            ph1, ph2, reset,
   assign forwardbE[0] = (rtE != 0) & (rtE == writeregW & regwriteW) 
                           & !forwardaE[1];
 
-  // stalls  
-
   // (This stall was not implemented in R2000)
   assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
 
   // Cache miss delays
   assign #1 datamissM = ~dataackM;
 
-  // Accessing HI and LO cannot happen during a multiply
+  // when the instruction in the decode stage wants access to hi/lo (by means of
+  // a mt/fhi/lo or another multiply or divide
   assign #1 multdivDE = hiloaccessD & mdrunE;
 
   // This assumes we are reading an instruction every cycle
   assign #1 instrmissF = ~instrackF;
 
-  // This could be made slightly better since jumpreg only uses one register
-  // output.
+  // A branch stall happens when a branch is dependant on data that is not yet
+  // available.
   assign #1 branchstallD = (branchD | jumpregD) & 
              (regwriteE & ((writeregE == rsD) | 
                           (writeregE == rtD)) |
               memtoregM & ((writeregM == rsD) | 
                           (writeregM == rtD)));
-
+  
+  // memstallexception is true when we have an exception waiting but we are
+  // still waiting for a memory miss
   assign #1 memstallexception = pendingexception & (instrmissF | datamissM);
 
-  // If we are in a branch stall then we need to progress to the next stage
-  assign #1 brstallexception =   pendingexception & executecleared;
+  // If we are in a branch stall then we can't just allow an exception to take
+  // place, because the exeption will be read from the execute stage (which will
+  // have been flushed with zeros), so wait until the instruction in the decode
+  // stage has made it to the execute stage.
+  assign #1 brstallexception = pendingexception & executecleared;
 
   // Keep track of whether the execute stage is blank
   flopr #(1) execclearreg(ph1, ph2, reset, (flushE | executecleared) & stallD, 
                           executecleared);
 
+
   // NOTE: activeexception actually drives the true "exception" which is used
-  // all over the chip and must be sent back to the coprocessor.  Consider how
-  // this is routed carefully as it is likely part of the processor's critical
-  // path.
+  // all over the chip and must be sent back to the coprocessor.  
+  // This is likely part of the processor's critical.
+  //
+  // activeexception relies on the memory stage's ability to be flushed
+  // eventually no matter what else is happening on the system.  Once the memory
+  // stage is flushed, then eventually there will no longer be an
+  // instruction stage stall (if there was one to begin with) and there
+  // will also not be a branch stall.
   assign #1 activeexception = pendingexception & ~memstallexception & 
                               ~brstallexception;
 
   assign #1 stallD = lwstallD | branchstallD | datamissM | multdivDE
                      | instrmissF; 
 
-  assign #1 stallF =  stallD;     // stalling D stalls all previous stages
+  assign #1 stallF =  stallD;     // stalling D stalls F
 
   // E needs all the freedom it can get to let its instrucitons through.  only
-  // a data miss or a pending exception caused by the E stage itself can 
+  // a data miss or a pending exception held in the E stage itself can 
   // prevent instructions from continuing down the pipeline.
   assign #1 stallE = datamissM | memstallexception; 
 
-  // The only reason to hold up Memory and Writeback are when they don't have
-  // their own data yet
+  // The only reason to hold up Memory and Writeback are when they are waiting
+  // for memory.
   assign #1 {stallM, stallW} = {2{datamissM}};
 
   // We kill D only when an exception is flushing the processor
   assign #1 flushD = activeexception;  // Exceptions invalidate the decode stage
 
-  // We kill E whenever an exception is taking place, or when we have to stallD,
+  // We kill E whenever an exception being carried out or when stallD is high
   // so long as the reason we are stalling D is not related to an exception
-  // caused by E nor a data (not instruction) miss
-  assign #1 flushE =  (~datamissM & stallD & ~memstallexception) | 
-                      activeexception;
+  // held in E nor a data (not instruction) miss
+  assign #1 flushE =    (~datamissM & stallD & ~memstallexception)
+                      | activeexception;
  
-  // Kill M so long as we aren't waiting for an operation to data memory.  If
+  // Kill M so long as we aren't waiting for data memory to do something.  If
   // E is waiting for the instruction cache before it can throw an exception, we
   // need to still flush M.  Finally, once an exception really happens, we have
   // to flush M because the instruction that was in E before this is not allowed
@@ -933,8 +1013,8 @@ module hazard(input            ph1, ph2, reset,
 
 endmodule
 
-module branchcontroller(input             reset, pendingexception, jump, branch, link,
-                        input             aeqz, aeqb, agtz, altz,
+module branchcontroller(input             reset, pendingexception, jump, branch,
+                                          link, aeqz, aeqb, agtz, altz,
                         input             lt, gt, eq, src,
                         output            rdsrc, 
                         output      [1:0] pcsrc,
@@ -977,7 +1057,7 @@ module alu(input      [31:0] a, b,
   assign #1 b2 = control[2] ? ~b:b; 
   assign #1 sum = a + b2 + control[2];
   assign #1 sltSigned = sum[31];
-  // a < b is an unsigned comparrison
+  // a < b in Verilog is an unsigned comparison
   assign #1 sltUnsigned = a < b;
   assign #1 aorb = a | b;
 
@@ -1057,7 +1137,6 @@ module regfile(input         ph1, ph2,
   // write third port on falling edge of clock
   // register 0 hardwired to 0
 
-  // TODO: Fix the clock to work with the two phases
   always @(negedge ph1)
     if (we3) rf[wa3] <= wd3;
 
