@@ -1,0 +1,4 @@
+Notes about the HMC mips compiler:
+
+The copmiler is a cross-chain compiler for x86 targeting the mips1.  It is 
+from gcc4.0.3.
