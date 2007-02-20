@@ -330,9 +330,10 @@ module writebuffer(input ph1, ph2, reset,
                    output [3:0] membyteen,
                    output memen,
                    input memdone);
-   wire [31:0] bufdata[3:0];
-   wire [26:0] bufadr[3:0];
-   wire [3:0] bufbyteen[3:0];
+
+   wire [31:0] bufdata;
+   wire [26:0] bufadr;
+   wire [3:0] bufbyteen;
    wire bufen[3:0];             // Flags to indicate whether buffer entries have
                                 // valid data.
    
@@ -349,10 +350,14 @@ module writebuffer(input ph1, ph2, reset,
    flopenr #(2) ptrf(ph1, ph2, reset, en & done, ptrnext, ptr);
    flopenr #(2) writeptrf(ph1, ph2, reset, writeready, writeptrnext, writeptr);
    
-   flopenr #(27) memadrf(ph1, ph2, reset, writeready, bufadr[writeptr], memadr);
-   flopenr #(32) memdataf(ph1, ph2, reset, writeready, bufdata[writeptr], memdata);
-   flopenr #(4) membyteenf(ph1, ph2, reset, writeready, bufbyteen[writeptr], membyteen);
-   flopenr #(1) memenf(ph1, ph2, reset, memdone | ~memen, bufen[writeptr], memen);
+   assign memadr = bufadr;
+   assign memdata = bufdata;
+   assign membyteen = bufbyteen;
+   assign memen = bufen[writeptr];
+   //flopenr #(27) memadrf(ph1, ph2, reset, writeready, bufadr, memadr);
+   //flopenr #(32) memdataf(ph1, ph2, reset, writeready, bufdata, memdata);
+   //flopenr #(4) membyteenf(ph1, ph2, reset, writeready, bufbyteen, membyteen);
+   //flopenr #(1) memenf(ph1, ph2, reset, memdone | ~memen, bufen[writeptr], memen);
   
    dec2 ptrdec(ptr,ptrs);
    dec2 writeptrdec(writeptr,writeptrs);
@@ -360,14 +365,29 @@ module writebuffer(input ph1, ph2, reset,
    genvar i;
    generate
      for(i = 0; i < 4; i = i + 1) begin:fbuf
-       flopenr #(1) fbufen(ph1, ph2,reset,((en & done) & ptrs[i]) | ((memdone | ~memen) & writeptrs[i]), 
-                                 (en & done) & ptrs[i],bufen[i]);
-       flopenr #(32) fbufdata(ph1, ph2,reset,(en & done) & ptrs[i], 
-                                 data,bufdata[i]);
-       flopenr #(27) fbufadr(ph1, ph2,reset,(en & done) & ptrs[i], 
-                                 adr,bufadr[i]);
-       flopenr #(4) fbufbyteen(ph1, ph2,reset,(en & done) & ptrs[i], 
-                                 byteen,bufbyteen[i]);
+       flopenr #(1) fbufen(ph1, ph2,reset,
+                           ((en & done) & ptrs[i]) | ((memdone | ~memen) & writeptrs[i]), 
+                           (en & done) & ptrs[i],bufen[i]);
      end
    endgenerate
+   
+   wbram ram(ph1,ph2,ptr,writeptr,
+             (en & done),
+             {byteen,adr,data},
+             {bufbyteen,bufadr,bufdata});
+endmodule
+
+  // data (32) + adr (27) + byteen (4) = 63 bits total
+module wbram(input ph1, ph2,
+  input [1:0] ptr, writeptr,
+  input rwb,
+  input [62:0] din,
+  output [62:0] dout);
+
+  reg [62:0] mem[3:0];
+  
+  always @(posedge ph1)
+    if(~rwb) mem[ptr] <= din;
+    
+  assign dout = mem[writeptr];
 endmodule
