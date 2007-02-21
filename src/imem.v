@@ -60,7 +60,7 @@ module extmem(input ph1, ph2,reset,
       #5000;
       $readmemh("testing/test_011.dat",RAM);
       #5000;
-      $readmemh("testing/test_012.dat",RAM);
+      $readmemh("testing/test_012.dat",RAM);  // Occurs at 60 us
       #15000;
       $readmemh("testing/test_013.dat",RAM);
       #5000;
@@ -68,9 +68,9 @@ module extmem(input ph1, ph2,reset,
       #5000;
       $readmemh("testing/test_015.dat",RAM);
       #5000;
-      $readmemh("testing/test_016.dat",RAM);
+      $readmemh("testing/test_016.dat",RAM);  // Occurs at 90us
       #15000;
-      $readmemh("testing/test_017.dat",RAM);
+      $readmemh("testing/test_017.dat",RAM);  // Occurs at 105us
       #250000;
       $readmemh("testing/test_018.dat",RAM);
       #5000;
@@ -88,6 +88,8 @@ module extmem(input ph1, ph2,reset,
       #5000;
       $readmemh("testing/test_025.dat",RAM);
       #5000;
+      $readmemh("testing/test_026.dat",RAM);  // Occurs at 395us
+      #15000;
     end
 
     assign data = (rwb) ? RAM[adr] : 32'bz;
