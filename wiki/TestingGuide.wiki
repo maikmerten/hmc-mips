@@ -1,5 +1,9 @@
 #summary Guide to the Verilog testing method.
 
+= Before you start =
+
+Get SVN setup as described by DevelopmentEnvironmentGuide. (Don't worry about Xlinx stuff, it is not needed to run tests or edit.)
+
 = Running Test =
 
   # Open Modelsim
