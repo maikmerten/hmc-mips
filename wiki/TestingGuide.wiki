@@ -9,7 +9,7 @@ Get SVN setup as described by DevelopmentEnvironmentGuide. (Don't worry about Xl
   # Open Modelsim
   # Change to the root directory of the svn tree (the folder with src/ and testing/)
   # Type do debug.fdo
-  # If there are no errors, type run 10000ns (or n * 1000ns where n is the number of tests)
+  # If there are no errors, type {{{run 500us}}}
   # Something like the following should be printed:
 {{{
 # Simulation           0 succeeded (start time          0)
@@ -72,3 +72,4 @@ Finally run as usual.
 {{{
 run 100000ns
 }}}
+
