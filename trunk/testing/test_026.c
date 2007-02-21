@@ -8,15 +8,19 @@
  * on the mips
  */
 
-int helper_026();
-
 asm("li $sp,0x200");  // Initialize the stack pointer.
 
 void test_026()
 {
 	int success = 0;
 	int result = 0;
-	result = helper_026();
+	
+	// Note: function calls do not work properly with this compiler.
+	//result = helper_026();
+	
+	int add = 6+8;
+	int mult = 7*2;
+	result = mult/add;
 
 	// Fail if helper did not change result.
 	if(result == 0)
@@ -28,10 +32,3 @@ void test_026()
 	while(1);  
 }
 
-int helper_026()
-{
-	int add = 6 + 8;
-	int mult = 7 * 2;
-	int div = mult / add;
-	return div;
-}
