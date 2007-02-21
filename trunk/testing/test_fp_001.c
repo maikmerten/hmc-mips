@@ -17,9 +17,7 @@ void test_fp_1()
 {
 	float f1 = 3.14;
 	float f2 = 2.0;
-	float result_add = 1;
-	float result_mult = 1;
+	float result_add = 1;	
 
 	result_add = f1 + f2;
-	result_mult = f1 * f2;
 }
