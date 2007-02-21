@@ -34,14 +34,14 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 26;
+      numTests = 27;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
         reset <= 1; # 30; reset <= 0;
         // Pausing
-        if(currentTest == 12 | currentTest == 16) begin
+        if(currentTest == 12 | currentTest == 16 | currentTest == 26) begin
           # 14970;
         end else if(currentTest == 17) begin
             # 249970;
@@ -328,6 +328,13 @@ module testbench;
           //       $display("Writing value %h to address %h", writedata, dataadr);
               end
           end 
+      26:
+          if(memwrite) begin
+              if(writedata == 1) begin
+                  currentSuccess <= 1;
+              end else begin
+              end 
+          end
 //        default:
       endcase
     end
