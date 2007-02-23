@@ -30,28 +30,32 @@ module adderc #(parameter WIDTH = 32)
   assign #1 {cout, y} = a + b + cin;
 endmodule
 
-module eqcmp(input [31:0] a, b,
-             output        eq);
+module eqcmp #(parameter WIDTH = 32)
+             (input [WIDTH-1:0] a, b,
+              output            eq);
 
   assign #1 eq = (a == b);
 endmodule
 
-module eqzerocmp(input [31:0] a,
-             output        eq);
+module eqzerocmp #(parameter WIDTH = 32)
+                 (input [WIDTH-1:0]  a,
+                  output        eq);
 
   assign #1 eq = (a == 0);
 endmodule
 
-module gtzerocmp(input [31:0] a,
-             output        eq);
+module gtzerocmp #(parameter WIDTH = 32)
+                 (input [WIDTH-1:0] a,
+                  output       eq);
 
-  assign #1 eq = ~a[31] & (a[30:0] !== 0);
+  assign #1 eq = ~a[WIDTH-1] & (a[WIDTH-2:0] !== 0);
 endmodule
 
-module ltzerocmp(input [31:0] a,
-             output        eq);
+module ltzerocmp #(parameter WIDTH = 32)
+                 (input [WIDTH-1:0] a,
+                  output       eq);
 
-  assign #1 eq = a[31];
+  assign #1 eq = a[WIDTH-1];
 endmodule
 
 module sl2(input  [31:0] a,
