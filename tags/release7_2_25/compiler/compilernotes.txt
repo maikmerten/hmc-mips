@@ -1,0 +1,34 @@
+Notes about the HMC mips compiler:
+
+The copmiler is a cross-chain compiler for x86 targeting the mips1.  It is 
+from gcc4.0.3.
+
+Files needed:
+gcc-4.0.3.tar.bz2
+binutils-2.17.tar.bz2
+
+1.) Build the binutils
+
+2.) Configure the compiler:
+The following command line instruction is uesd to configure gcc for our target:
+../../gcc/gcc-4.0.3/configure --target=$TARGET --prefix=$PREFIX --without-headers --with-newlib --with-gnu-as --with-gnu-ld --enable-threads -with-arch=mips1 -enable-languages=c --disable-libada --disable-libssp --disable-libgomp
+
+[srcdirectory]/configure --target=mips-linux-elf --program-suffix=-hmc-mips --enable-threads -with-cpu=r3000 -with-arch=mips1 -with-fpu=soft-float -enable-languages=c --disable-libada --disable-libssp --disable-libgomp 
+
+This configures the build directory so that the compiler made will:
+  - target the mips
+  - add -hmc-mips to the end of utility names (e.g. gcc-hmc-mips)
+  - enable thread support (whatever it decides is default)
+  - use the r3000 cpu model
+  - use the mips1 architecture
+  - use soft floating-point
+  - enable only C programs to be built for the platform.
+  - not bother with the ADA, SSP, or GOMP libraries.
+
+This instruction must be given in the build directory where building is to happen.
+
+3.) Build the compiler
+
+
+References:
+- Tips for building cross compiler: http://www.ifp.uiuc.edu/~nakazato/tips/xgcc.html#pre
