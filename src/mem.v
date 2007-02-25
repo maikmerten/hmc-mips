@@ -307,7 +307,7 @@ module cacheram(input ph1, ph2,
   input [52:0] din,
   output [52:0] dout);
   
-  reg [52:0] mem[125:0];
+  reg [52:0] mem[127:0];
   
   always @(posedge ph1)
     if(~rwb) mem[adr] <= din;
