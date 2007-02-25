@@ -461,30 +461,30 @@ module datapath(input         ph1, ph2, reset,
   wire [31:0] readdataW, resultW;
   wire [31:0] pcD;
   wire        adelthrownF, adelthrownD;
-  wire		  rsDon, rtDon, rsEon, rtEon;
-  wire		  rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW;
-  wire		  rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD;
-  wire		  rsDeqwrE, rtDeqwrE;
+  wire        rsDon, rtDon, rsEon, rtEon;
+  wire        rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW;
+  wire        rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD;
+  wire        rsDeqwrE, rtDeqwrE;
   wire [4:0]  rdD;
   
   fivebitdp fivebitdp(//inputs
-							 ph1, ph2, reset,
-							 stallE, stallM, stallW, flushE, flushM,
-							 rsD, rtD, rdD, rdsrcD, regdstE,
-							 //outputs
-							 rsDon, rtDon, rsEon, rtEon,
-							 rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-							 rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-							 rsDeqwrE, rtDeqwrE,
-							 rdE, writeregW);
+                             ph1, ph2, reset,
+                             stallE, stallM, stallW, flushE, flushM,
+                             rsD, rtD, rdD, rdsrcD, regdstE,
+                             //outputs
+                             rsDon, rtDon, rsEon, rtEon,
+                             rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
+                             rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
+                             rsDeqwrE, rtDeqwrE,
+                             rdE, writeregW);
   
   // hazard detection
   hazard    h(// inputs
               ph1, ph2, reset,
-				  rsDon, rtDon, rsEon, rtEon,
-				  rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-				  rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-				  rsDeqwrE, rtDeqwrE, 
+                  rsDon, rtDon, rsEon, rtEon,
+                  rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
+                  rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
+                  rsDeqwrE, rtDeqwrE, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, branchD, jumpregD,
               instrackF, dataackM, pendingexception, hiloaccessD, mdrunE,
@@ -594,7 +594,7 @@ module decodestage(input         ph1, ph2, unsignedD,
                    output [4:0]  rsD, rtD,
                    output [31:0] srca2D, srcb2D, signimmD, pcnextbrFD,
                    output        aeqbD, aeqzD, agtzD, altzD,
-						 output [4:0]  rdD);
+                         output [4:0]  rdD);
 
   wire [31:0] srcaD, srcbD, branchtargetD;
   
@@ -920,10 +920,10 @@ endmodule
 
 
 module hazard(input            ph1, ph2, reset,
-              input				 rsDon, rtDon, rsEon, rtEon,
-				  input				 rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-				  input				 rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-				  input				 rsDeqwrE, rtDeqwrE,
+              input            rsDon, rtDon, rsEon, rtEon,
+              input            rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
+              input            rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
+              input            rsDeqwrE, rtDeqwrE,
               input            regwriteE, regwriteM, regwriteW,
               input            memtoregE, memtoregM, 
               input            branchD, jumpregD,
@@ -1031,17 +1031,18 @@ module hazard(input            ph1, ph2, reset,
 
 endmodule
 
-module fivebitdp(input					ph1, ph2, reset,
-					  input					stallE, stallM, stallW,
-					  input					flushE, flushM,
-					  input			[4:0] rsD, rtD, rdD,
-					  input					rdsrcD, regdstE,
-					  output					rsDon, rtDon, rsEon, rtEon,
-					  output					rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-					  output					rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-					  output					rsDeqwrE, rtDeqwrE,
-					  output			[4:0] rdE, writeregW);
-	
+module fivebitdp(input                    ph1, ph2, reset,
+                 input                    stallE, stallM, stallW,
+                 input                    flushE, flushM,
+                 input            [4:0] rsD, rtD, rdD,
+                 input                    rdsrcD, regdstE,
+                 output                   rsDon, rtDon, rsEon, rtEon,
+                 output                   rsDeqwrM, rtDeqwrM, rsEeqwrM, 
+                                          rsEeqwrW, rtEeqwrM, rtEeqwrW, 
+                                          rtEeqrsD, rtEeqrtD, rsDeqwrE, 
+                                          rtDeqwrE,
+                 output            [4:0] rdE, writeregW);
+    
   wire [4:0] rsE, rtE, rd2D;
   wire [4:0] writeregM, writeregE;
   
