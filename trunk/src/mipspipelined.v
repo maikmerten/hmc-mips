@@ -461,10 +461,10 @@ module datapath(input         ph1, ph2, reset,
   wire [31:0] readdataW, resultW;
   wire [31:0] pcD;
   wire        adelthrownF, adelthrownD;
-  wire        rsDon, rtDon, rsEon, rtEon;
-  wire        rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW;
-  wire        rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD;
-  wire        rsDeqwrE, rtDeqwrE;
+  wire        rsonD, rtonD, rsonE, rtonE;
+  wire        rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW;
+  wire        rteqwrEM, rteqwrEW, rteqrsED, rteqrtED;
+  wire        rseqwrDE, rteqwrDE;
   wire [4:0]  rdD;
   
   fivebitdp fivebitdp(//inputs
@@ -472,19 +472,19 @@ module datapath(input         ph1, ph2, reset,
                              stallE, stallM, stallW, flushE, flushM,
                              rsD, rtD, rdD, rdsrcD, regdstE,
                              //outputs
-                             rsDon, rtDon, rsEon, rtEon,
-                             rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-                             rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-                             rsDeqwrE, rtDeqwrE,
+                             rsonD, rtonD, rsonE, rtonE,
+                             rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
+                             rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
+                             rseqwrDE, rteqwrDE,
                              rdE, writeregW);
   
   // hazard detection
   hazard    h(// inputs
               ph1, ph2, reset,
-                  rsDon, rtDon, rsEon, rtEon,
-                  rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-                  rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-                  rsDeqwrE, rtDeqwrE, 
+                  rsonD, rtonD, rsonE, rtonE,
+                  rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
+                  rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
+                  rseqwrDE, rteqwrDE, 
               regwriteE, regwriteM, regwriteW, 
               memtoregE, memtoregM, branchD, jumpregD,
               instrackF, dataackM, pendingexception, hiloaccessD, mdrunE,
@@ -632,7 +632,7 @@ module decodestage(input         ph1, ph2, unsignedD,
 
   // some linking instructions only link to register $31, so we must be able to
   // switch the destination registerd between rdD and 31
-  //moved to fivebitdp
+  // fivebitdp
 
 endmodule
 
@@ -694,7 +694,7 @@ module executestage(input         ph1, ph2, reset, alusrcE,
   assign misalignedhE = aluoutE[0];
 
   // pick which register results may be saved to
-  //moved to fivebitdp
+  // fivebitdp
 
 endmodule
 
@@ -920,10 +920,10 @@ endmodule
 
 
 module hazard(input            ph1, ph2, reset,
-              input            rsDon, rtDon, rsEon, rtEon,
-              input            rsDeqwrM, rtDeqwrM, rsEeqwrM, rsEeqwrW,
-              input            rtEeqwrM, rtEeqwrW, rtEeqrsD, rtEeqrtD,
-              input            rsDeqwrE, rtDeqwrE,
+              input            rsonD, rtonD, rsonE, rtonE,
+              input            rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
+              input            rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
+              input            rseqwrDE, rteqwrDE,
               input            regwriteE, regwriteM, regwriteW,
               input            memtoregE, memtoregM, 
               input            branchD, jumpregD,
@@ -939,20 +939,20 @@ module hazard(input            ph1, ph2, reset,
   wire executecleared;
 
   // forwarding sources to D stage (branch equality)
-  assign forwardaD = (~rsDon & rsDeqwrM & regwriteM);
-  assign forwardbD = (~rtDon & rtDeqwrM & regwriteM);
+  assign forwardaD = (rsonD & rseqwrDM & regwriteM);
+  assign forwardbD = (rtonD & rteqwrDM & regwriteM);
 
   // forwarding sources to E stage (ALU)
-  assign forwardaE[1] = (~rsEon) & (rsEeqwrM & regwriteM);
-  assign forwardaE[0] = (~rsEon) & (rsEeqwrW & regwriteW) & 
+  assign forwardaE[1] = (rsonE) & (rseqwrEM & regwriteM);
+  assign forwardaE[0] = (rsonE) & (rseqwrEW & regwriteW) & 
                           !forwardaE[1];
   
-  assign forwardbE[1] = (~rtEon) & (rtEeqwrM & regwriteM);
-  assign forwardbE[0] = (~rtEon) & (rtEeqwrW & regwriteW) 
+  assign forwardbE[1] = (rtonE) & (rteqwrEM & regwriteM);
+  assign forwardbE[0] = (rtonE) & (rteqwrEW & regwriteW) 
                           & !forwardaE[1];
 
   // (This stall was not implemented in R2000)
-  assign #1 lwstallD = memtoregE & (rtEeqrsD | rtEeqrtD);
+  assign #1 lwstallD = memtoregE & (rteqrsED | rteqrtED);
 
   // Cache miss delays
   assign #1 datamissM = ~dataackM;
@@ -967,10 +967,10 @@ module hazard(input            ph1, ph2, reset,
   // A branch stall happens when a branch is dependant on data that is not yet
   // available.
   assign #1 branchstallD = (branchD | jumpregD) & 
-             (regwriteE & ((rsDeqwrE) | 
-                          (rtDeqwrE)) |
-              memtoregM & ((rsDeqwrM) | 
-                          (rtDeqwrM)));
+             (regwriteE & ((rseqwrDE) | 
+                          (rteqwrDE)) |
+              memtoregM & ((rseqwrDM) | 
+                          (rteqwrDM)));
   
   // memstallexception is true when we have an exception waiting but we are
   // still waiting for a memory miss
@@ -1036,31 +1036,31 @@ module fivebitdp(input                    ph1, ph2, reset,
                  input                    flushE, flushM,
                  input            [4:0] rsD, rtD, rdD,
                  input                    rdsrcD, regdstE,
-                 output                   rsDon, rtDon, rsEon, rtEon,
-                 output                   rsDeqwrM, rtDeqwrM, rsEeqwrM, 
-                                          rsEeqwrW, rtEeqwrM, rtEeqwrW, 
-                                          rtEeqrsD, rtEeqrtD, rsDeqwrE, 
-                                          rtDeqwrE,
+                 output                   rsonD, rtonD, rsonE, rtonE,
+                 output                   rseqwrDM, rteqwrDM, rseqwrEM, 
+                                          rseqwrEW, rteqwrEM, rteqwrEW, 
+                                          rteqrsED, rteqrtED, rseqwrDE, 
+                                          rteqwrDE,
                  output            [4:0] rdE, writeregW);
     
   wire [4:0] rsE, rtE, rd2D;
   wire [4:0] writeregM, writeregE;
   
   //hazard 5-bit comparisons
-  eqzerocmp #(5) ez1(rsD, rsDon);
-  eqzerocmp #(5) ez2(rtD, rtDon);
-  eqzerocmp #(5) ez3(rsE, rsEon);
-  eqzerocmp #(5) ez4(rtE, rtEon);
-  eqcmp #(5) e1(rsD, writeregM, rsDeqwrM);
-  eqcmp #(5) e2(rtD, writeregM, rtDeqwrM);
-  eqcmp #(5) e3(rsE, writeregM, rsEeqwrM);
-  eqcmp #(5) e4(rsE, writeregW, rsEeqwrW);
-  eqcmp #(5) e5(rtE, writeregM, rtEeqwrM);
-  eqcmp #(5) e6(rtE, writeregW, rtEeqwrW);
-  eqcmp #(5) e7(rtE, rsD, rtEeqrsD);
-  eqcmp #(5) e8(rtE, rtD, rtEeqrtD);
-  eqcmp #(5) e9(rsD, writeregE, rsDeqwrE);
-  eqcmp #(5) e0(rtD, writeregE, rtDeqwrE);
+  neqzerocmp #(5) ez1(rsD, rsonD);
+  neqzerocmp #(5) ez2(rtD, rtonD);
+  neqzerocmp #(5) ez3(rsE, rsonE);
+  neqzerocmp #(5) ez4(rtE, rtonE);
+  eqcmp #(5) e1(rsD, writeregM, rseqwrDM);
+  eqcmp #(5) e2(rtD, writeregM, rteqwrDM);
+  eqcmp #(5) e3(rsE, writeregM, rseqwrEM);
+  eqcmp #(5) e4(rsE, writeregW, rseqwrEW);
+  eqcmp #(5) e5(rtE, writeregM, rteqwrEM);
+  eqcmp #(5) e6(rtE, writeregW, rteqwrEW);
+  eqcmp #(5) e7(rtE, rsD, rteqrsED);
+  eqcmp #(5) e8(rtE, rtD, rteqrtED);
+  eqcmp #(5) e9(rsD, writeregE, rseqwrDE);
+  eqcmp #(5) e0(rtD, writeregE, rteqwrDE);
   //Decode mux
   mux2 #(5)   rdmux(rdD, 5'b11111, rdsrcD, rd2D);
   //Execute mux

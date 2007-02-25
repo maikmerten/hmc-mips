@@ -44,6 +44,13 @@ module eqzerocmp #(parameter WIDTH = 32)
   assign #1 eq = (a == 0);
 endmodule
 
+module neqzerocmp #(parameter WIDTH = 32)
+                 (input [WIDTH-1:0]  a,
+                  output        eq);
+
+  assign #1 eq = (a != 0);
+endmodule
+
 module gtzerocmp #(parameter WIDTH = 32)
                  (input [WIDTH-1:0] a,
                   output       eq);
