@@ -215,10 +215,10 @@ module cache(input ph1, ph2, reset,
             
   // Cache ram ports
   wire [31:0] cacheline;
-  wire [18:0] tagdata;
+  wire [19:0] tagdata;
   wire        valid;
   wire [31:0] cachelinenew;
-  wire [18:0] tagdatanew;
+  wire [19:0] tagdatanew;
   wire        validnew;
   wire        cacheramrwb;
             
@@ -227,10 +227,10 @@ module cache(input ph1, ph2, reset,
   wire waiting;
   wire reading;
             
-  cacheram cacheram(ph1, ph2, adr[7:0],cacheramrwb,
+  cacheram cacheram(ph1, ph2, adr[6:0],cacheramrwb,
                     {validnew,tagdatanew,cachelinenew},
                     {valid,tagdata,cacheline});
-  cachecontroller cachec(ph1, ph2, reset, adr[29:8], en, rwb,
+  cachecontroller cachec(ph1, ph2, reset, adr[29:7], en, rwb,
                          tagdata, valid, memdone, 
                          bypass, waiting, reading, done);
             
@@ -240,7 +240,7 @@ module cache(input ph1, ph2, reset,
   // and not bypassing.  (Remember rwb = 0 for a write)
   assign #1 cacheramrwb = ~waiting | bypass;
   mux2 #(32) cachelinemux(data,memdata,reading,cachelinenew);
-  assign #1 tagdatanew = adr[26:8];
+  assign #1 tagdatanew = adr[26:7];
   assign #1 validnew = ((& byteen) | reading) & memdone;  // valid if reading or writing all
                                                                     // bytes.
   // Memory controls                  
@@ -258,10 +258,10 @@ endmodule
 
 // cachecontroller: controls the cache for reading/writing.
 module cachecontroller(input ph1, ph2, reset,
-              input [29:8] adr,
+              input [29:7] adr,
               input en, rwb,
               
-              input [18:0] tagdata,
+              input [19:0] tagdata,
               input valid,
               
               input memdone,
@@ -277,7 +277,7 @@ module cachecontroller(input ph1, ph2, reset,
     assign #1 bypass = adr[29] & adr[27];
     assign #1 waiting = (|state);
     assign reading = state[0];  
-    assign #1 incache = (tagdata == adr[26:8]) & valid;
+    assign #1 incache = (tagdata == adr[26:7]) & valid;
     assign #1 done = (incache & rwb & ~bypass) | (waiting & memdone) | ~en | reset;
 
     parameter SREADY = 2'b00;  // Ready
@@ -300,14 +300,14 @@ module cachecontroller(input ph1, ph2, reset,
 endmodule
 
 
-// 512 bytes cache memory + tag (19) [50:32] + valid (1-bit) [51]
+// 512 bytes cache memory + tag (20) [51:32] + valid (1-bit) [52]
 module cacheram(input ph1, ph2,
-  input [7:0] adr,
+  input [6:0] adr,
   input rwb,
-  input [51:0] din,
-  output [51:0] dout);
+  input [52:0] din,
+  output [52:0] dout);
   
-  reg [51:0] mem[255:0];
+  reg [52:0] mem[125:0];
   
   always @(posedge ph1)
     if(~rwb) mem[adr] <= din;
