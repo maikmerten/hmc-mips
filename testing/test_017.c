@@ -23,7 +23,7 @@ int test2(void);
       nop");
   
   // Invalidate entire instruction cache
-  asm("addi $10, $0, 256;
+  asm("addi $10, $0, 128;
        addi $11, $0, 0x400;
        loop1:
        sb $0,0($11);
@@ -39,7 +39,7 @@ int test2(void);
       nop");
 
   // Invalidate entire data cache
-  asm("addi $10, $0, 256;
+  asm("addi $10, $0, 128;
        addi $11, $0, 0x400;
        loop2:
        sb $0,0($11);
