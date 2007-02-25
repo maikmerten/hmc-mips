@@ -7,6 +7,7 @@
 // Thomas W. Barr tbarr at cs dot hmc dot edu 2007
 // Matt Totino mtotino at hmc.edu 2007
 // Nathaniel Pinckney npinckney at gmail dot com
+// Nate Schlossberg sonofernda at gmail dot com 2007
 //
 // Pipelined MIPS processor spare parts
 //------------------------------------------------
