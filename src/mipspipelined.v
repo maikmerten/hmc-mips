@@ -7,6 +7,7 @@
 // Thomas W. Barr tbarr at cs dot hmc dot edu 2007
 // Matt Totino mtotino at hmc.edu 2007
 // Nathaniel Pinckney npinckney at gmail dot com 2007
+// Nate Schlossberg sonofernda at gmail dot com 2007
 //
 // Harvey Mudd College
 //
@@ -468,19 +469,20 @@ module datapath(input         ph1, ph2, reset,
   wire [4:0]  rdD;
   
   fivebitdp fivebitdp(//inputs
-                             ph1, ph2, reset,
-                             stallE, stallM, stallW, flushE, flushM,
-                             rsD, rtD, rdD, rdsrcD, regdstE,
-                             //outputs
-                             rsonD, rtonD, rsonE, rtonE,
-                             rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
-                             rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
-                             rseqwrDE, rteqwrDE,
-                             rdE, writeregW);
+                      ph1, ph2, reset,
+                      stallE, stallM, stallW, flushE, flushM,
+                      rsD, rtD, rdD, rdsrcD, regdstE,
+                      //outputs
+                      rsonD, rtonD, rsonE, rtonE,
+                      rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
+                      rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
+                      rseqwrDE, rteqwrDE,
+                      rdE, writeregW);
   
   // hazard detection
   hazard    h(// inputs
               ph1, ph2, reset,
+                  // comparison inputs
                   rsonD, rtonD, rsonE, rtonE,
                   rseqwrDM, rteqwrDM, rseqwrEM, rseqwrEW,
                   rteqwrEM, rteqwrEW, rteqrsED, rteqrtED,
@@ -1031,17 +1033,15 @@ module hazard(input            ph1, ph2, reset,
 
 endmodule
 
-module fivebitdp(input                    ph1, ph2, reset,
-                 input                    stallE, stallM, stallW,
-                 input                    flushE, flushM,
-                 input            [4:0] rsD, rtD, rdD,
-                 input                    rdsrcD, regdstE,
-                 output                   rsonD, rtonD, rsonE, rtonE,
-                 output                   rseqwrDM, rteqwrDM, rseqwrEM, 
-                                          rseqwrEW, rteqwrEM, rteqwrEW, 
-                                          rteqrsED, rteqrtED, rseqwrDE, 
-                                          rteqwrDE,
-                 output            [4:0] rdE, writeregW);
+module fivebitdp(input         ph1, ph2, reset,
+                 input         stallE, stallM, stallW,
+                 input         flushE, flushM,
+                 input  [4:0]  rsD, rtD, rdD,
+                 input         rdsrcD, regdstE,
+                 output        rsonD, rtonD, rsonE, rtonE, rseqwrDM, rteqwrDM, 
+                               rseqwrEM, rseqwrEW, rteqwrEM, rteqwrEW, 
+                               rteqrsED, rteqrtED, rseqwrDE, rteqwrDE,
+                 output [4:0] rdE, writeregW);
     
   wire [4:0] rsE, rtE, rd2D;
   wire [4:0] writeregM, writeregE;
