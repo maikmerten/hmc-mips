@@ -85,14 +85,14 @@ Since each cache is 1kB and a word (32-bit) is 4 bytes, each cache can hold 256 
 
 Each cache communicates through the following interface (from the cache's pov):
 {{{
-input clk, reset,
+input ph1, ph2, reset,
 input [29:0] adr,
 inout [31:0] data,
 input [3:0] byteen,
 input rwb, en,
 output done,
              
-output [29:0] memadr, 
+output [26:0] memadr, 
 inout  [31:0] memdata,
 output [3:0] membyteen,
 output memrwb,
@@ -112,17 +112,17 @@ The write buffer is a four entry deep (not including data currently being writte
 
 The interface is:
 {{{
-input clk, reset,
-input [29:0] adr,
+input ph1, ph2, reset,
+input [26:0] adr,
 input [31:0] data,
 input [3:0] byteen,
 input en,
 output done,
                    
-output reg [29:0] memadr,
-output reg [31:0] memdata,
-output reg [3:0] membyteen,
-output reg memen,
+output [26:0] memadr,
+output [31:0] memdata,
+output [3:0] membyteen,
+output memen,
 input memdone
 }}}
 
