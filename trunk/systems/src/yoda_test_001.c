@@ -7,10 +7,10 @@
  * Created: 2/24/07
  */
 
-asm("li $sp 0x200");
+asm("li $sp,0x200");
 
 int globalvar = 0xfee;
 
-int yoda_test_001() {
-	
+int main() {
+	return 0;	
 }

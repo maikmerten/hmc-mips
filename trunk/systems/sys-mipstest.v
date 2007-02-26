@@ -34,7 +34,7 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
-      numTests = 27;
+      numTests = 1;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
