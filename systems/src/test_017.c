@@ -15,37 +15,37 @@ int test2(void);
 
 // This is the boot loader code...
   // swap
-  asm("swapon: addi  $9, $0, 1;
-      sll $9,$9,17
-      mtc0  $9, $12;
-      nop;
-      nop;
-      nop");
+  asm("swapon: addi  $9, $0, 1");
+  asm("sll $9,$9,17");
+  asm("mtc0  $9, $12");
+  asm("nop");
+  asm("nop");
+  asm("nop");
   
   // Invalidate entire instruction cache
-  asm("addi $10, $0, 256;
-       addi $11, $0, 0x400;
-       loop1:
-       sb $0,0($11);
-       addi $11,$11,4;
-       addi $10,$10,-1;
-       bnez $10,loop1");
+  asm("addi $10, $0, 256");
+  asm("addi $11, $0, 0x400");
+  asm("loop1:");
+  asm("sb $0,0($11)");
+  asm("addi $11,$11,4");
+  asm("addi $10,$10,-1");
+  asm("bnez $10,loop1");
 
   // unswap
-  asm("swapoff: addi  $9, $0, 0;
-      mtc0  $9, $12;
-      nop;
-      nop;
-      nop");
+  asm("swapoff: addi  $9, $0, 0");
+  asm("mtc0  $9, $12");
+  asm("nop");
+  asm("nop");
+  asm("nop");
 
   // Invalidate entire data cache
-  asm("addi $10, $0, 256;
-       addi $11, $0, 0x400;
-       loop2:
-       sb $0,0($11);
-       addi $11,$11,4;
-       addi $10,$10,-1;
-       bnez $10,loop2");
+  asm("addi $10, $0, 256");
+  asm("addi $11, $0, 0x400");
+  asm("loop2:");
+  asm("sb $0,0($11)");
+  asm("addi $11,$11,4");
+  asm("addi $10,$10,-1");
+  asm("bnez $10,loop2");
 
 //  In order to run the first function, first initialize stack pointer
 asm("li $sp,0x300");
@@ -53,8 +53,8 @@ asm("li $sp,0x300");
 // And jumped to the cached address for main()
 // Note: the jumped address must be changed manually, labels
 // didn't seem to work.
-asm("addi $8, $0, 116
-     jr $8");
+asm("addi $8, $0, 116");
+asm("jr $8");
 
 // bootstrap test, to invalidate both caches.
 void test()
@@ -87,5 +87,3 @@ int test2(void) {
 	int c = a+b;
 	return c;
 }
-
-

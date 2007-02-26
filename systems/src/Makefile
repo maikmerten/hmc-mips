@@ -1,9 +1,12 @@
 CC = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-gcc.exe 
 AS = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-as.exe 
+LD = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-ld.exe
 DUMP = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-objdump.exe 
-CFLAGS = -Wall -msoft-float 
+BLD = ../build 
+SRC = ./ 
+CFLAGS = -Wall -msoft-float -march=r3000 -EL 
 
-all: test_000.dat test_001.dat test_002.dat test_003.dat test_004.dat test_005.dat test_006.dat test_007.dat test_008.dat test_009.dat test_010.dat test_011.dat test_012.dat test_012.asm test_013.dat test_014.dat test_015.dat test_016.dat test_fp_001.dat test_017.dat test_020.dat test_021.dat test_022.dat test_023.dat test_024.dat test_025.dat test_026.dat
+all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test_017.dat test_026.dat test_026.asm yoda_test_001.dat yoda_test_001.asm
 
 # All c-compiled programs must have their first instruction changed so that it
 # sets the stack pointer
@@ -14,8 +17,11 @@ all: test_000.dat test_001.dat test_002.dat test_003.dat test_004.dat test_005.d
 %.dat: %.dump
 	cat $< | grep --only-matching "^ *[0-9a-fA-F]\+:[^0-9a-fA-F]*[0-9a-fA-F ]\+" | tr -d " " | grep --only-matching "[0-9a-fA-F]\{8\}" > $@
 
-%.dump: %.o
+%.dump: %.out
 	$(DUMP) -d --disassemble-zeroes $< > $@
+
+%.out: %.o
+	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
 
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
