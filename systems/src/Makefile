@@ -21,7 +21,8 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.out: %.o
-	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
+	$(LD) -EL -o $@ $<
+#	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
 
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
