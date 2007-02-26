@@ -10,7 +10,7 @@ This specifies the memory subsystem, including the data and instruction cache, m
 
 The memory subsystem is composed of the following subunits:
 
-  * Two identical 1kB caches, one for data and one for instructions.
+  * Two identical 512 byte caches, one for data and one for instructions.
   * A cache controller, to interface the process with the cache and main memory.
   * A write buffer to reduce number of stalls when writing to main memory.
   * A memsys controller which contains the above plus mechanisms to multiplex data between the above components, the processor, and external memory.
@@ -72,7 +72,7 @@ The precedence is implemented using combinational logic and a multiplexer.  The 
   
 == Cache ==
 
-Both caches are identical, one for instructions and one for data.  Each cache will be 1kB in size and synchronous.  The cache will be of the following type:
+Both caches are identical, one for instructions and one for data.  Each cache are 512 in size and synchronous.  The caches are of the following type:
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
