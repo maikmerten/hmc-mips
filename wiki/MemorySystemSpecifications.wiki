@@ -24,12 +24,12 @@ http://hmc-mips.googlecode.com/svn/trunk/images/mem.gif
 
 Most of the subcomponents' interfaces include:
 
-adr (address)
-data (bi-direction data)
-byteen (a byte mask for writing data less than a word in length)
-rwb (read/write bar.  0 = write, 1 = read)
-en (enable read/write)
-done (signifies that memory operation is complete)
+* adr (address)
+* data (bi-direction data)
+* byteen (a byte mask for writing data less than a word in length)
+* rwb (read/write bar.  0 = write, 1 = read)
+* en (enable read/write)
+* done (signifies that memory operation is complete)
 
 We'll call the module requesting a memory operation the _master_ and the module executing the operation the _slave_.  For example, normally the mips processor is the master and the cache the slave.  When a cache is writing to the write buffer, the cache is the master and the write buffer is the slave.
 
@@ -76,7 +76,7 @@ Both caches are identical, one for instructions and one for data.  Each cache ar
 
   * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
   * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
-  * _Direct-mapped_: The lower bits (how many bits?) of the memory address will be used as the tag in the cache memory.
+  * _Direct-mapped_: The lower seven bits of the memory address will be used as the tag in the cache memory.
   * _Physically addressed_: The memory address the cache uses is based upon the physical address, the actual address in RAM, not a program address which is translated.
   * Support cache bypassing (via upper bits of memory address).  This is explained in the memory map below.
   * Support cache swapping (using the swc bit available in the status register).  This swaps the instruction and data cache so that the instruction cache can be invalidated.
