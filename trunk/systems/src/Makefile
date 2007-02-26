@@ -26,7 +26,7 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
 %.o: %.asm
-	$(AS) -o $@ $<
+	$(AS) -EL -o $@ $<
 
 %.asm: %.c
 	$(CC) $(CFLAGS) -S -c $< -o $@
