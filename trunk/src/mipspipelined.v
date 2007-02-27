@@ -669,7 +669,7 @@ module executestage(input         ph1, ph2, reset, alusrcE,
                       shiftresultE);
 
   // Multiply and divide operate separately from the main processor. mdstartE
-  // launches the unit into action, driving mdrunE low.  Once it finishes, 
+  // launches the unit into action, driving mdrunE high.  Once it finishes, 
   // mdrunE will go low.  While mdrunE is high, the hazard unit stalls any
   // other instructions that access/use the mdunit.
   mdunit md(ph1, ph2, reset,
@@ -723,8 +723,8 @@ module memorystage(input         byteM, halfwordM, loadsignedM,
   mux3 #(32) wdatamux(writedataM, {2{writedataM[15:0]}}, {4{writedataM[7:0]}},
                       {byteM, halfwordM}, writedata2M);
 
-  // Byte encoding logic for store operations -- determine the byte mask,
-  // byteenM based on the address and whether we are doing a byte, halfword, or
+  // Byte encoding logic for store operations -- Determine the byte mask,
+  // byteenM, based on the address and whether we are doing a byte, halfword, or
   // word-sized operation.  Misaligned addresses will have been caught as an
   // exception in the execute stage.
   dec2 bytebyteendec(aluoutreM[1:0], bytebyteenM);
@@ -808,11 +808,11 @@ module exceptionunit(input            ph1, ph2, reset,
     wire       overflow, adel, ades, interrupt;
     wire  [2:0] priencout;
 
-    // Note that all exceptions happen during the exectute stage and the final
+    // Note that all exceptions happen during the exectute stage, and the final
     // say in whether an exception is active is set by the hazard unit as
     // "activeexception."  Also, an exception happens in the same cycle as it is
     // occurs, meaning the processor does not use a clock cycle to execute the
-    // exception, rather it happens all at once.
+    // exception, rather it happens all at once (this is slow).
    
     // Various possible exception conditions
     assign overflow = overflowableE & overflowE;
@@ -827,7 +827,7 @@ module exceptionunit(input            ph1, ph2, reset,
     assign pendingexception = 
         |({interrupt, overflow, adel, ades, syscallE, breakE, riE, fpuE});
    
-    // To pick which of the 8 possible exceptions occured, send them threw
+    // To pick which of the 8 possible exceptions occured, send them through
     // a priority encoder
     prienc_8  excprienc({interrupt, overflow, adel, ades, syscallE, breakE, 
                         riE, fpuE}, priencout);
@@ -947,11 +947,11 @@ module hazard(input            ph1, ph2, reset,
   // forwarding sources to E stage (ALU)
   assign forwardaE[1] = (rsonE) & (rseqwrEM & regwriteM);
   assign forwardaE[0] = (rsonE) & (rseqwrEW & regwriteW) & 
-                          !forwardaE[1];
+                          ~forwardaE[1];
   
   assign forwardbE[1] = (rtonE) & (rteqwrEM & regwriteM);
   assign forwardbE[0] = (rtonE) & (rteqwrEW & regwriteW) 
-                          & !forwardaE[1];
+                          & ~forwardbE[1];
 
   // (This stall was not implemented in R2000)
   assign #1 lwstallD = memtoregE & (rteqrsED | rteqrtED);
