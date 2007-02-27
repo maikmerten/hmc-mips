@@ -11,7 +11,7 @@
  * point in software (since it is not implemented on this chip in hardware.)
  */
 
-asm("li $sp,0xf0");
+asm("li $sp,0x200");
 
 void test_fp_1()
 {
