@@ -1,0 +1,6 @@
+#summary Adelaide Team's Homepage
+
+The team in Adelaide, Australia consists of [JoelStanley Joel Stanley], [RhysBowden Rhys Bowden], [RobertMoric Robert Moric] and [MelanieTan Melanie Tan], supervised by [http://www.eleceng.adelaide.edu.au/Personal/phillips/ Braden Phillips].
+
+We are responsible for the _cache_, _cacheram_, and _cachecontroller_ modules of the microprocessors' memory system.
+
