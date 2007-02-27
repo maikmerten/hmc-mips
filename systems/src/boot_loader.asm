@@ -31,7 +31,6 @@ __reset:
 #   0 (IEc) = 0 for now, disable interrupts.
 
 # Instructions for setting SR on See MIPS Run p. 105
-set_sr:	 
 	mfc0	$t0, SR
 set_sr1:
 	nop
@@ -52,7 +51,7 @@ set_sr2:
 # With the I-cache in isolation, we can find out the size of the cache, and
 # then write that many invalid bits.
 	lui	$t1, 0x0004	# $t1 is initially 256K.
-	addi	$t2, 0x0400	# $t2 is the smallest cache size (0.5K) 
+	li	$t2, 0x0400	# $t2 is the smallest cache size (0.5K) 
 	lui	$t3, 0x8000	# $t3 = kseg0 = 0x8000 0000
 size_i:
 	add	$t0, $t3, $t1	# $t0 = kseg0 + current size
@@ -69,8 +68,8 @@ read_size_i:
 				# start writing at
 inval_i_loop:
 	sb	$0, 0($t2)	# Invalidate the word at address $t2
-	addi	$t2, 4		# Move to next word address
-	addi	$t1, -4		# Use cache size to count down loop iterations
+	addi	$t2, $t2, 4	# Move to next word address
+	addi	$t1, $t1, -4	# Use cache size to count down loop iterations
 	bnez	$t1, inval_i_loop
 				# Keep writing bytes until we run out of space.
 
@@ -89,7 +88,7 @@ swap_i_for_d:
 # Having swapped the caches, we can repeat the same operation on the D-cache
 # that we did on the I-cache.
 	lui	$t1, 0x0004	# $t1 is initially 256K.
-	addi	$t2, 0x0400	# $t2 is the smallest cache size (0.5K) 
+	li	$t2, 0x0400	# $t2 is the smallest cache size (0.5K) 
 	lui	$t3, 0x8000	# $t3 = kseg0 = 0x8000 0000
 size_d:
 	add	$t0, $t3, $t1	# $t0 = kseg0 + current size
@@ -102,18 +101,18 @@ size_d:
 read_size_d:
 	lw	$t1, $t3	# Loads the value of kseg0 into $t1
 				# Our cache size is now in $t1
-				# Conveniently, $t2 holds the value we want to
+	addi	$t2, $0, 0	# Conveniently, $t2 holds the value we want to
 				# start writing at
 inval_d_loop:
 	sb	$0, 0($t2)	# Invalidate the word at address $t2
-	addi	$t2, 4		# Move to next word address
-	addi	$t1, -4		# Use cache size to count down loop iterations
+	addi	$t2, $t2, 4	# Move to next word address
+	addi	$t1, $t2, -4	# Use cache size to count down loop iterations
 	bnez	$t1, inval_d_loop
 				# Keep writing bytes until we run out of space.
 
 # Step 3: Initialize $sp and reset SR to proper values. 
 	lui	$sp, 0x001
-	ori	$sp, 0x31FC	# The highest the stack goes is 0x00131FF.
+	ori	$sp, $sp, 0x31FC  # The highest the stack goes is 0x00131FF.
 
 # Set register bits:
 #   22 (BEV) = 0 now that we have initialized the cache.
@@ -123,9 +122,9 @@ inval_d_loop:
 	mfc0	$t0, SR
 	nop
 	nop
-	ori	$t0, 0x1	# set IEc
+	ori	$t0, $t0, 0x1	# set IEc
 	lui	$t1, 0xFFBE	
-	ori	$t1, 0xFFFF
+	ori	$t1, $t1, 0xFFFF
 	and	$t0, $t0, $t1   # clear BEV and IsC.
 	mtc0	$t0, SR
 	nop
@@ -133,4 +132,6 @@ inval_d_loop:
 
 
 # Step 4: Jump to a cached-mode address
- 
+	lui	$t0, 0x9FC0
+	ori	$t0, $t0, 0x1000
+	jr	$t0		# Instructions should start at 0x9FC01000 
