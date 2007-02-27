@@ -23,7 +23,13 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.out: %.o
+	$(LD) -EL -Ttext=0x9fc01000 -o $@ $<
+
+boot_start.out: boot_start.o boot_loader.o
 	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
+
+boot_loader.out: boot_loader.o
+	$(LD) -EL -Ttext=0xbfc00E00 -o $@ $<
 
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
@@ -33,9 +39,6 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 
 %.asm: %.c
 	$(CC) $(CFLAGS) -S -c $< -o $@
-
-test_fp_001.o: test_fp_001.c
-	$(CC) $CFLAGS) -c $< -o $@
 
 clean:
 	rm *.o *.dump
