@@ -4,3 +4,4 @@ The team in Adelaide, Australia consists of [JoelStanley Joel Stanley], [RhysBow
 
 We are responsible for the _cache_, _cacheram_, and _cachecontroller_ modules of the microprocessors' memory system.
 
+The Adelaide team's calendar is at [AdelaideCalendar].
