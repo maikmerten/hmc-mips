@@ -11,11 +11,12 @@
 
 # We don't want the assembler to reorder or fill branch delay slots.
 .set noreorder
+.text
 
-boot:	lui $t0, 0xBFC0		# Our main bootloader is located at 0xBFC00E00
-	ori $t0, $t0, 0x0E00
-	jr  $t0
+boot:	lui $8, 0xBFC0		# Our main bootloader is located at 0xBFC00E00
+	ori $8, $8, 0x0E00
+	jr  $8
 	nop
 
-#boot:	b __reset		# For now, we will try getting the linker
+#	b	reset		# For now, we will try getting the linker
 #				# to use the boot_loader tag __reset
