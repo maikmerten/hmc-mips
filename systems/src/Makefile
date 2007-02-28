@@ -23,7 +23,7 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.out: %.o
-	$(LD) -EL -Ttext=0x9fc01000 -o $@ $<
+	$(LD) -EL -Ttext=0x9fc00000 -o $@ $<
 
 boot_start.out: boot_start.o boot_loader.o
 	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
