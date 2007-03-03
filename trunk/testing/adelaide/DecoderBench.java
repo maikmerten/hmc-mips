@@ -38,11 +38,11 @@ public class DecoderBench
 			ph = (int) Math.floor(2*Math.random());
 			if(ph==1)
 			{
-				y.insert(i,1);
+				y.insert(63-i,1);
 			}
 			else
 			{
-				y.insert(i,0);
+				y.insert(63-i,0);
 			}
 			writer.println("print iteration "+i+" ph1 set to "+ph);
 			writer.println("set a "+a);
