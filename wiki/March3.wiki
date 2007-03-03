@@ -1,0 +1,61 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+Follows is the summary of the work that the Adelaide team has been doing, following 
+
+
+==Rhys==
+Rhys has been responsible for the decoder block, and writing a test bench for the whole cache.
+
+  * Generating a (self-checking) test bench for it
+  * Make a trial layout to see that each cell fits in the available space.
+  * look at optimisation with respect to delay
+
+  * Will do whole cache test bench last
+  * Try to test each mode of operation and transitions between
+  * Will not hook up to the other devices, such as memory, yet; just plugging in appropriate signals at appropriate times.
+
+==Rob==
+Rob has been working on the SRAM array.
+
+===SRAM Layout===
+  * Issue with fanout for inverter stage. Problem may be solved in three ways: 
+  # Increase the size of the inverter, or 
+  # Employ a small buffer design.
+    * scaling factor of 'u'
+    * number of stages 'N'
+    * rough idea of what the capacitance seen by the inverter at its input
+    * capacitance of the load it will be driving. Or,
+  # Simply break the inverter signal to have 1 inverter driving 4 lines at most. This is ok but then the stage that feeds the original inverter will still have its own fanout issue to deal with in driving the 13 or so replacement inverters. 13 or so may not be a problem.
+
+
+===Write driver===
+  * The ph1, rwb, din and the and3 can be replaced nicely by a single inverter on the ph1 and a nor3. This eliminates an inverter and also the nor3 is smaller than the and3. This is the least of our worries in this section. But its a start :)
+
+  * Currently working on a layout of the writedriver to try to make it as compact as possible. Doing it purely with standard cells. The extra transistors need to be laid out to get an idea of how much area they will take up and also the possibilities for simplifying the ordering of cells for routing the connecting wires.
+
+  * The biggest problem is that the write driver is much larger (wider) than the pair of SRAM cells it is meant to be driving. it is not possible to just make an array and have them lined up nicely. An observation that I made was that a write driver is as wide as 4 SRAM cells.
+ * To solve this, a possible solution may be to two write drivers sitting one under the other: ie:
+{{{
+[sram][sram][sram][sram]
+ y0y1 y2y3   y0y1  y2y3
+-------------------------
+|                       |
+|      writedriver      |
+|                       |
+------------------------
+
+-------------------------
+|                       |
+|      writedriver      |
+|                       |
+-------------------------
+}}}
+The top write driver will service the first two SRAMs, while the bottom will service the next two. The bottom write driver will be laid out such that the bitlines line up nicely with the left-most SRAMs and the bottom will line up nicely with the right-most SRAMs. Therefore, we may need two copies of the writedriver. Drawback is the extra extra space requirements, so looking into other possible solutions.
+
+It sounds a little far out but thats what has been planned at this stage.
+
+===Testing SRAM array===
+As per discussion with Stephen Brawner earlier today, the Mudders have suggested just assuming the array works as it is a difficult unit to test. However, if we have time will come up with a dumb and simple way of testing in IRSIM just to get some outputs.
+
