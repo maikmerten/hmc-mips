@@ -2,7 +2,7 @@
 
 = Before you start =
 
-Get SVN setup as described by DevelopmentEnvironmentGuide. Make sure your machine is set up withXilinx and Modelsim.
+Get SVN setup as described by DevelopmentEnvironmentGuide. Make sure your machine is set up with Xilinx and Modelsim.
 
 = Running Test =
 
