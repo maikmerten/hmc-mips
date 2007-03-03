@@ -76,11 +76,10 @@ Mel has been designing test benches to check the functions of the multiplexers (
 The IRSIM test scripts are located in subversion, under [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/ testing/adelaide].
 
 ===Notes===
-  * To run minor test_adrtagdatalogic.cmd, minor modification is required to the adrtagdatalogic block; some wires in the block have been given names in order to verify behavior.
+  * To run minor test_adrtagdatalogic.cmd, minor modification is required to the adrtagdatalogic block; some wires in the block have been given names in order to verify behavior. A modified Cache.jelib that reflects this change is in subversion.
 
   * There are 2 separate read and write files to test the dataout block 
 
   * Most of the blocks function as expected. However, some issues are
     * The comparator in the adrtagdatalogic is giving output ‘x’ (floating - illegal value) for matching inputs
     * For the AND gate in adrtagdatalogic, the bypass (output) is ‘0’ when inputs adr[29] and adr[27] are both ‘1’.
-
