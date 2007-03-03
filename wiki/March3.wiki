@@ -59,3 +59,12 @@ It sounds a little far out but thats what has been planned at this stage.
 ===Testing SRAM array===
 As per discussion with Stephen Brawner earlier today, the Mudders have suggested just assuming the array works as it is a difficult unit to test. However, if we have time will come up with a dumb and simple way of testing in IRSIM just to get some outputs.
 
+==Joel==
+Joel has been designated the 'tools man' of the team.
+
+  * Team is currently testing their modules using IRSIM in Electric
+  * Looking at using verilog testing of modules
+  * Ran into issues with unavalibilty of verilog libraries for ModelSim on CATS comptuers
+
+==Mel==
+Mel has been 
