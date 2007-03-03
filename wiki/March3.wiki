@@ -20,7 +20,7 @@ Rhys has been responsible for the decoder block, and writing a test bench for th
 Rob has been working on the SRAM array.
 
 ===SRAM Layout===
-  * Issue with fanout for inverter stage. Problem may be solved in three ways: 
+  Issue with fanout for inverter stage. Problem may be solved in three ways: 
   # Increase the size of the inverter, or 
   # Employ a small buffer design.
     * scaling factor of 'u'
