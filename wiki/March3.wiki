@@ -8,10 +8,12 @@ Follows is the summary of the work that the Adelaide team has been doing, follow
 ==Rhys==
 Rhys has been responsible for the decoder block, and writing a test bench for the whole cache.
 
-  * Generating a (self-checking) test bench for it
+===Decoder64 Block testbench===
+  * Generating a self-asserting test bench ([http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/DecoderBench.java DecoderBench.java])
   * Make a trial layout to see that each cell fits in the available space.
   * look at optimisation with respect to delay
 
+===Top level cache testbench==
   * Will do whole cache test bench last
   * Try to test each mode of operation and transitions between
   * Will not hook up to the other devices, such as memory, yet; just plugging in appropriate signals at appropriate times.
@@ -83,3 +85,4 @@ The IRSIM test scripts are located in subversion, under [http://hmc-mips.googlec
   * Most of the blocks function as expected. However, some issues are
     * The comparator in the adrtagdatalogic is giving output ‘x’ (floating - illegal value) for matching inputs
     * For the AND gate in adrtagdatalogic, the bypass (output) is ‘0’ when inputs adr[29] and adr[27] are both ‘1’.
+
