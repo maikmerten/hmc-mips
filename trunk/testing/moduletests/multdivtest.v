@@ -29,14 +29,16 @@ module multdivtest();
   reg [31:0]  prodhexpected, prodlexpected;
   reg         ready;
   reg         start;
+  reg         ph1, ph2;
+  // generate clock to sequence tests
+  always
+    begin
+      ph1 <= 1; # 4; ph1 <= 0; #1;
+		ph2 <= 1; # 4; ph2 <= 0; #1;
+    end
 
   // device under test
-  multdiv dut(clk, reset, start, multdivb, signedop, x, y, prodh, prodl, run, dividebyzero);
-
-  // generate clock
-  always begin
-    clk = 1; #5; clk = 0; #5;
-  end
+  multdiv dut(ph1, ph2, reset, start, multdivb, signedop, x, y, prodh, prodl, run, dividebyzero);
 
   // generate reset
   initial begin
@@ -48,12 +50,12 @@ module multdivtest();
   // load testvectors
   initial
     begin
-      $readmemh("testing/moduletests/multdiv.tv", testvectors);
+      $readmemh("multdiv.tv", testvectors);
       vectornum = 0;
       errors = 0;
     end
 
-  always @(posedge clk)
+  always @(posedge ph1)
     if (ready) begin
       #1 {multdivb, signedop, x, y, prodhexpected, prodlexpected} = testvectors[vectornum];
       vectornum = vectornum+1;
@@ -63,7 +65,7 @@ module multdivtest();
       #1 start = 0;
     end
 
-  always @(negedge clk)
+  always @(negedge ph1)
     if (~run & ~start & ~reset) begin
       #1 ready = 1;
       if (testvectors[vectornum][0] === 1'bx) begin
