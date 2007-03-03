@@ -2,7 +2,7 @@
 
 = Before you start =
 
-Get SVN setup as described by DevelopmentEnvironmentGuide. (Don't worry about Xlinx stuff, it is not needed to run tests or edit.)
+Get SVN setup as described by DevelopmentEnvironmentGuide. Make sure your machine is set up withXilinx and Modelsim.
 
 = Running Test =
 
@@ -72,4 +72,3 @@ Finally run as usual.
 {{{
 run 100000ns
 }}}
-
