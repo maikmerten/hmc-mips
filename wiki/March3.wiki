@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Follows is the summary of the work that the Adelaide team has been doing, following 
+Follows is the summary of the work that the Adelaide team has been doing, following Steven's handover of the cache schematics on Thursday night.
 
 
 ==Rhys==
@@ -64,7 +64,19 @@ Joel has been designated the 'tools man' of the team.
 
   * Team is currently testing their modules using IRSIM in Electric
   * Looking at using verilog testing of modules
-  * Ran into issues with unavalibilty of verilog libraries for ModelSim on CATS comptuers
+  * Ran into issues with unavalibilty of verilog libraries for ModelSim on CATS comptuers, still pushing ahead with it though.
+  
+  * Looked at the cachecontroller modules, working on writing test benches for them.
+
+  * Getting all of the teams work into SVN on the google code server
 
 ==Mel==
-Mel has been 
+Mel has been designing test benches to check the functions of the multiplexers (mux2_1x_32, mux2_4, mux2_c_1x, mux2_dp_1x, mux2_zip), adrtagdatalogic, byteenlog, and dataout.  
+
+The IRSIM test scripts are located in $SVNROOT/testing/adelaide.
+
+(Please take note that I have 2 separate read and write files to test the dataout block)  
+
+Most of the blocks function as expected. However, some issues are
+  * The comparator in the adrtagdatalogic is giving output ‘x’ (floating - illegal value) for matching inputs
+  * For the AND gate in adrtagdatalogic, the bypass (output) is ‘0’ when inputs adr[29] and adr[27] are both ‘1’.
