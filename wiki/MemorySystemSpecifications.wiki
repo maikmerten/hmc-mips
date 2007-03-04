@@ -40,7 +40,8 @@ All of the interfaces for primary modules are detailed below and are from the sl
 
 == Memsys ==
 
-The MIPS memory system (memsys) interfaces the processor, cache, and main memory.  Additionally, it handles operations such as cache swapping.  Memsys is composed of a memsys controller, the two caches, and the write buffer.  The interface is as follows (memsys's point of view):
+The MIPS memory system (memsys) module is the entire memory/cache system and interfaces the processor, caches, write buffer, and external memory. Additionally, it handles operations such as cache swapping. Memsys also includes the memsys controller (memsyscontroller) containing logic to control many multiplexers and tri-state buffers, to prioritize and arbitrate external memory operations. Memsys's interface is: 
+
 {{{
 input ph1, ph2, reset,
 input [31:2] pcF,
@@ -65,28 +66,32 @@ output memen,
 input memdone
 }}}
 
-Note that since an uncached address will retrieve or write to memory every time enable is asserted (and the previous option was completed), it is necessary for the data and instruction caches to have enable inputs, so if the processor is stalling it won't keep repeating the memory operation.
+Note that an uncached address read or write operation will cause a cache miss (and hence processor stall) whenever en is asserted.  Hence, it is necessary for the processor to control the data and instruction cache en inputs, so no cycles will be wasted on unneeded memory stalls (e.g. if the current instruction does not use memory). 
 
-Since the main memory only has one data and address bus, the memsys is responsible for multiplexing between read/writes from the two caches and writes from the write buffer.  The cache controller will wait until the current memory operation is complete and start new ones with the following precedence:
+Since the external memory only has one data and address bus, the memsys is responsible for multiplexing read/writes to the external memory from the two caches and write buffer. The cache controller will wait until the current memory operation is complete and start new operations with the following priority (top indicates highest priority): 
+
   #  Write buffer write
   #  Data cache read
   #  Instruction cache read
-The precedence is implemented using combinational logic and a multiplexer.  The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write.  When a component is using the external memory, the memory and component are multiplexed directly together, so once the memory asserts done the component's memdone will be high.  After one cycle, memsys disconnects the component and the memory, and connects a low to the memdone input of the component.
+
+The data cache (or instruction cache if swapped) is connected directly to the write buffer if it requests a memory write. When a module is using the external memory, the memory and module are multiplexed together directly, so once the memory asserts done the component's memdone will be HIGH. After one cycle, memsys disconnects the module and the memory, and connects a LOW to the memdone input of the module. 
   
-== Cache ==
+== Data and Instruction Caches ==
 
-Both caches are identical, one for instructions and one for data.  Each cache are 512 in size and synchronous.  The caches are of the following type:
+Both caches are identical, one for instructions and one for data. Each cache will be 512 bytes in size and synchronous. Cache features include:
 
-  * _Write-through_: When data is written to an address, it is written immediately to memory as well as the cached.  The cache never has an newer copy of data than main memory.
-  * _Write buffer_: To improve performance, so the CPU does not stall for the entire memory write latency, a FIFO (first-in first-out) write buffer is used.  Once the write buffer is full, the CPU must stall.
-  * _Direct-mapped_: The lower seven bits of the memory address will be used as the tag in the cache memory.
-  * _Physically addressed_: The memory address the cache uses is based upon the physical address, the actual address in RAM, not a program address which is translated.
-  * Support cache bypassing (via upper bits of memory address).  This is explained in the memory map below.
-  * Support cache swapping (using the swc bit available in the status register).  This swaps the instruction and data cache so that the instruction cache can be invalidated.
+  * _Write-through_: When a data write is requested from the processor, it is written immediately to memory (or write buffer) as well as the cached. The cache never holds a newer copy of data than main memory (or write buffer). 
+  * _Write buffer_: To improve performance, so the CPU does not stall for the entire external memory write time, a FIFO (first-in, first-out) write buffer is used. Once the write buffer is full, the CPU stalls until a space is available in the write buffer. 
+  * _Direct-mapped_: The lower seven bits of the memory address are used as the tag in the cache memory. 
+  * _Physically addressed_: The address the cache uses in the tag data is based upon the physical address of the data in external RAM. 
+  * _Bypassing_:  The cache can be bypassed via the upper bits (explained in the memory map section) so that certain data (e.g. memory mapped I/O) is never cached. 
+  * _Swapping_:  The caches can be swapped.  This is mainly useful for cache invalidation during boot loading of the processor. 
 
-Since each cache is 1kB and a word (32-bit) is 4 bytes, each cache can hold 256 words.  A tag must be associated with each word, representing the lower bits of the address. 256 = 2^8, so each tag is 8-bits long.  The tag data must hold the upper bits of the address, and all addresses should word aligned, hence 32 - 8 - 2 = 22 bits.  Additionally, a "valid" bit must be associated with each tag.  The total width of each cache slot is then 22 + 1 + 32 = 55 bits.  256*55 = 14080 or 1.7kB.  The cache slots are stored in a _cacheram_ module, and the controls are generated from a _cachecontroller_ module.
 
-Each cache communicates through the following interface (from the cache's pov):
+Since each cache is 512 bytes and a word is 4 bytes, each cache can hold 128 words. A tag must be associated with each word, representing the lower bits of the address. 128 = 2^7, so each tag is 7 bits long. The tag data must hold the upper bits of the address, and all addresses should word aligned, hence 32 - 7 - 2 = 23 bits of tag data. Additionally, a valid bit must be associated with each tag. The total width of each cache slot is then 23 + 1 + 32 = 56 bits.  The total size of the cache's memory is then 128*56 = 7168 bits or 896 bytes per cache. 
+
+The cache slots (containing the tag data, data, and valid bit) are stored in the cacheram module, and the controls are generated from a cachecontroller module.  The cache interface is: 
+
 {{{
 input ph1, ph2, reset,
 input [29:0] adr,
@@ -103,17 +108,16 @@ output memen,
 input memdone
 }}}
 
-The cache is synchronous with the processor and attempts to read a cache location within one clock cycle.  So, the cache will respond exactly as the E85 mips processor's instruction and data memory did, for valid cached memory locations.  In this case, corresponding done signals will be asserted.  When a memory location is not in the cache, the done signal is not asserted.  The hazard unit of the cpu stalls, while the cpu waits a prefixed amount of time before reading in the result from main memory. 
+The cache is synchronous with the processor completes a cache hit within one clock cycle. So, the cache will respond exactly as the HMC ENGR85 (Digital Electronics and Computer Engineering) MIPS processor's instruction and data memory did for cached memory locations that are valid. In this case, a done signal will be asserted within the same clock signal as the request. When the cache misses, the done signal is not asserted until the memory fetch or write is complete. During the time done is not asserted, the hazard unit causes the cpu to stall. 
 
-When a word write is requested to an address that is cachable, but not currently in the cache, data is written to both the cache and to the write buffer.  When a half-word or byte address write is requested, it is sent directly to the write buffer, and invalidates the cache location, as noted above.  Hence, a store other than word length will never write to the cache, just invalidate.  This is primarily to retain compatibility with R2000 MIPS processors, to allow invalidation of cache lines.
+When a word write is requested to an address that is cachable, but not currently in the cache, data is written to both the cache and to the write buffer. When a half-word or byte address write is requested, it is sent directly to the write buffer and invalidates its cache line. Hence, a store other than word length will never write to the cache: just invalidate. This is to retain compatibility with R2000 MIPS processors and to allow invalidation of cache lines.  Note that the caches do not support cache isolation because a read-modify-write cycle was not implemented (read-modify-write cycles appear to only have been implemented on R3000's and above).  If a cache is given an uncached address (to bypass the cache), it will not read/write from/to the cache line (or invalidate it) but otherwise completes the operation as above. 
 
-If a cache is given an uncached address (to bypass the cache), it will not read or write from the cache slots, but instead read or write directly to memory or the write buffer, respectively.
 
 ==Write Buffer==
+The write buffer is a FIFO (first-in first-out) buffer four entries deep, as suggested as an optimal depth by See MIPS Run. The write buffer (module writebuffer) contains the module wbram, which represents the buffer's memory.  Dual-port SRAM is needed for wbram because the write buffer must be able to send data to the external memory while reading data from the cache to write, and so two independent bit-line buses are needed with corresponding word-line buses.  Data cannot be read from external memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall the CPU until all writes are complete.  This prevents the processor from reading outdated data.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask to support storing data smaller than a word. 
 
-The write buffer is a four entry deep (not including data currently being written), as suggested by See MIPS Run, FIFO buffer.  Data can not be read from main memory until after the write buffer is empty, so a cache read miss directly after a memory write will stall the cpu until the write is complete.  In addition to storing the address and data for a write, the write buffer must also store the byteen byte mask, to support storing to half-word and byte memory locations.
+The interface is: 
 
-The interface is:
 {{{
 input ph1, ph2, reset,
 input [26:0] adr,
@@ -130,11 +134,11 @@ input memdone
 }}}
 
 
-== Main Memory ==
+== External Memory ==
 
-The memory subsystem expects a single main memory interface.  The exact timings of the main memory are very flexible.  The main memory should expect an EN (enable) input when the cache system requests a read/write.  Once the main memory has performed the operation, and driven any necessary output ports with the correct value, it asserts done.
+The memory system expects a single external memory interface. The exact timings of the main memory are very flexible. The main memory should expect an en (enable) input when the cache system requests a read/write. Once the main memory has performed the operation, and driven any necessary output ports with the correct value, it asserts done. 
 
-The interface from the main memory's view is:
+The interface from the main memory's view is: 
 
 {{{
 input ph1, ph2,
@@ -145,7 +149,7 @@ input rwb, en,
 output done)
 }}}
 
-If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM.  On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate cycle latency.  Done can be asserted in as short as the same cycle, so the memory should not drive done high until it truly is.  Note that there are only 27 address bits bits from memsys, so 3 MSB's and 2 LSB's (since word addressed) of the external memory's address are driven low.
+If the memory does not have these specifications, then a memory controller will need to be implemented to interface the cache system with the RAM. On the test implementation used for simulation, a reset pin was added to reset the state machine used to generate memory cycle latency. done can be asserted within the same cycle, so the memory should not drive done HIGH until the memory operation is complete. Note that there are only 27 address bits from memsys, so 3 MSB's (because of physical mapping) and 2 LSB's (because it is word addressed) of the external memory's address are driven LOW. 
 
 
 =Memory Map=
@@ -217,5 +221,4 @@ to jump to address 0x74 (this is outside of the range of the memory map listed a
 asm("li $sp,0x300");
 }}}
 which initializes to 0x300.
-
 
