@@ -2,38 +2,41 @@
 
 = Introduction =
 
-This specifies the memory subsystem, including the data and instruction cache, main memory, and the cache controller.
+This specifies the memory subsystem, including the data and instruction cache, write buffer, external memory interface, and the memory system controller.
 
 = Specifications =
 
 == Overview ==
 
-The memory subsystem is composed of the following subunits:
+The memory and cache system is composed of the following modules:
 
-  * Two identical 512 byte caches, one for data and one for instructions.
-  * A cache controller, to interface the process with the cache and main memory.
-  * A write buffer to reduce number of stalls when writing to main memory.
-  * A memsys controller which contains the above plus mechanisms to multiplex data between the above components, the processor, and external memory.
-
+  * Two identical 512 byte caches: one for data and one for instructions. 
+  * A write buffer to reduce number of stalls when writing to main memory. 
+  * A memsys controller which multiplexes data between the above modules, processor, and external memory. 
 
 A block diagram of this is shown below:
 
 http://hmc-mips.googlecode.com/svn/trunk/images/mem.gif
 
-== Interface ==
+== Memory Interface Conventions ==
 
-Most of the subcomponents' interfaces include:
+All of the primary memory and cache system modules follow a common interface convention for control signals and address/data buses.  The interface convention includes: 
 
-* adr (address)
-* data (bi-direction data)
-* byteen (a byte mask for writing data less than a word in length)
-* rwb (read/write bar.  0 = write, 1 = read)
-* en (enable read/write)
-* done (signifies that memory operation is complete)
+  * adr: word address 
+  * data: bi-direction data 
+  * byteen: byte mask for writing data less than a word in length 
+  * rwb: read/write bar, 0 = write, 1 = read 
+  * en: enable read/write 
+  * done: asserted when memory operation is complete
 
-We'll call the module requesting a memory operation the _master_ and the module executing the operation the _slave_.  For example, normally the mips processor is the master and the cache the slave.  When a cache is writing to the write buffer, the cache is the master and the write buffer is the slave.
+Most of the modules include the interface convention twice, one for requests from "lower" modules to the module and one for requests from the module to a "higher" module.  "Lower" and "higher" modules refer to the position of the module within the memory hierarchy shown below.  For example, from the write buffer's perspective, the "lower" module is the caches and the "higher" module is external memory.
 
-When the slaves input pins (adr, data if necessary, rwb, etc..) are valid, the master asserts enable.  Enable must be asserted for the entire duration of the operation.  The slave will execute the operation and after completion, when the output pins have valid data, the slave asserts done.  There will always be at least a one cycle latency between the master asserting enable and the slave asserting done, except between the nips processor and the cache (for reading).  This is to complete a valid cached memory read within one cycle.
+http://hmc-mips.googlecode.com/svn/trunk/images/memhier.gif
+
+We'll call the "lower" module requesting a memory operation the master and the current module executing the operation the slave.  When the slave's input pins (adr, data, rwb, etc..) from the master are valid, the master asserts en.  En must be asserted for the entire duration of the operation. The slave will execute the operation until completion, where it will drive necessary pins to the master and assert done. There will always be at least a one cycle latency between the master asserting en and the slave asserting done, except between the MIPS processor/cache interface (for reading) and the external memory interface. 
+
+All of the interfaces for primary modules are detailed below and are from the slave's point of view.
+
 
 == Memsys ==
 
@@ -214,3 +217,5 @@ to jump to address 0x74 (this is outside of the range of the memory map listed a
 asm("li $sp,0x300");
 }}}
 which initializes to 0x300.
+
+
