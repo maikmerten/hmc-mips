@@ -20,13 +20,7 @@ The following testbenches were written by Mel.
 =Rob=
 This testbench provides coverage for the srambit.
 
-It provides all the required functionality, however there is a small issue with having to set lines to `x` (floating). He tried to make it work
-
- like the description in the text book, however it still requires manually setting 
-
-some signals to `x`. Unsure if the circuit was
-
- supposed to do this on its own, but it doesn't work unless they are explicitly set.
+It provides all the required functionality, however there is a small issue with having to set lines to `x` (floating). He tried to make it work like the description in the text book, however it still requires manually setting some signals to `x`. Unsure if the circuit was supposed to do this on its own, but it doesn't work unless they are explicitly set.
 
   * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_srambit.cmd test_srambit]
 
