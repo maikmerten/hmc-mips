@@ -372,7 +372,7 @@ module writebuffer(input ph1, ph2, reset,
    endgenerate
    
    wbram ram(ph1,ph2,ptr,writeptr,
-             (en & done),
+             ~(en & done),
              {byteen,adr,data},
              {bufbyteen,bufadr,bufdata});
 endmodule
