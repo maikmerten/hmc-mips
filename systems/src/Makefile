@@ -14,6 +14,9 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 # This line prevents make from automatically deleting these files as temporary
 .PRECIOUS: %.dat %.dump %.o %.s %.asm
 
+%.coe: %.dat boot_loader.dat boot_start.dat
+	python dumpBootAndProgram.py -boot_start boot_start.dat -boot_load boot_loader.dat -program $< -output $@
+
 # This magic grep command strips out the instruction hex from the objdump 
 # output.
 %.dat: %.dump
