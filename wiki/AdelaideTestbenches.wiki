@@ -7,15 +7,15 @@ All the tests are located in subversion, at [http://hmc-mips.googlecode.com/svn/
 =Mel=
 The following testbenches were written by Mel.
 
-  * test_adrtagdatalogic
-  * test_byteenlog
-  * test_dataout_read
-  * test_dataout_write
-  * test_mux2_1x_32
-  * test_mux2_4
-  * test_mux2_c_1x
-  * test_mux2_dp_1x
-  * test_mux2_zip
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_adrtagdatalogic.cmd test_adrtagdatalogic]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_byteenlog.cmd test_byteenlog]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_dataout_read.cmd test_dataout_read]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_dataout_write.cmd test_dataout_write]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_mux2_1x_32.cmd test_mux2_1x_32]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_mux2_4.cmd test_mux2_4]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_mux2_c_1x.cmd test_mux2_c_1x]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_mux2_dp_1x.cmd test_mux2_dp_1x]
+  * [http://hmc-mips.googlecode.com/svn/trunk/testing/adelaide/test_mux2_zip.cmd test_mux2_zip]
 
 =Rob=
 This testbench provides coverage for the srambit.
