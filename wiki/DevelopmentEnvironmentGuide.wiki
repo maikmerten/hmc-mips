@@ -1,5 +1,6 @@
 #summary Guide to setting up your own machine to develop on the hmc-mips project on Windows.
 
+_Note:_ If you want to develop C code software for the HMC MIPS chip, then you are looking for the SoftwareDevelopmentGuide.
 
 = Prerequisites =
 
@@ -92,4 +93,6 @@ set textwidth=80
 = Source Code Updates =
 
 Use SVN's update feature to load changes from the server.  Watch for new files being added to the source tree.  These will have to be added as non-copies to your project.  (If you don't notice the files being added, you'll probably get an error.)  Also, any conflicts will have to be resolved in the usual manner.  For more details on code management, [http://www.google.com/search?q=subversion+tutorial&ie=utf-8&oe=utf-8&rls=org.mozilla:en-US:official find a Subversion tutorial]. 
+
+
 
