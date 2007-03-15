@@ -51,7 +51,7 @@ module multdivtest();
   // load testvectors
   initial
     begin
-      $readmemh("testing/moduletests/multdiv.tv", testvectors);
+      $readmemh("testing/moduletests/md_rand_001.tv", testvectors);
       vectornum = 0;
       errors = 0;
     end
