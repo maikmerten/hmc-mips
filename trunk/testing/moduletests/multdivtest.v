@@ -38,7 +38,8 @@ module multdivtest();
     end
 
   // device under test
-  multdiv dut(ph1, ph2, reset, start, multdivb, signedop, x, y, prodh, prodl, run, dividebyzero);
+  multdiv dut(ph1, ph2, reset, start, multdivb, signedop, x, y, prodh, prodl, 
+              run);
 
   // generate reset
   initial begin
@@ -50,7 +51,7 @@ module multdivtest();
   // load testvectors
   initial
     begin
-      $readmemh("multdiv.tv", testvectors);
+      $readmemh("testing/moduletests/multdiv.tv", testvectors);
       vectornum = 0;
       errors = 0;
     end

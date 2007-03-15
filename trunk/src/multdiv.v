@@ -1,5 +1,7 @@
 // multdiv.v
-// David_Harris@hmc.edu 1/2/07
+// David_Harris at hmc dot edu 1/2/07
+// Cassie Chou cassiepchou at gmail dot com 3/8/07
+// Carl Nygaard carlpny at gmail dot com 3/8/07
 //
 // An ALU-based multiplier and divider
 // handling signed and unsigned operands
@@ -39,13 +41,13 @@
 //  (-13) / (-5) = 2 with remainder of -3 
 
 
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Module: multdiv
 // 
 // This module is the top level for the multiply/divide unit.
 // It contains a controller and datapath to perform signed and
 // unsigned multiplication and division (mult when multdivb = 1).
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1 ns / 1 ps
 
@@ -58,8 +60,7 @@ module multdiv(input         ph1, ph2,
                input  [31:0] y,
                output [31:0] prodh,
                output [31:0] prodl,
-               output        run,
-               output        dividebyzero);
+               output        run);
 
   wire done, init, muldivbsaved, signedopsaved;
   wire qi, srchinv;
@@ -72,9 +73,10 @@ module multdiv(input         ph1, ph2,
   wire [33:0] srch1, srch, prodhsh, nextprodh, yy, srchplusyy;
 
   // control logic
-  mdcontroller mdcont(ph1, ph2, reset, start, run, done, init, muldivb, signedop, 
-                      cout, prodl[1:0], x[31], y[31], ysaved[31], srch1[31], srchplusyy[33], yzero, 
-                      ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero, muldivbsaved, signedopsaved);
+  mdcontroller mdcont(ph1, ph2, reset, start, run, done, init, muldivb, 
+                      signedop, prodl[1:0], x[31], y[31], ysaved[31], srch1[31],
+                      srchplusyy[33], yzero, ysel, srchsel, srchinv, prodhsel, 
+                      prodlsel, qi, muldivbsaved, signedopsaved);
 
   // Y register and Booth mux
   flopenr        yreg(ph1, ph2, reset, start, y, ysaved);
@@ -82,21 +84,28 @@ module multdiv(input         ph1, ph2,
   zerodetect     yzdetect(ysaved, yzero);
 
   // PRODH
-  // keep one extra bit in high part to accomdate 2x Booth multiples and another bit to keep sign
-  shl1r2   #(34) prodhshlr(muldivbsaved, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
-  mux3     #(34) srchmux(prodhsh, {prodhextra, prodh}, {2'b0, prodl}, srchsel, srch1);  // only necessary for signed division
-  xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for signed division
+  // keep one extrsrc/multdiv.va bit in high part to accomdate 2x Booth multiples and another
+  // bit to keep sign
+  shl1r2   #(34) prodhshlr(muldivbsaved, {prodhextra, prodh}, 
+                           {2{prodhextra[1]}}, prodl[31], prodhsh);
+  mux3     #(34) srchmux(prodhsh, {prodhextra, prodh}, {2'b0, prodl}, 
+                         srchsel, srch1);  // only necessary for signed division
+  xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for 
+                                                      // signed division
   adderc   #(34) addh(srch, yy, cin, srchplusyy, cout);
-  mux3     #(34) prodhmux(prodhsh, srchplusyy, {prodhextra, prodh}, prodhsel, nextprodh); // d2 for signed division only
+  mux3     #(34) prodhmux(prodhsh, srchplusyy, {prodhextra, prodh}, prodhsel, 
+                          nextprodh); // d2 for signed division only
   flopenr  #(34) prodhreg(ph1, ph2, init, run, nextprodh, {prodhextra, prodh});
 
   // PRODL
   shl1r2         prodlshlr(muldivbsaved, prodl, prodh[1:0], qi, prodlsh);
-  mux4           prodlmux(prodlsh, srchplusyy[31:0], prodl, x, prodlsel, nextprodl); // d1 and d2 for signed division only
-  flopenr        prodlreg(ph1, ph2, reset, run, nextprodl, prodl); // probably doesnt' need reset
+  mux4           prodlmux(prodlsh, srchplusyy[31:0], prodl, x, prodlsel, 
+                          nextprodl); // d1 and d2 for signed division only
+  flopenr        prodlreg(ph1, ph2, reset, run, nextprodl, 
+                          prodl); // probably doesnt' need reset
 endmodule
 
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Module: mdcontroller
 // 
 // This module contains a counter to cycle through the steps for
@@ -104,17 +113,16 @@ endmodule
 // it generates select signals for the multiplexers.  Most of
 // the complexity is due to the signed division, which must 
 // conditionally take the two's complement of the inputs and outputs.
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 module mdcontroller(input            ph1, ph2,
                     input            reset,
                     input            start,
                     output           run,
-                    output reg       done,
+                    output           done,
                     output           init,
                     input            muldivb,
                     input            signedop,
-                    input            cout,
                     input  [1:0]     x,
                     input            xsign,
                     input            ysign,
@@ -122,20 +130,22 @@ module mdcontroller(input            ph1, ph2,
                     input            srchsign,
                     input            addsign,
                     input            yzero,
-                    output reg [2:0] ysel,
-                    output reg [1:0] srchsel,
-                    output reg       srchinv,
-                    output reg [1:0] prodhsel,
-                    output reg [1:0] prodlsel,
+                    output     [2:0] ysel,
+                    output     [1:0] srchsel,
+                    output           srchinv,
+                    output     [1:0] prodhsel,
+                    output     [1:0] prodlsel,
                     output           qi,
-                    output           dividebyzero,
                     output           muldivbsaved, signedopsaved);
 
   wire [5:0] nextcount, count;
   wire       nccout, oldrun;
   wire       oldx, muldivbreg, signedopreg;
   reg [1:0] x2;
-  wire       signsdisagree;
+  wire        signsdisagree, ysel2b;
+  reg [10:0] caseout; 
+  //wire count0, count17, count32, count33, count34, count35;
+  reg [6:0] countvals;
 
   // count and run registers
   flopenr #(6) countreg(ph1, ph2, init, run, nextcount, count);
@@ -143,7 +153,8 @@ module mdcontroller(input            ph1, ph2,
 
   // remember whether we are multiplying or dividing and whether we are using
   // a signed op, the value must also be available while start is high
-  flopen #(2) controlreg(ph1, ph2, start, {muldivb, signedop}, {muldivbreg, signedopreg});
+  flopen #(2) controlreg(ph1, ph2, start, {muldivb, signedop}, 
+                         {muldivbreg, signedopreg});
 
   assign {muldivbsaved, signedopsaved} = start ? {muldivb, signedop}
                                                : {muldivbreg, signedopreg};
@@ -154,109 +165,119 @@ module mdcontroller(input            ph1, ph2,
   inc #(6) nc(count, nextcount, nccout);
 
   // hang onto sign for result of signed division
-  flopen #(1) signdisagreereg(ph1, ph2, start, xsign ^ ysign, signsdisagree);
+  flopenr #(1) signdisagreereg(ph1, ph2, reset, start, xsign ^ ysign, 
+                               signsdisagree);
 
   // determine quotient digit
   assign qi = ~addsign; // sign of result for division
 
   // check for division by zero
-  assign dividebyzero = yzero & ~muldivbsaved;
+  //assign dividebyzero = yzero & ~muldivbsaved;
 
   // keep previous x msb for Booth encoding
   flopr #(1) xoldreg(ph1, ph2, init, x[1], oldx);
+  
+  // countvals indicates bitwise whether count is equal to certain values, in
+  // this order:
+  // count16, count0, count17, count32, count33, count34, count35
+  always @ (*) 
+    case(count)
+      6'b010000: countvals = 7'b1000000; // 16 is not used in the main PLA
+      6'b000000: countvals = 7'b0100000; // 0
+      6'b010001: countvals = 7'b0010000; // 17
+      6'b100000: countvals = 7'b0001000; // 32
+      6'b100001: countvals = 7'b0000100; // 33
+      6'b100010: countvals = 7'b0000010; // 34
+      6'b100011: countvals = 7'b0000001; // 25
+      default:   countvals = 7'b0000000; // other
+    endcase
 
-  // mux select logic
-  always @(*) begin
-    ///////////////////////////////////////////////////////
-    // default values
-    ///////////////////////////////////////////////////////
-    srchsel = 0; // default: take srch from shifted PRODH
-    srchinv = 0;
-    prodhsel = 0; // default: take shifted result
-    prodlsel = 0; // default: take shifted result
-    ysel = 4; // select 0 by default from Booth mux
-    done = 0;
+  // ysel by default is 4, but the PLA's default is all zeros, so we make the
+  // high bit of ysel inverting
+  assign ysel[2] = ~ysel2b;
+  assign {srchsel, srchinv, prodhsel, prodlsel, 
+          ysel2b, ysel[1:0], done} = caseout;
 
-    ///////////////////////////////////////////////////////
-    // multiplication
-    ///////////////////////////////////////////////////////
-    if (muldivbsaved) begin 
-      prodhsel = 1; // take adder result
-      x2 = x;
-      if (count == 16) x2 = signedopsaved ? {2{oldx}} : 2'b0;  // zero or sign extend final two bits
-      if (count == 17) done = 1;
-      case ({x2, oldx}) // Booth encode for multiplication
-        3'b000: ysel = 4; // select 0
-        3'b001: ysel = 0; // select Y
-        3'b010: ysel = 0; // select Y
-        3'b011: ysel = 1; // select 2Y
-        3'b100: ysel = 3; // select -2Y
-        3'b101: ysel = 2; // select -Y
-        3'b110: ysel = 2; // select -Y
-        3'b111: ysel = 4; // select 0
-      endcase
-    end
+  always @ ( * ) 
+  casez ({muldivbsaved, signedopsaved, countvals[5:0], x2, oldx, srchsign, 
+          signsdisagree, ysavedsign, qi, start})
+    // MULDIVSAVED
+    // if count = 17 (note count will never be above 17 during multiply)
+    16'b1?_?10000_??_?_?_?_?_?_0: caseout = 11'b00_0_01_00_000_1;
+    16'b1?_?10000_??_?_?_?_?_?_1: caseout = 11'b00_0_01_11_000_1;
+    // else
+    16'b1?_?0????_00_0_?_?_?_?_0: caseout = 11'b00_0_01_00_000_0;
+    16'b1?_?0????_00_1_?_?_?_?_0: caseout = 11'b00_0_01_00_100_0;
+    16'b1?_?0????_01_0_?_?_?_?_0: caseout = 11'b00_0_01_00_100_0;
+    16'b1?_?0????_01_1_?_?_?_?_0: caseout = 11'b00_0_01_00_101_0;
+    16'b1?_?0????_10_0_?_?_?_?_0: caseout = 11'b00_0_01_00_111_0;
+    16'b1?_?0????_10_1_?_?_?_?_0: caseout = 11'b00_0_01_00_110_0;
+    16'b1?_?0????_11_0_?_?_?_?_0: caseout = 11'b00_0_01_00_110_0;
+    16'b1?_?0????_11_1_?_?_?_?_0: caseout = 11'b00_0_01_00_000_0;
 
-    ///////////////////////////////////////////////////////
-    // unsigned division
-    ///////////////////////////////////////////////////////
-    else if (~signedopsaved) begin  
-      ysel = 2; // select -Y
-      if (qi) prodhsel = 1; // if quotient digit is true, take ALU result
-      if (count == 32) done = 1; // cycle 32: finished with unsigned division
-    end
-    
-    ///////////////////////////////////////////////////////
-    // signed division
-    ///////////////////////////////////////////////////////
-    else if (signedopsaved) begin 
-      if (count == 'd0) begin // cycle 0: ensure X is positive
-        srchsel = 2; // select PRODL, containing X
-        prodhsel = 2; // freeze PRODH register
-        prodlsel = 1; // write ALU result with corrected X to PRODL register
-        if (srchsign) begin  // if sign is negative, take two's complement of X
-          srchinv = 1;
-          ysel = 6;
-        end 
-      end else if (count == 'd33) begin // cycle 33: set sign of quotient
-        srchsel = 2; // select PRODL, containing quotient
-        srchinv = signsdisagree; // negate quotient if source signs differ
-        prodhsel = 2; // freeze PRODH register
-        prodlsel = 1; // write ALU result with corrected quotient to PRODL register
-        if (signsdisagree) begin  // if signs disagree, take two's complement of quotient
-          srchinv = 1;
-          ysel = 6;
-        end 
-      end else if (count == 'd34) begin // cycle 34: set sign of remainder
-        srchsel = 1; // select PRODH, containing remainder
-        srchinv = ysavedsign;
-        prodhsel = 1; // put corrected remainder in PRODH
-        prodlsel = 2; // freeze PRODL register
-        if (ysavedsign) begin  // if sign y is negative, take two's complement of remainder
-          srchinv = 1;
-          ysel = 6;
-        end 
-      end else if (count == 'd35) begin // cycle 35: finished with signed division
-        done = 1;
-      end else begin // normal signed division cycle
-        if (qi) prodhsel = 1; // if quotient digit is true, take ALU result
-        if (ysavedsign) ysel = 0; // Choose Y if it is negative
-        else ysel = 2; // else choose -Y
-      end
-    end
+    16'b1?_?0????_00_0_?_?_?_?_1: caseout = 11'b00_0_01_11_000_0;    
+    16'b1?_?0????_00_1_?_?_?_?_1: caseout = 11'b00_0_01_11_100_0;
+    16'b1?_?0????_01_0_?_?_?_?_1: caseout = 11'b00_0_01_11_100_0;
+    16'b1?_?0????_01_1_?_?_?_?_1: caseout = 11'b00_0_01_11_101_0;
+    16'b1?_?0????_10_0_?_?_?_?_1: caseout = 11'b00_0_01_11_111_0;
+    16'b1?_?0????_10_1_?_?_?_?_1: caseout = 11'b00_0_01_11_110_0;
+    16'b1?_?0????_11_0_?_?_?_?_1: caseout = 11'b00_0_01_11_110_0;
+    16'b1?_?0????_11_1_?_?_?_?_1: caseout = 11'b00_0_01_11_000_0;
 
-    ///////////////////////////////////////////////////////
-    // start cycle
-    ///////////////////////////////////////////////////////
-    if (start) prodlsel = 3; // always load X into PRODL on start cycle
-  end
+    // ~MULDIVSAVED ~SIGNEDOPSAVED
+    // count 32
+    16'b00_??1???_??_?_?_?_?_0_0: caseout = 11'b00_0_00_00_110_1;
+    16'b00_??1???_??_?_?_?_?_0_1: caseout = 11'b00_0_00_11_110_1;
+    16'b00_??1???_??_?_?_?_?_1_0: caseout = 11'b00_0_01_00_110_1;
+    16'b00_??1???_??_?_?_?_?_1_1: caseout = 11'b00_0_01_11_110_1;
+    16'b00_??0???_??_?_?_?_?_0_0: caseout = 11'b00_0_00_00_110_0;
+    16'b00_??0???_??_?_?_?_?_1_0: caseout = 11'b00_0_01_00_110_0;
+    16'b00_??0???_??_?_?_?_?_0_1: caseout = 11'b00_0_00_11_110_0;
+    16'b00_??0???_??_?_?_?_?_1_1: caseout = 11'b00_0_01_11_110_0;
+      
+    // ~MULDIVSAVED SIGNEDOPSAVED
+    // count = 0   srchsign, start
+    16'b01_1??000_??_?_0_?_?_?_0: caseout = 11'b10_0_10_01_000_0;       
+    16'b01_1??000_??_?_1_?_?_?_0: caseout = 11'b10_1_10_01_010_0;
+    16'b01_1??000_??_?_0_?_?_?_1: caseout = 11'b10_0_10_11_000_0;
+    16'b01_1??000_??_?_1_?_?_?_1: caseout = 11'b10_1_10_11_010_0;
+    // count = 33
+    16'b01_0??100_??_?_?_0_?_?_0: caseout = 11'b10_0_10_01_000_0;
+    16'b01_0??100_??_?_?_0_?_?_1: caseout = 11'b10_0_10_11_000_0;
+    16'b01_0??100_??_?_?_1_?_?_0: caseout = 11'b10_1_10_01_010_0;
+    16'b01_0??100_??_?_?_1_?_?_1: caseout = 11'b10_1_10_11_010_0;
+    // count = 34
+    16'b01_0??010_??_?_?_?_0_?_0: caseout = 11'b01_0_01_10_000_0;
+    16'b01_0??010_??_?_?_?_0_?_1: caseout = 11'b01_0_01_11_000_0;
+    16'b01_0??010_??_?_?_?_1_?_0: caseout = 11'b01_1_01_10_010_0;
+    16'b01_0??010_??_?_?_?_1_?_1: caseout = 11'b01_1_01_11_010_0;
+    // count = 35 stoppedhere
+    16'b01_0??001_??_?_?_?_?_?_0: caseout = 11'b00_0_00_00_000_1;
+    16'b01_0??001_??_?_?_?_?_?_1: caseout = 11'b00_0_00_11_000_1;
+    // {ysavedsign, qi, start}    
+    //   {srchsel, srchinv, prodhsel, prodlsel, ysel, done}              
+    16'b01_0??000_??_?_?_?_0_0_0: caseout = 11'b00_0_00_00_110_0;
+    16'b01_0??000_??_?_?_?_0_0_1: caseout = 11'b00_0_00_11_110_0;
+    16'b01_0??000_??_?_?_?_0_1_0: caseout = 11'b00_0_01_00_110_0;
+    16'b01_0??000_??_?_?_?_0_1_1: caseout = 11'b00_0_01_11_110_0;    
+    16'b01_0??000_??_?_?_?_1_0_0: caseout = 11'b00_0_00_00_100_0;
+    16'b01_0??000_??_?_?_?_1_0_1: caseout = 11'b00_0_00_11_100_0;
+    16'b01_0??000_??_?_?_?_1_1_0: caseout = 11'b00_0_01_00_100_0;
+    16'b01_0??000_??_?_?_?_1_1_1: caseout = 11'b00_0_01_11_100_0;
+    // start = done
+    default:                      caseout = 11'b00_0_00_00_000_0;
+  endcase
+  
+always @ ( * ) 
+   if (muldivbsaved && countvals[6] == 1) x2 = signedopsaved ? {2{oldx}} : 2'b0;
+   else x2 = x;
+   
 endmodule
-
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Module: shl1r2
 // 
 // Shift left by 1 (for divide) or right by 2 (for mult).
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 module shl1r2 #(parameter WIDTH = 32)
                (input             dir,
@@ -269,7 +290,7 @@ module shl1r2 #(parameter WIDTH = 32)
   mux2 #(WIDTH) shmux({a[WIDTH-2:0], inr}, {inl, a[WIDTH-1:2]}, dir, y);
 endmodule
 
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Module: boothsel
 // 
 // Select the appropriate second source operand based on boothsel:
@@ -280,7 +301,7 @@ endmodule
 //  4: 0
 //  6: 1
 // The output is sign-extended to 34 bits.
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 module boothsel(input  [31:0] a,
                 input  [2:0]  boothsel,
