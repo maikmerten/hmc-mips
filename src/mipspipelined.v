@@ -1173,10 +1173,9 @@ module mdunit(input         ph1, ph2, reset,
               output        mdrun);
 
   wire [31:0] prodh, prodl, hinext, lonext;
-  wire        dividebyzero; // MIPS does not support divide by zero exceptions
 
   multdiv multdiv(ph1, ph2, reset, mdstart, alushcontrol[0], alushcontrol[1],
-                  srca, srcb, prodh, prodl, mdrun, dividebyzero);
+                  srca, srcb, prodh, prodl, mdrun);
   mux2 #(32) losrcmux(prodl, srca, hilosrc, lonext);
   mux2 #(32) hisrcmux(prodh, srca, hilosrc, hinext);
 
