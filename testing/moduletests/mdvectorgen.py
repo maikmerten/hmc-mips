@@ -12,6 +12,7 @@
 import random, math
 
 numvectors = 100
+DEBUG = False
 
 def zeropad(inNumString, length=32):
     #length is length in bits
@@ -20,8 +21,8 @@ def zeropad(inNumString, length=32):
 def genNums(signed = False):
     # pick random numbers.
     if signed:
-        x = random.randint(-0x80000000, 0xefffffff)
-        y = random.randint(-0x80000000, 0xefffffff)
+        x = random.randint(-0x80000000, 0x7fffffff)
+        y = random.randint(-0x80000000, 0x7fffffff)
     else:
         x = random.randint(0x00000000, 0xffffffff)
         y = random.randint(0x00000000, 0xffffffff)
@@ -52,8 +53,10 @@ def genVector(type):
     #                       1 - signed division
     #                       2 - unsigned mult.
     #                       3 - signed div
-    
-    (x, y) = genNums(signed = (1 & type))
+    signed = (1 & type)
+    (x, y) = genNums(signed)
+    if DEBUG:
+        print "signed: " + str(signed)
     
     if (2 & type):
         result = x * y
@@ -73,13 +76,18 @@ def genVector(type):
         resulth = reprInt(remainder)
         resultl = reprInt(quotient)
     
+    if DEBUG:
+        print "x: " + str(x)
+        print "y: " + str(y)
     
     print str(type) + "_" +\
           reprInt(x) + "_" +\
           reprInt(y) + "_" +\
           resulth + "_" +\
           resultl
+    if DEBUG: print
 
 # main script.
 for x in range(numvectors):
     genVector(random.randint(0,3))
+    
