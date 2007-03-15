@@ -202,7 +202,7 @@ module mdcontroller(input            ph1, ph2,
   casez ({muldivbsaved, signedopsaved, countvals[5:0], x2, oldx, srchsign, 
           signsdisagree, ysavedsign, qi, start})
     // MULDIVSAVED
-    // if count = 17 (note count will never be above 17 during multiply)
+    // if count = 17 
     16'b1?_?10000_??_?_?_?_?_?_0: caseout = 11'b00_0_01_00_000_1;
     16'b1?_?10000_??_?_?_?_?_?_1: caseout = 11'b00_0_01_11_000_1;
     // else
