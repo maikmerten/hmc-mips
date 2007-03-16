@@ -18,16 +18,14 @@ def zeropad(inNumString, length=32):
     #length is length in bits
     return ('0'*(length/4 - len(inNumString)) + inNumString).lower()
 
-def genNums(signed = False):
-    # pick random numbers.
+def genNum(signed = False):
+    # pick random number
     if signed:
         x = random.randint(-0x80000000, 0x7fffffff)
-        y = random.randint(-0x80000000, 0x7fffffff)
     else:
         x = random.randint(0x00000000, 0xffffffff)
-        y = random.randint(0x00000000, 0xffffffff)
     
-    return (x,y)
+    return x
 
 def reprInt(signedInt, length=32):
     # convert an input integer to the n bit hex string representing the 
@@ -54,7 +52,7 @@ def genVector(type):
     #                       2 - unsigned mult.
     #                       3 - signed div
     signed = (1 & type)
-    (x, y) = genNums(signed)
+    (x, y) = (genNum(signed), genNum(signed))
     if DEBUG:
         print "signed: " + str(signed)
     
@@ -68,13 +66,22 @@ def genVector(type):
         # we need to make y smaller than x, otherwise we'll always just round
         # down to zero. we do want the value to be negative, though
         
+        # since the CPU calculates quotients and remainders by calculating
+        # from magnitudes, then propogating, we'll do that too, I suppose.
+        
         y = int(math.sqrt(abs(y))) * (abs(y) / y)
-        quotient = long(x / y) #cast to long to ensure we're not a float
+        
+        (xa, ya) = (abs(x), abs(y))
+        (xs, ys) = (x/xa, y/ya)
+        
+        quotient = long(xa / ya) #cast to long to ensure we're not a float
                              # not really necessary under py2.5, will be
                              # for py3.0
-        remainder = x % y
-        resulth = reprInt(remainder)
-        resultl = reprInt(quotient)
+        
+        remainder = xa % ya
+
+        resulth = reprInt(remainder * ys)
+        resultl = reprInt(quotient * ys * xs)
     
     if DEBUG:
         print "x: " + str(x)
