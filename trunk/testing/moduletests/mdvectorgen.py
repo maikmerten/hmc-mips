@@ -11,8 +11,12 @@
 
 import random, math
 
-numvectors = 100
+numvectors = 10000
 DEBUG = False
+RANDOMNESS = 6 # how often a directed number is taken
+
+signedDirections = [0, 1, -1, -0x80000000, 0x7fffffff]
+unsignedDirections = [0, 1, 0x80000000, 0x7fffffff, 0xffffffff]
 
 def zeropad(inNumString, length=32):
     #length is length in bits
@@ -21,12 +25,18 @@ def zeropad(inNumString, length=32):
 def genNum(signed = False):
     # pick random number
     if signed:
-        x = random.randint(-0x80000000, 0x7fffffff)
+      if not (random.randint(0,RANDOMNESS)):
+        newx = random.choice(signedDirections)
+      else:
+        newx = random.randint(-0x80000000, 0x7fffffff)
+        
     else:
-        x = random.randint(0x00000000, 0xffffffff)
-    
-    return x
-
+      if not (random.randint(0,RANDOMNESS)):
+        newx = random.choice(unsignedDirections)
+      else:
+        newx = random.randint(0x00000000, 0xffffffff)
+    return newx
+      
 def reprInt(signedInt, length=32):
     # convert an input integer to the n bit hex string representing the 
     # desired number in 2's complement notation. This code is also used to
@@ -69,10 +79,18 @@ def genVector(type):
         # since the CPU calculates quotients and remainders by calculating
         # from magnitudes, then propogating, we'll do that too, I suppose.
         
+        while (y==0):
+          y = genNum(signed)
+        
         y = int(math.sqrt(abs(y))) * (abs(y) / y)
         
         (xa, ya) = (abs(x), abs(y))
-        (xs, ys) = (x/xa, y/ya)
+        
+        if (x==0):
+          xs = 1
+          ys = y/ya
+        else:
+          (xs, ys) = (x/xa, y/ya)
         
         quotient = long(xa / ya) #cast to long to ensure we're not a float
                              # not really necessary under py2.5, will be
