@@ -4,8 +4,8 @@
 
 vlib work
 vlog  "src/components.v"
-vlog  "src/multdiv.v"
-vlog  "testing/moduletests/multdivtest.old.v"
+vlog  "src/multdiv.old.v"
+vlog  "testing/moduletests/multdivtest.v"
 vlog  "C:/Xilinx/verilog/src/glbl.v"
 vsim -t 1ps   -L xilinxcorelib_ver -L unisims_ver -lib work multdivtest glbl
 view wave

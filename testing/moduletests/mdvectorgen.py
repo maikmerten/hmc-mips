@@ -1,4 +1,4 @@
-# Multdiv test generator, v2
+# Multdiv test generator, v3
 # Carl Nygaard, Thomas W. Barr
 # 3/8/07
 #
@@ -11,7 +11,7 @@
 
 import random, math
 
-numvectors = 10000
+numvectors = 1000
 DEBUG = False
 RANDOMNESS = 6 # how often a directed number is taken
 
@@ -96,10 +96,13 @@ def genVector(type):
                              # not really necessary under py2.5, will be
                              # for py3.0
         
-        remainder = xa % ya
-
-        resulth = reprInt(remainder * ys)
-        resultl = reprInt(quotient * ys * xs)
+        
+        quotient = quotient * (ys * xs)
+        
+        remainder = (xa % ya) * xs
+        
+        resulth = reprInt(remainder)
+        resultl = reprInt(quotient)
     
     if DEBUG:
         print "x: " + str(x)
