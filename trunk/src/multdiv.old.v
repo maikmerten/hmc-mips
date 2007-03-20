@@ -5,12 +5,12 @@
 // handling signed and unsigned operands
 //
 // Apply inputs and assert start for one cycle.
-// Outputs are in prodh and prodl when done is asserted for a cycle
+// Outputs are in prodh and prodl when run becomes low for a cycle
 //  Mult: {PRODH, PRODL} = X * Y
 //  Div:  PRODH = X % Y ; PRODL = X/Y
 //
-// The unit has a 2N-bit product register and an N-bit Y register.
-// Initially, Y is loaded in the Y register, Y is loaded in PRODL,
+// The unit has a 2N-bit product register, an N-bit Y register.
+// Initially, Y is loaded in the Y register, X is loaded in PRODL,
 // and PRODH is cleared.  The unit also has an N-bit ALU and an
 // Y mux.  On each cycle, the unit chooses {2Y, Y, 0, -Y, -2Y}, adds
 // it to a shifted PRODH, and puts the result back in PRODH.
@@ -47,7 +47,9 @@
 // unsigned multiplication and division (mult when multdivb = 1).
 /////////////////////////////////////////////////////////////////////////////////
 
-module multdiv(input         clk,
+`timescale 1 ns / 1 ps
+
+module multdiv(input         ph1, ph2,
                input         reset,
                input         start,
                input         muldivb,
@@ -56,12 +58,12 @@ module multdiv(input         clk,
                input  [31:0] y,
                output [31:0] prodh,
                output [31:0] prodl,
-               output        done,
-               output        dividebyzero);
+               output        run);
 
-  wire run, init;
+  wire done, init, muldivbsaved, signedopsaved;
   wire qi, srchinv;
   wire yzero;
+  wire dividebyzero;
   wire xsavedsign;
   wire [1:0] prodhsel, prodlsel;
   wire [1:0] srchsel;
@@ -71,31 +73,31 @@ module multdiv(input         clk,
   wire [33:0] srch1, srch, prodhsh, nextprodh, yy, srchplusyy;
 
   // control logic
-  mdcontroller mdcont(clk, reset, start, run, done, init, muldivb, signedop, 
+  mdcontroller mdcont(ph1, ph2, reset, start, run, done, init, muldivb, signedop, 
                       cout, prodl[1:0], x[31], y[31], ysaved[31], xsavedsign, srch1[31], srchplusyy[33], yzero, 
-                      ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero);
+                      ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero, muldivbsaved, signedopsaved);
 
   // Y register and Booth mux
-  flopenr        yreg(clk, reset, start, y, ysaved);
-  boothsel       ybooth(ysaved, ysel, signedop, yy, cin);
+  flopenr        yreg(ph1, ph2, reset, start, y, ysaved);
+  boothsel       ybooth(ysaved, ysel, signedopsaved, yy, cin);
   zerodetect     yzdetect(ysaved, yzero);
   
-  // X sign register
-  flopenr   #(1) xreg(clk, reset, start, x[31], xsavedsign);
+  // X savedsign register
+  flopenr   #(1) xreg(ph1, ph2, reset, start, x[31], xsavedsign);
 
   // PRODH
   // keep one extra bit in high part to accomdate 2x Booth multiples and another bit to keep sign
-  shl1r2   #(34) prodhshlr(muldivb, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
+  shl1r2   #(34) prodhshlr(muldivbsaved, {prodhextra, prodh}, {2{prodhextra[1]}}, prodl[31], prodhsh);
   mux3     #(34) srchmux(prodhsh, {prodhextra, prodh}, {2'b0, prodl}, srchsel, srch1);  // only necessary for signed division
   xor2     #(34) srchxor(srch1, {34{srchinv}}, srch); // only necessary for signed division
-  adder    #(34) addh(srch, yy, cin, srchplusyy, cout);
+  adderc   #(34) addh(srch, yy, cin, srchplusyy, cout);
   mux3     #(34) prodhmux(prodhsh, srchplusyy, {prodhextra, prodh}, prodhsel, nextprodh); // d2 for signed division only
-  flopenr  #(34) prodhreg(clk, init, run, nextprodh, {prodhextra, prodh});
+  flopenr  #(34) prodhreg(ph1, ph2, init, run, nextprodh, {prodhextra, prodh});
 
   // PRODL
-  shl1r2         prodlshlr(muldivb, prodl, prodh[1:0], qi, prodlsh);
+  shl1r2         prodlshlr(muldivbsaved, prodl, prodh[1:0], qi, prodlsh);
   mux4           prodlmux(prodlsh, srchplusyy[31:0], prodl, x, prodlsel, nextprodl); // d1 and d2 for signed division only
-  flopenr        prodlreg(clk, reset, run, nextprodl, prodl); // probably doesnt' need reset
+  flopenr        prodlreg(ph1, ph2, reset, run, nextprodl, prodl); // probably doesnt' need reset
 endmodule
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +110,7 @@ endmodule
 // conditionally take the two's complement of the inputs and outputs.
 /////////////////////////////////////////////////////////////////////////////////
 
-module mdcontroller(input            clk,
+module mdcontroller(input            ph1, ph2,
                     input            reset,
                     input            start,
                     output           run,
@@ -124,24 +126,32 @@ module mdcontroller(input            clk,
                     input            xsavedsign,
                     input            srchsign,
                     input            addsign,
-		    input            yzero,
+                    input            yzero,
                     output reg [2:0] ysel,
                     output reg [1:0] srchsel,
                     output reg       srchinv,
                     output reg [1:0] prodhsel,
                     output reg [1:0] prodlsel,
                     output           qi,
-		    output           dividebyzero);
+                    output           dividebyzero,
+                    output           muldivbsaved, signedopsaved);
 
   wire [5:0] nextcount, count;
   wire       nccout, oldrun;
-  wire       oldx;
+  wire       oldx, muldivbreg, signedopreg;
   reg [1:0] x2;
   wire       signsdisagree;
 
   // count and run registers
-  flopenr #(6) countreg(clk, init, run, nextcount, count);
-  flopr #(1)   runreg(clk, reset, run, oldrun);
+  flopenr #(6) countreg(ph1, ph2, init, run, nextcount, count);
+  flopr #(1)   runreg(ph1, ph2, reset, run, oldrun);
+
+  // remember whether we are multiplying or dividing and whether we are using
+  // a signed op, the value must also be available while start is high
+  flopen #(2) controlreg(ph1, ph2, start, {muldivb, signedop}, {muldivbreg, signedopreg});
+
+  assign {muldivbsaved, signedopsaved} = start ? {muldivb, signedop}
+                                               : {muldivbreg, signedopreg};
 
   // combinational logic for run and count
   assign init = reset | start;
@@ -149,16 +159,16 @@ module mdcontroller(input            clk,
   inc #(6) nc(count, nextcount, nccout);
 
   // hang onto sign for result of signed division
-  flopen #(1) signdisagreereg(clk, start, xsign ^ ysign, signsdisagree);
+  flopen #(1) signdisagreereg(ph1, ph2, start, xsign ^ ysign, signsdisagree);
 
   // determine quotient digit
   assign qi = ~addsign; // sign of result for division
 
   // check for division by zero
-  assign dividebyzero = yzero & ~muldivb;
+  assign dividebyzero = yzero & ~muldivbsaved;
 
   // keep previous x msb for Booth encoding
-  flopr #(1) xoldreg(clk, init, x[1], oldx);
+  flopr #(1) xoldreg(ph1, ph2, init, x[1], oldx);
 
   // mux select logic
   always @(*) begin
@@ -175,10 +185,10 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // multiplication
     ///////////////////////////////////////////////////////
-    if (muldivb) begin 
+    if (muldivbsaved) begin 
       prodhsel = 1; // take adder result
       x2 = x;
-      if (count == 16) x2 = signedop ? {2{oldx}} : 2'b0;  // zero or sign extend final two bits
+      if (count == 16) x2 = signedopsaved ? {2{oldx}} : 2'b0;  // zero or sign extend final two bits
       if (count == 17) done = 1;
       case ({x2, oldx}) // Booth encode for multiplication
         3'b000: ysel = 4; // select 0
@@ -195,7 +205,7 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // unsigned division
     ///////////////////////////////////////////////////////
-    else if (~signedop) begin  
+    else if (~signedopsaved) begin  
       ysel = 2; // select -Y
       if (qi) prodhsel = 1; // if quotient digit is true, take ALU result
       if (count == 32) done = 1; // cycle 32: finished with unsigned division
@@ -204,7 +214,7 @@ module mdcontroller(input            clk,
     ///////////////////////////////////////////////////////
     // signed division
     ///////////////////////////////////////////////////////
-    else if (signedop) begin 
+    else if (signedopsaved) begin 
       if (count == 'd0) begin // cycle 0: ensure X is positive
         srchsel = 2; // select PRODL, containing X
         prodhsel = 2; // freeze PRODH register
@@ -279,14 +289,14 @@ endmodule
 
 module boothsel(input  [31:0] a,
                 input  [2:0]  boothsel,
-                input         signedop,
+                input         signedopsaved,
                 output [33:0] y,
                 output        cin);
 
   wire [33:0] yp2, yp1, ym1, ym2, yb;
 
-  assign yp2 = {a[31] & signedop, a, 1'b0};
-  assign yp1 = {{2{a[31] & signedop}}, a};
+  assign yp2 = {a[31] & signedopsaved, a, 1'b0};
+  assign yp1 = {{2{a[31] & signedopsaved}}, a};
   assign ym1 = ~yp1;
   assign ym2 = ~yp2;
 
@@ -296,112 +306,3 @@ module boothsel(input  [31:0] a,
   and2 #(34) boothzero(yb, ~{34{boothsel[2]}}, y);
 endmodule
 
-/////////////////////////////////////////////////////////////////////////////////
-// The remainder of this file contains standard parameterized gates and registers.
-/////////////////////////////////////////////////////////////////////////////////
-
-module and2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              output [WIDTH-1:0] y);
-
-  assign #1 y = a & b;
-endmodule
-
-module xor2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              output [WIDTH-1:0] y);
-
-  assign #1 y = a ^ b;
-endmodule
-
-module mux3 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2,
-             input   [1:0]  s,
-             output  [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? d2
-                     : (s[0] ? d1 : d0);
-endmodule
-
-module mux4 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2, d3,
-             input   [1:0]  s,
-             output  [WIDTH-1:0] y);
-
-  assign #1 y = s[1] ? (s[0] ? d3 : d2)
-                     : (s[0] ? d1 : d0);
-endmodule
-
-module mux5 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, d2, d3, d4,
-             input   [2:0]  s,
-                output  [WIDTH-1:0] y);
-
-  // 101 = d4; 100 = d3; 010 = d2; 001 = d1; 000 = d0
-
-  assign #1 y = s[2] ? (s[0] ? d4 : d3)
-                     : (s[1] ? d2 : (s[0] ? d1 : d0));
-endmodule
-
-module inc #(parameter WIDTH = 32)
-            (input  [WIDTH-1:0] a,
-             output [WIDTH-1:0] y,
-             output             cout);
- 
-  assign #1 {cout, y} = a + 1'b1;
-endmodule
-
-module flopenr #(parameter WIDTH = 32)
-                (input                  clk, reset,
-                 input                  en,
-                 input      [WIDTH-1:0] d, 
-                 output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if      (reset) #1 q <= 0;
-    else if (en)    #1 q <= d;
-endmodule
-
-module flopen #(parameter WIDTH = 32)
-               (input                  clk,
-                input                  en,
-                input      [WIDTH-1:0] d, 
-                output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if (en)    #1 q <= d;
-endmodule
-
-module flopr #(parameter WIDTH = 32)
-              (input                  clk, reset,
-               input      [WIDTH-1:0] d, 
-               output reg [WIDTH-1:0] q);
- 
-  always @(posedge clk)
-    if      (reset) #1 q <= 0;
-    else            #1 q <= d;
-endmodule
-
-module mux2 #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] d0, d1, 
-              input              s, 
-              output [WIDTH-1:0] y);
-
-  assign #1 y = s ? d1 : d0; 
-endmodule
-
-module adder #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a, b,
-              input              cin,
-              output [WIDTH-1:0] y,
-              output             cout);
- 
-  assign #1 {cout, y} = a + b + cin;
-endmodule
-
-module zerodetect #(parameter WIDTH = 32)
-             (input  [WIDTH-1:0] a,
-              output             y);
- 
-  assign #1 y = ~|a;
-endmodule
