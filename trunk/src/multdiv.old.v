@@ -62,6 +62,7 @@ module multdiv(input         clk,
   wire run, init;
   wire qi, srchinv;
   wire yzero;
+  wire xsavedsign;
   wire [1:0] prodhsel, prodlsel;
   wire [1:0] srchsel;
   wire [1:0] prodhextra;
@@ -71,13 +72,16 @@ module multdiv(input         clk,
 
   // control logic
   mdcontroller mdcont(clk, reset, start, run, done, init, muldivb, signedop, 
-                      cout, prodl[1:0], x[31], y[31], ysaved[31], srch1[31], srchplusyy[33], yzero, 
+                      cout, prodl[1:0], x[31], y[31], ysaved[31], xsavedsign, srch1[31], srchplusyy[33], yzero, 
                       ysel, srchsel, srchinv, prodhsel, prodlsel, qi, dividebyzero);
 
   // Y register and Booth mux
   flopenr        yreg(clk, reset, start, y, ysaved);
   boothsel       ybooth(ysaved, ysel, signedop, yy, cin);
   zerodetect     yzdetect(ysaved, yzero);
+  
+  // X sign register
+  flopenr   #(1) xreg(clk, reset, start, x[31], xsavedsign);
 
   // PRODH
   // keep one extra bit in high part to accomdate 2x Booth multiples and another bit to keep sign
@@ -117,6 +121,7 @@ module mdcontroller(input            clk,
                     input            xsign,
                     input            ysign,
                     input            ysavedsign,
+                    input            xsavedsign,
                     input            srchsign,
                     input            addsign,
 		    input            yzero,
@@ -219,10 +224,10 @@ module mdcontroller(input            clk,
         end 
       end else if (count == 'd34) begin // cycle 34: set sign of remainder
         srchsel = 1; // select PRODH, containing remainder
-        srchinv = ysavedsign;
+        srchinv = xsavedsign;
         prodhsel = 1; // put corrected remainder in PRODH
         prodlsel = 2; // freeze PRODL register
-        if (ysavedsign) begin  // if sign y is negative, take two's complement of remainder
+        if (xsavedsign) begin  // if sign y is negative, take two's complement of remainder
           srchinv = 1;
           ysel = 6;
         end 
