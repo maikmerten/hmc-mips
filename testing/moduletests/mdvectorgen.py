@@ -9,7 +9,7 @@
 #                       2 - unsigned mult.
 #                       3 - signed div
 
-import random, math
+import random, math, sys
 
 numvectors = 1000
 DEBUG = False
@@ -100,6 +100,9 @@ def genVector(type):
         quotient = quotient * (ys * xs)
         
         remainder = (xa % ya) * xs
+        
+        if not x == quotient * y + remainder:
+          sys.stderr.write('x=qy+z violated')
         
         resulth = reprInt(remainder)
         resultl = reprInt(quotient)
