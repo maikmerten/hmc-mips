@@ -2,6 +2,7 @@
 // David_Harris at hmc dot edu 1/2/07
 // Cassie Chou cassiepchou at gmail dot com 3/8/07
 // Carl Nygaard carlpny at gmail dot com 3/8/07
+// Thomas W. Barr tbarr at cs dot hmc dot edu 20mar07
 //
 // An ALU-based multiplier and divider
 // handling signed and unsigned operands
