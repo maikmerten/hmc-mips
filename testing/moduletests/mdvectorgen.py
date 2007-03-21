@@ -102,7 +102,7 @@ def genVector(type):
         remainder = (xa % ya) * xs
         
         if not x == quotient * y + remainder:
-          sys.stderr.write('x=qy+z violated')
+          sys.stderr.write('x=qy+z violated\n')
         
         resulth = reprInt(remainder)
         resultl = reprInt(quotient)
@@ -119,6 +119,7 @@ def genVector(type):
     if DEBUG: print
 
 # main script.
+sys.stderr.write('writing %d vectors...\n' % numvectors)
 for x in range(numvectors):
     genVector(random.randint(0,3))
     
