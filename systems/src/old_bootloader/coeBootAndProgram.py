@@ -1,12 +1,17 @@
 """
-dumpBootAndProgram.py
+coeBootAndProgram.py
 
 Created 2/27/07 by Matt McKnett
 HMC Spring 2007 CMOS VLSI, MIPS project
 
 This script is designed to accept three dat files (each file composed of
 MIPS instructions in hex, one instruction per line) and convert them to a
-vector file simulatable in Modelsim.
+coefficient file simulatable in Xilinx.
+
+Limitations:
+-> The available memory is mem_size - 1 word.  This is so that the script
+    can place a final "00000000;".  Fixing this would require a little
+    overhead, but is possible.
 """
 
 import sys
@@ -18,10 +23,14 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
     current_loc = reset_loc
     output_file = open(output, 'wb')
 
+    # We need to write the MEMORY_INITIALIZATION_RADIX AND _VECTOR flags
+    output_file.write("MEMORY_INITIALIZATION_RADIX=%d;\n" % radix)
+    output_file.write("MEMORY_INITIALIZATION_VECTOR=\n")
+
     #First open the bootstrapper start file and output the lines.
     boots_file = open(boot_start, 'rU')
     for line in boots_file:
-        output_file.write(line)
+        output_file.write("%s,\n" % line.rstrip('\n'))
         current_loc += 4
     boots_file.close()
 
@@ -34,7 +43,7 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
 
     # Write 0's as a buffer between boot_starter and boot_loader.
     while current_loc < boot_loc :
-        output_file.write("00000000\n")
+        output_file.write("00000000,\n")
         current_loc += 4
 
     print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, boot_loc)
@@ -42,7 +51,7 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
     # Next open the bootloader and output its lines.
     bootl_file = open(boot_load, 'rU')
     for line in bootl_file:
-        output_file.write(line)
+        output_file.write("%s,\n" % line.rstrip('\n'))
         current_loc += 4
     bootl_file.close()
 
@@ -54,7 +63,7 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
     
     # Write 0's as a buffer between the boot_loader and the program
     while current_loc < prog_loc :
-        output_file.write("00000000\n")
+        output_file.write("00000000,\n")
         current_loc += 4
 
     print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, prog_loc)
@@ -62,7 +71,7 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
     # Last, write the program out to the memory.  
     progr_file = open(program, 'rU')
     for line in progr_file:
-        output_file.write(line)
+        output_file.write("%s,\n" % line.rstrip('\n'))
         # If we were to allow the whole mem_size, we would want to add a
         # condition here to see if we need a ';' instead of a ','
         current_loc += 4
@@ -75,12 +84,14 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
                   "  Read %d lines from %s" % (current_loc - prog_loc, progr_file)
 
     # Write 0's as a buffer between the program and the end of memory
-    while current_loc < mem_size :
+    while current_loc < mem_size - 4 :
         # If we were to allow the whole mem_size, we would want to add a
         # condition here to see if we need a ';' instead of a ','
-        output_file.write("00000000\n")
+        output_file.write("00000000,\n")
         current_loc += 4
         
+    # Write the final word of 0's and close the file.
+    output_file.write("00000000;")
     output_file.close()
 
     print "Boot and Program Dump: output %d words to file %s" % (current_loc / 4, output)
@@ -97,8 +108,10 @@ if "--help" in args or len(args) < 4:
             \n\nOptions:\n-reset_loc [address of beginning of reset instructions in output file]\n \
             -boot_loc [address of beginning of bootloader in output file]\n \
             -prog_loc [address of beginning of program in output file]\n \
-            -mem_size [size of file to output in words]\n"
+            -mem_size [size of file to output in words]\n \
+            -radix [radix of output coefficient file]"
     sys.exit(0)
+
     
 if "-debug" in args:
     DEBUG = 1
@@ -118,6 +131,7 @@ else:
     boot_loc =  0x00000020
     prog_loc =  0x00000120
     mem_size =  2**8
+radix = 16
 
 # Continue parsing
 try:
@@ -173,6 +187,9 @@ try:
     if "-mem_size" in args:
         i = args.index("-mem_size")
         mem_size = args[i+1]
+    if "-radix" in args:
+        i = args.index("-radix")
+        radix = args[i+1]
 except IndexError:
     print "Found a bad optional parameter in the arguments."
     sys.exit(1)
