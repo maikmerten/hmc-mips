@@ -13,10 +13,23 @@
 .set noreorder
 .text
 
-boot:	lui $8, 0xBFC0		# Our main bootloader is located at 0xBFC00E00
-	ori $8, $8, 0x0E00
-	jr  $8
+reset:
+	j	load
 	nop
+
+load:
+	# Boot-loading code goes here.
+	syscall	0x0
+	j	load
+	nop
+
+# Originally, we were going to jump to a location to prove that the processor is
+# configured enough to handle it, but it is probably best to simply jump to the 
+# next instruction (which will be the loader) as above.
+#boot:	lui $8, 0xBFC0		# Our main bootloader is located at 0xBFC00E00
+#	ori $8, $8, 0x0E00
+#	jr  $8
+#	nop
 
 #	b	reset		# For now, we will try getting the linker
 #				# to use the boot_loader tag __reset
