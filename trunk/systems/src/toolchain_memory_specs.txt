@@ -1,0 +1,5 @@
+00000000, bootstart, bootstart.dat
+00000400, excepthandle, excepthandle.dat
+00000E00, bootload, bootload.dat
+00001000, program
+00800000, memsize
