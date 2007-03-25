@@ -18,8 +18,17 @@ reset:
 	nop
 
 load:
-	# Boot-loading code goes here.
-	syscall	0x0
+	# Boot-loading code must be placed in exception-handling.  We'll use the
+	# breakpoint features to cause an exception to get there.  The exception
+	# handler appears to start at 0xBFC00100 on our chip, which is contrary to
+	# See MIPS Run.
+	break	0x0
+
+	# Once the cache setup is done, jump to the first instruction (in the
+	# uncached region).  This ought to be at 0x9FC01000
+	lui	$8, 0x9FC0
+	ori	$8, $8, 0x1000
+	jr	$8
 	j	load
 	nop
 

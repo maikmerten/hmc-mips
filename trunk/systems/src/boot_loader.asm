@@ -36,7 +36,6 @@
 #
 #  SR words:  OR with 0x0002FF2A, AND with 0xFF4FFFEB
 
-hello there, I am some text
 
 # Instructions for setting SR (register $12 in cp0) on See MIPS Run p. 105
 
@@ -157,8 +156,9 @@ inval_d_loop:
 	nop
 
 
-# Step 4: Jump to a cached-mode address
-	lui	$8, 0x9FC0
-	ori	$8, $8, 0x1000
-	jr	$8		# Instructions should start at 0x9FC01000 
+# Step 4:  Return from the exception handler, where this code should reside.
+	mfc0	$8, $14	# Get EPC (cp0 reg. 14)
+	jr	$8		# Jump back to the instruction that called this code.
+	rfe			# Don't forget to return from the exception in the BD slot.
+	 
 	
