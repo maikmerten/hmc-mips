@@ -185,121 +185,16 @@ public.
 %State how the customer will measure whether the project has been a
 %success.
 
-\section{Proposed Approach}
+%ROBS SECTION
 
-\subsection{System Architecture}
+\input{pip-rob}
 
-The cache is the focal point of our project. A thorough description of
-the memory system being implemented for this project can be found in
-\cite{various07}. The MIPS microprocessor was initially designed
-by defining an interface and then describing all modules in verilog
-using a development tool called ModelSim. Once the verilog system was
-completed and verified work began on translating the verilog code into
-schematics. The schematics are currently in the process of being
-developed and using a VLSI design application called Electric8.04. The
-design process will be elaborated in Section 3.2.
+%END ROBS SECTION
 
-Given in Figure~\ref{cacheblock} is the current block diagram of
-the cache system. The cache is comprised of:
-\begin{enumerate}
-\item Cache Controller
-\item Cache RAM
-\item Data Out
-\item Byte Enable
-\item Various simple logic components including multiplexers,
-  inverters, and OR gates.
-\end{enumerate}
-
-\begin{figure}
-\centering 
-%\includegraphics[width=\textwidth]{cacheblock}
-\includegraphics[width=\textwidth]{cacheblock}
-\caption{Block diagram of the MIPS cache.}
-\label{cacheblock}
-\end{figure}
-
-The Adelaide team will be involved in the continued design and
-verification of the Cache Controller and the Cache Ram. These modules
-are described in further detail in Figure~\ref{cachcontroller} and
-Figure~\ref{cacheram} respectively.
-
-\subsection{Cache Controller}
-
-This module comprises the following components: 
-\begin{enumerate}
-\item Address Tag Data Logic
-\item Controller State Logic
-\item Inverters, OR gates and flops
-\end{enumerate}
-
-\subsection{Cache Ram}
-
-This module contains the following components:
-\begin{enumerate}
-\item 64-bit Decoder
-\item Cache Signal Buffers
-\item SRAM Array
-\item Bit Line Conditioning
-\item Write Driver
-\end{enumerate}
-
-\begin{figure}
-\centering 
-\includegraphics[width=\textwidth]{cachecontroller}
-\caption{The MIPS cache controller module.}
-\label{cachecontroller}
-\end{figure}
-
-\begin{figure}
-\centering 
-\includegraphics[width=\textwidth]{cacheram}
-\caption{The MIPS cache ram module.}
-\label{cacheram}
-\end{figure}
-
-\subsection{Design Processes}
-
-Figure~\ref{designprocess} describes the methodology that will be
-followed to complete the stages of development of the cache
-system. The first stage involves starting with the verilog
-specification that has already been developed and verified. This
-starting point involves learning the verilog hardware description
-language and then determining what modules were used and the overall
-interface for the memory system. The verilog code was developed using
-ModelSim and so familiarity with this development environment is a
-requirement.
-
-The next stage of the design flow involves designing schematics from
-the verilog code. This will be achieved by using the VLSI design suite
-Electric. Once the schematics are designed a verilog deck, containing
-the schematic netlist of a module will be extracted and inserted in
-place of the original verilog description for that module. This will
-enable checking that each schematic that has been designed integrates
-with the interface and is logically correct.
-
-Once the schematics have been verified, layouts of the schematics will
-commence. A similar testing procedure will be conducted to the
-schematics for the layouts in addition to the MOSIS rules, Schematic
-vs Layout verification features built-in to Electric.
-
-At present, the intended further testing procedure involves generating
-IRSIM command files and spice test files from the verilog
-code. Verilog is only designed to conduct logical testing of
-circuitry.This is, therefore, an important stage to complete since
-IRSIM will be allow evaluation of delays and critical paths within the
-circuitry. `Fast Spice' will also be used to check on behaviour of
-circuitry that is significant to analogue design.
-
-\begin{figure}
-\centering 
-\includegraphics[width=\textwidth]{designprocess}
-\caption{Flow chart of the design process for the project.}
-\label{designprocess}
-\end{figure}
 
 %MELS SECTION
 
-\input{pmp-mel}
+\input{pip-mel}
 
 %END MELS SECTION
 
