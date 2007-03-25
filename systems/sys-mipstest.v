@@ -41,12 +41,9 @@ module testbench;
         currentSuccess <= 0;
         reset <= 1; # 30; reset <= 0;
         // Pausing
-        if(currentTest == 12 | currentTest == 16 | currentTest == 26) begin
+        if(currentTest == 0)begin
           # 14970;
-        end else if(currentTest == 17) begin
-            # 249970;
-        end else
-           # 4970;
+        end
 
         if(currentSuccess) begin
           $display("Simulation %d succeeded (end time %d)", currentTest, 
@@ -62,15 +59,15 @@ module testbench;
       $stop;
     end
     
-  initial
+  /*initial
     begin
       interrupts[0] <= 0; #75800;
       interrupts[0] <= 1; #50;
       interrupts[0] <= 0;
-/* original      interrupts[0] <= 0; #75400;
-      interrupts[0] <= 1; #10;
-      interrupts[0] <= 0;
-*/
+//original      interrupts[0] <= 0; #75400;
+//      interrupts[0] <= 1; #10;
+//      interrupts[0] <= 0;
+
     end
       
   initial
@@ -82,18 +79,20 @@ module testbench;
       interrupts[1] <= 0; #100;   // Send interupt high (but during handler)
       interrupts[1] <= 1; #50;    // So doesn't influence handler
       interrupts[1] <= 0;
-/* original      interrupts[1] <= 0; #75100; 
-      interrupts[1] <= 1; #10; 
-      interrupts[1] <= 0; #90;
-      interrupts[1] <= 1; #10;
-      interrupts[1] <= 0; #240;
-      interrupts[1] <= 1; #10;
-      interrupts[1] <= 0;
-*/
+//original      interrupts[1] <= 0; #75100; 
+//      interrupts[1] <= 1; #10; 
+//      interrupts[1] <= 0; #90;
+//      interrupts[1] <= 1; #10;
+//      interrupts[1] <= 0; #240;
+//      interrupts[1] <= 1; #10;
+//      interrupts[1] <= 0;
     end
+*/
     
   initial
       begin
+	  interrupts[0] <= 0;
+	  interrupts[1] <= 0;
         interrupts[2] <= 0;
         interrupts[3] <= 0;
         interrupts[4] <= 0;
@@ -121,219 +120,6 @@ module testbench;
             end else begin
        //       $display("Writing value %d to address %h", writedata, dataadr);
             end
-          end
-        1:
-          if(memwrite) begin
-            if(dataadr === 32'h204 & writedata === 7) begin
-              currentSuccess <= 1;
-            end else begin
-         //     $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        2:
-          if(memwrite) begin
-            if(dataadr === 32'h10f00ff0 & writedata === 2) begin
-              currentSuccess <= 1;
-            end else begin
-       //       $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        3:
-          if(memwrite) begin
-            if(dataadr === 32'h0f0ff010 & writedata === 2) begin
-              currentSuccess <= 1;
-            end else begin
-        //      $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        4:
-          if(memwrite) begin
-            if(dataadr === 32'h0ffffffc & writedata === 32'h3f8) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        5:
-          if(memwrite) begin
-            if(dataadr === 32'h1fc00024 & writedata === 32'h9) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %h to address %h", writedata, dataadr);
-            end
-          end
-        6:
-          if(memwrite) begin
-            if(dataadr === 32'h1263ff00 & writedata === 32'h0) begin
-              currentSuccess <= 1;
-            end else begin
-         //     $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        7:
-          if(memwrite) begin
-            if(dataadr === 32'h14 & writedata === 32'h550000ff) begin
-              currentSuccess <= 1;
-            end 
-         //   $display("Writing value %h to address %h", writedata, dataadr);
-          end
-        8:
-          if(memwrite) begin
-            if(dataadr === 32'h18 & writedata === 32'h1f) begin
-              currentSuccess <= 1;
-            end 
-          //  $display("Writing value %h to address %h", writedata, dataadr);
-          end
-        9:
-          if(memwrite) begin
-            if(dataadr === 32'h1fc0000c & writedata === 32'h0c) begin
-              currentSuccess <= 1;
-            end else begin
-           //   $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-          
-        10:
-          if(memwrite) begin
-            if(dataadr === 32'h0 & writedata === 32'h4) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        11:
-          if(memwrite) begin
-            if(dataadr === 32'h0 & writedata === 32'h4) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-        12:
-          if(memwrite) begin
-            // This program is written in C, so we don't look at the address
-            // that it is writing to, just the value it is writing
-            if(writedata === 479001600 /* 12 factorial */) begin
-              currentSuccess <= 1;
-            end else begin
-              //$display("Writing value %d to address %h at time %d", writedata,
-              //         dataadr, counter);
-            end
-          end
-          
-        13:
-          if(memwrite) begin
-            if(dataadr === 32'h4 & writedata === 2) begin
-              currentSuccess <= 1;
-            end else begin
-        //      $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-		  14:
-          if(memwrite) begin
-            if(dataadr === 32'h4 & writedata === 32'h6) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-      15:
-          if(memwrite) begin
-            if(dataadr === 32'h4 & writedata === 32'h4) begin
-              currentSuccess <= 1;
-            end else begin
-          //    $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-      16:
-          if(memwrite) begin
-            // This program is written in C, so we don't look at the address
-            // that it is writing to, just the value it is writing
-            if(writedata === 2201) begin
-              currentSuccess <= 1;
-            end else begin
-              //$display("Writing value %d to address %h at time %d", writedata,
-              // dataadr, counter);
-            end
-          end
-      17:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-//                  $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      18:
-          if(memwrite) begin
-            if(dataadr === 32'h4 & writedata === 32'h1) begin
-              currentSuccess <= 1;
-            end else begin
-        //      $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-      19:
-          if(memwrite) begin
-            if(dataadr === 32'h4 & writedata === 32'hf) begin
-              currentSuccess <= 1;
-            end else begin
-         //     $display("Writing value %d to address %h", writedata, dataadr);
-            end
-          end
-      20:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-             //     $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      21:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-       //           $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      22:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-           //       $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      23:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-  //                $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      24:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-          //       $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      25:
-          if(memwrite) begin
-              if(writedata === 32'hdeadbeef & dataadr === 0) begin
-                  currentSuccess <= 1;
-              end else begin
-          //       $display("Writing value %h to address %h", writedata, dataadr);
-              end
-          end 
-      26:
-          if(memwrite) begin
-              if(writedata == 1) begin
-                  currentSuccess <= 1;
-              end else begin
-              end 
           end
 //        default:
       endcase

@@ -38,7 +38,7 @@ module extmem(input ph1, ph2,reset,
 
   initial
     begin
-      $readmemh("src/test_012.dat",RAM);
+      $readmemh("src/boot_start.dat",RAM);
       #15000;
       // The other tests aren't ready yet.
       //$readmemh("src/test_016.dat",RAM);  // Occurs at 90us
