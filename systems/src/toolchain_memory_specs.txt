@@ -1,5 +1,6 @@
-00000000, bootstart, bootstart.dat
-00000380, excepthandle, excepthandle.dat
-00000E00, bootload, bootload.dat
-00001000, program
-00800000, memsize
+reset_loc:00000000
+reset_name:boot_start.dat
+except_loc:00000100
+except_name:boot_loader.dat
+program_loc:00001000
+mem_size:00008000

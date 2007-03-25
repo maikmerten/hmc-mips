@@ -14,76 +14,90 @@ import sys
 #
 # The function that takes the three files and puts them together into output
 #
-def dumpBootAndProgram(boot_start, boot_load, program, output):
+def dumpBootAndProgram(params):
+
+    # Get pertinent values out of the parameters
+    try:
+        print params
+        reset_name = params['reset_name']
+        reset_loc = int(params['reset_loc'])
+        except_name = params['except_name']
+        except_loc = int(params['except_loc'])
+        program_name = params['program_name']
+        program_loc = int(params['program_loc'])
+        mem_size = int(params['mem_size'])
+        output_name = params['output_name']
+    except KeyError:
+        print "dumpBootAndProgram: A needed parameter was not defined!"    
+
+    # Initialize the current location and the output file.
     current_loc = reset_loc
-    output_file = open(output, 'wb')
+    output_file = open(output_name, 'wb')
 
     #First open the bootstrapper start file and output the lines.
-    boots_file = open(boot_start, 'rU')
-    for line in boots_file:
+    reset_file = open(reset_name, 'rU')
+    for line in reset_file:
         output_file.write(line)
         current_loc += 4
-    boots_file.close()
+    reset_file.close()
 
-    # Make sure the boot_starter didn't overrun the boot_loader code.
-    offset = boot_loc - current_loc
+    # Make sure the reset code didn't overrun the exception code.
+    offset = except_loc - current_loc
     if offset < 0:
         print "Boot and Program Dump:  initial boot code exceeded available " \
-                "memory region.  Read %d lines from %s." % (current_loc, boot_start)
+                "memory region.  Read %d lines from %s." % (current_loc, reset_name)
         sys.exit(1)
 
-    # Write 0's as a buffer between boot_starter and boot_loader.
-    while current_loc < boot_loc :
+    # Write 0's as a buffer between reset and exception.
+    while current_loc < except_loc :
         output_file.write("00000000\n")
         current_loc += 4
 
-    print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, boot_loc)
+    print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
 
     # Next open the bootloader and output its lines.
-    bootl_file = open(boot_load, 'rU')
-    for line in bootl_file:
+    except_file = open(except_name, 'rU')
+    for line in except_file:
         output_file.write(line)
         current_loc += 4
-    bootl_file.close()
+    except_file.close()
 
     # Make sure the boot_loader didn't overrun the program code.
-    offset = prog_loc - current_loc
+    offset = program_loc - current_loc
     if offset < 0:
         print "Boot and Program Dump:  boot loader exceeded available memory region."\
-                  "  Read %d lines from %s" % (current_loc - boot_loc, boot_load)
+                  "  Read %d lines from %s" % (current_loc - except_loc, except_name)
     
     # Write 0's as a buffer between the boot_loader and the program
-    while current_loc < prog_loc :
+    while current_loc < program_loc :
         output_file.write("00000000\n")
         current_loc += 4
 
-    print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, prog_loc)
+    print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
 
     # Last, write the program out to the memory.  
-    progr_file = open(program, 'rU')
-    for line in progr_file:
+    program_file = open(program_name, 'rU')
+    for line in program_file:
         output_file.write(line)
-        # If we were to allow the whole mem_size, we would want to add a
-        # condition here to see if we need a ';' instead of a ','
         current_loc += 4
-    progr_file.close()
+    program_file.close()
 
     # Make sure the program didn't overrun the memory (leave room for a final word of 0's)
-    offset = mem_size - 4 - current_loc
+    offset = mem_size - current_loc
     if offset < 0:
         print "Boot and Program Dump:  The program exceeded available memory region." \
-                  "  Read %d lines from %s" % (current_loc - prog_loc, progr_file)
+                  "  Read %d lines from %s" % (current_loc - program_loc, program_file)
 
     # Write 0's as a buffer between the program and the end of memory
     while current_loc < mem_size :
-        # If we were to allow the whole mem_size, we would want to add a
-        # condition here to see if we need a ';' instead of a ','
         output_file.write("00000000\n")
         current_loc += 4
         
     output_file.close()
 
-    print "Boot and Program Dump: output %d words to file %s" % (current_loc / 4, output)
+    print "Boot and Program Dump: output %d words to file %s" % (current_loc / 4, output_name)
+# End of dumpBootAndProgram()
+
 
 
 # Here is our main functionality
@@ -91,13 +105,9 @@ def dumpBootAndProgram(boot_start, boot_load, program, output):
 # parse the arguments
 args = sys.argv[1:]
 
-if "--help" in args or len(args) < 4:
-    print "Usage:  python dumpBootAndProgram.py -boot_start [bootstrap dat file] -boot_load \
-            [bootloader dat file] -program [program dat file] -output [output filename] \
-            \n\nOptions:\n-reset_loc [address of beginning of reset instructions in output file]\n \
-            -boot_loc [address of beginning of bootloader in output file]\n \
-            -prog_loc [address of beginning of program in output file]\n \
-            -mem_size [size of file to output in words]\n"
+if "--help" in args or not("-params" in args and "-output" in args):
+    print "Usage:  python dumpBootAndProgram.py -params (file with parameters) \
+            -program (program filename) -output (output filename) [-debug]"
     sys.exit(0)
     
 if "-debug" in args:
@@ -105,78 +115,51 @@ if "-debug" in args:
 else:
     DEBUG = 0
 
-# Default values
-# These addresses are locations in memory that the processor will actually
-# look for the first instruction, the boot loader, and the first program.
-if(not DEBUG):
-    reset_loc = 0x00000000
-    boot_loc =  0x00000e00
-    prog_loc =  0x00001000
-    mem_size =  69632
-else:
-    reset_loc = 0x00000000
-    boot_loc =  0x00000020
-    prog_loc =  0x00000120
-    mem_size =  2**8
+params = {'debug': DEBUG}
 
 # Continue parsing
 try:
-    i = args.index("-boot_start")
-    boot_start = args[i+1]
+    i = args.index("-params")
+    params_filename = args[i+1]
 except IndexError:
-    print "Found a bad parameter in the arguments."
+    print "No parameter file was specified."
     sys.exit(1)
 except ValueError:
-    print "-boot_start argument is required"
-    sys.exit(1)
-    
-try:
-    i = args.index("-boot_load")
-    boot_load = args[i+1]
-except IndexError:
-    print "Found a bad parameter in the arguments."
-    sys.exit(1)
-except ValueError:
-    print "-boot_load argument is required"
-    sys.exit(1)
-
-try:
-    i = args.index("-program")
-    program = args[i+1]
-except IndexError:
-    print "Found a bad parameter in the arguments."
-    sys.exit(1)
-except ValueError:
-    print "-program argument is required"
+    print "-params requires a parameter file name."
     sys.exit(1)
 
 try:
     i = args.index("-output")
-    output = args[i+1]
+    params['output_name'] = args[i+1]
 except IndexError:
-    print "Found a bad parameter in the arguments."
+    print "No output file was specified."
     sys.exit(1)
 except ValueError:
-    print "-output argument is required"
+    print "-output requires a file name."
     sys.exit(1)
 
 try:
-    if "-reset_loc" in args:
-        i = args.index("-reset_loc")
-        reset_loc = args[i+1]
-    if "-boot_loc" in args:
-        i = args.index("-boot_loc")
-        boot_loc = args[i+1]
-    if "-prog_loc" in args:
-        i = args.index("-prog_loc")
-        prog_loc = args[i+1]
-    if "-mem_size" in args:
-        i = args.index("-mem_size")
-        mem_size = args[i+1]
+    i = args.index("-program")
+    params['program_name'] = args[i+1]
 except IndexError:
-    print "Found a bad optional parameter in the arguments."
+    print "No program file was specified."
     sys.exit(1)
-    # This would be a good place for an options explanation!
+except ValueError:
+    print "-program requires a file name."
+    sys.exit(1)
 
-dumpBootAndProgram(boot_start, boot_load, program, output)
+# Parse the parameter file.
+params_file = open(params_filename, 'rU')
+lineNum = 0
+for line in params_file:
+    lineNum += 1
+    # Try to read the parameters from the file.
+    try:
+        paramsNameVal = line.replace("\n","").split(':')
+        params[paramsNameVal[0]] = paramsNameVal[1]
+    except IndexError:
+        print "The parameter defined in %s on line %d is invalid." % (params_filename, lineNum)
+params_file.close()
+    
+dumpBootAndProgram(params)
 sys.exit(0)
