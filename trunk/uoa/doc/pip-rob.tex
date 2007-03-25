@@ -89,14 +89,18 @@ At present, the intended further testing procedure involves examining the timing
 
 Once testing of circuits has been carried out circuits that are found to have poor temporal performance that may lead to operating errors will be examined and redesigned at the schematic level. Once the design is found to be free from timing problems the design may  be sent off for fabrication.
 
-************ ATTENTION JOEL*******************
+%joel's bit
+The hardware testing of the processor is split into two sections, being firstly simulated hardware in the form of verilog implimented on FPGA, and once it is avaliable, fabricated hardware.
 
-please see about breaking these into steps in a similar fashion to above or you can feel free to rewrite stuff if you feel you have a better way of expressing thjis part.
+The inital hardware testing will consist of two FPGA boards, one containing a memory input ouput controller and assoicated RAM for the CPU to operate, the other containing a FPGA implimentation of our CPU.
 
->>>All about hardware testing..... and packaging of hardware.....
+Once the fabricated hardware becomes avaliable, the FPGA board containing the sumulated CPU will be replaced with a PCB, designed by the Mudders. It will provide a hardware socket for the microprocessor package, associated power circuitry, and a LCD for displaying outputs. It will use the FPGA memory for it's RAM needs.
 
->>>installing software..... and presentation
-***********
+The software will be programmed directly into the memory on the FPGA. A bootloader will be developed, along with a C compiler toolchain to enable simple software to be run on the board.
+
+As an extension, it will be attempted to build a GNU toolchain, comprising of binutils, gcc and either ulibc or libc. This toolchain will then be used to compile GNU Linux to run on the board.
+
+The system will be both a testbed and demonstration unit, to be put on display for the public to view the operation of the system.
 
 \begin{figure}
 \centering 
