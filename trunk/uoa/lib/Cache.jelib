@@ -1042,7 +1042,7 @@ Ewaiting||D5G2;|pin@24||O
 X
 
 # Cell cachecontroller;1{lay}
-Ccachecontroller;1{lay}||mocmos|1173960492093|1174020007328||DRC_last_good_drc_bit()I19|DRC_last_good_drc_date()G1174019330376
+Ccachecontroller;1{lay}||mocmos|1173960492093|1174896171058||DRC_last_good_drc_bit()I19|DRC_last_good_drc_date()G1174019330376
 Iadrtagdatalogic;1{lay}|adrtagda@0||189.75|-833|||D5G4;
 Ngeneric:Facet-Center|art@0||0|0|0|0||AV
 NMetal-1-Metal-2-Con|contact@0||-256|1657|5|5||
@@ -1066,8 +1066,6 @@ AMetal-2|net@2||4|S900|flopr_c_@1|resetb|-408|1841|flopr_c_@0|resetb|-408|1723
 AMetal-2|net@3||4|S900|flopr_c_@0|resetb|-408|1721|contact@1||-408|1657
 AMetal-1|net@4||4|S1800|contact@1||-408|1657|contact@0||-257|1657
 AMetal-2|net@5||4|S900|contact@0||-256|1656|inv_1x@0|y|-256|1588
-AMetal-1|net@6||8|S0|inv_1x@0|vdd|-264|1637|controll@0|vdd|-408|1637
-AMetal-1|net@7||8|S0|inv_1x@0|gnd|-264|1547|controll@0|ground|-408|1547
 AMetal-2|net@8||4|S900|flopr_c_@1|ph2|-384|1831|flopr_c_@0|ph2|-384|1713
 AMetal-2|net@9||4|S2700|flopr_c_@0|ph1|-272|1699|flopr_c_@1|ph1|-272|1817
 AMetal-2|net@10||4|S2700|controll@0|nexts1|-408|1588|contact@2||-408|1647
@@ -29992,7 +29990,7 @@ Es1||D5G2;|pin@12||I
 X
 
 # Cell controllerstatelogic;1{lay}
-Ccontrollerstatelogic;1{lay}||mocmos|1173767038656|1174018954140||DRC_last_good_drc_bit()I19|DRC_last_good_drc_date()G1174019330376
+Ccontrollerstatelogic;1{lay}||mocmos|1173767038656|1174896244020||ATTR_NCC(D5G1;NT)S["exportsConnectedByParent vdd /vdd_[0-9]+/","exportsConnectedByParent gnd /gnd_[0-9]+/"]|DRC_last_good_drc_bit()I19|DRC_last_good_drc_date()G1174019330376
 Imuddlib07:and3_1x;1{lay}|and3_1x@0||-284|75|||D5G4;
 Imuddlib07:and3_1x;1{lay}|and3_1x@1||-196|75|||D5G4;
 Imuddlib07:and4_1x;1{lay}|and4_1x@0||-244|75|||D5G4;
@@ -30101,21 +30099,19 @@ AMetal-2|net@196||4|S2700|contact@53||-266|231|or2_1x@0|a|-266|365
 AMetal-1|net@197||4|S1800|contact@53||-266|231|contact@42||-202|231
 Edone||D5G2;|inv_1x@2|a|I
 Egnd||D5G2;|and3_1x@0|gnd|G
-Eground||D5G2;|or2_1x@0|gnd|G
+Egnd_1||D5G2;|or2_1x@0|gnd|G
 Ememdone||D5G2;|inv_1x@1|a|I
 Enexts0||D5G2;|or2_1x@1|y|O
 Enexts1||D5G2;|or2_1x@0|y|O
 Erwb||D5G2;|inv_1x@0|a|I
 Es0||D5G2;|inv_1x@5|a|I
 Es1||D5G2;|inv_1x@3|a|I
-Evdd||D5G2;|or2_1x@0|vdd|P
-Evdd2||D5G2;|and3_1x@0|vdd|P
-Evdd_1||D5G2;|or2_1x@0|vdd|P
-Evdd_2||D5G2;|or2_1x@0|vdd|P
+Evdd@270771681|vdd|D5G2;|or2_1x@0|vdd|P
+Evdd_1@444875912|vdd_1|D5G2;|and3_1x@0|vdd|P
 X
 
 # Cell controllerstatelogic;2{sch}
-Ccontrollerstatelogic;2{sch}||schematic|1172718203726|1173945476984|
+Ccontrollerstatelogic;2{sch}||schematic|1172718203726|1174895997576|
 Imuddlib07:and3_1x;1{ic}|and3_1x@0||7|-5|||D5G4;
 Imuddlib07:and3_1x;1{ic}|and3_1x@1||6.5|-16|||D5G4;
 Imuddlib07:and4_1x;1{ic}|and4_1x@0||7|4|||D5G4;
@@ -30131,7 +30127,6 @@ Imuddlib07:or2_1x;1{ic}|or2_1x@0||9|-3|||D5G4;
 Imuddlib07:or2_1x;1{ic}|or2_1x@1||12|-22.5|||D5G4;
 NWire_Pin|pin@0||14|5|0.5|0.5||
 NWire_Pin|pin@1||14|-1|0.5|0.5||
-NWire_Pin|pin@2||14|-24.5|0.5|0.5||
 NWire_Pin|pin@3||14|-20.5|0.5|0.5||
 NWire_Pin|pin@5||-39|28|0.5|0.5||
 NWire_Pin|pin@7||-39|23|0.5|0.5||
@@ -30153,17 +30148,14 @@ NWire_Pin|pin@42||-77|-26.5|0.5|0.5||
 NWire_Pin|pin@43||-34|-14|0.5|0.5||
 NWire_Pin|pin@44||-58|-7|0.5|0.5||
 NWire_Pin|pin@45||14|-16|0.5|0.5||
-NWire_Pin|pin@46||14|-24.5|0.5|0.5||
 NWire_Pin|pin@48||-71|4|0.5|0.5||
 NWire_Pin|pin@49||-19|6|0.5|0.5||
-NWire_Pin|pin@50||2|3|0.5|0.5||
 NWire_Pin|pin@51||-46|3|0.5|0.5||
 Awire|done_b|D5G1;|0|2700|pin@30||-46|-25.5|pin@51||-46|3
 Awire|memdone_b|D5G1;|0|900|pin@44||-58|-7|pin@36||-58|-18
 Awire|net@0||0|1800|and4_1x@0|y|13|5|pin@0||14|5
 Awire|net@1||0|900|pin@0||14|5|pin@1||14|-1
 Awire|net@2||0|1800|pin@1||14|-1|or2_1x@0|a|14.5|-1
-Awire|net@3||0|1800|and4_1x@1|y|13|-24.5|pin@2||14|-24.5
 Awire|net@5||0|1800|pin@3||14|-20.5|or2_1x@1|a|17.5|-20.5
 Awire|net@7||0|1800|and3_1x@0|y|13|-5|or2_1x@0|b|14.5|-5
 Awire|net@9||0|900|pin@7||-39|23|pin@15||-39|-3
@@ -30194,15 +30186,13 @@ Awire|net@62||0|0|and3_1x@0|c|2|-7|pin@44||-58|-7
 Awire|net@63||0|900|pin@32||-58|28|inv_1x@3|a|-58|22
 Awire|net@64||0|1800|and3_1x@1|y|12.5|-16|pin@45||14|-16
 Awire|net@65||0|900|pin@45||14|-16|pin@3||14|-20.5
-Awire|net@66||0|900|pin@2||14|-24.5|pin@46||14|-24.5
-Awire|net@67||0|1800|pin@46||14|-24.5|or2_1x@1|b|17.5|-24.5
 Awire|net@73||0|900|pin@49||-19|6|pin@19||-19|-5
 Awire|net@74||0|900|inv_1x@1|y|-19|12|pin@49||-19|6
 Awire|net@75||0|1800|pin@49||-19|6|and4_1x@0|b|2|6
-Awire|net@77||0|2700|pin@50||2|3|and4_1x@0|d|2|3
 Awire|net@79||0|1800|pin@48||-71|4|and4_1x@0|c|2|4
 Awire|net@80||0|2700|pin@51||-46|3|inv_1x@2|y|-46|12
 Awire|net@81||0|1800|pin@51||-46|3|and4_1x@0|d|2|3
+Awire|net@83||0|1800|and4_1x@1|y|13|-24.5|or2_1x@1|b|17.5|-24.5
 Awire|s0_b|D5G1;|0|900|pin@19||-19|-5|pin@18||-19|-23.5
 Awire|s1_b|D5G1;|0|900|pin@13||-34|7|pin@16||-34|-22.5
 Edone||D5G2;|pin@25||I
