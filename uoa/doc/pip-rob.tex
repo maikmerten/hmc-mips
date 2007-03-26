@@ -79,7 +79,7 @@ This module contains the following components:
 
 \subsection{Design Processes}
 
-Figure~\ref{designflowA} and Figure~\ref{designflowB} describes the methodology that will be followed to complete the stages of development of the cache system. The process is given in two parts respectively. The first part is development and testing of the cache memory system in conjunction with the HMC team. The second part is done separate from the HMC team and involves evaluating the temporal performance of the design, the evaluation of the fabricated microprocessor, packaging, and setting up a software environment on the packaged system. The first stage will begin with the Verilog specification that has already been developed and verified. This starting point involves learning Verilog, a hardware description language, and then determining what modules were used and the overall interface for the memory system. The design of the system in Verilog has been developed using ModelSim. Familiarity with this development environment is therefore a requirement.
+Figure~\ref{designflowALL} describes the methodology that will be followed to complete the stages of development of the cache system, project extensions and, public presentation. Initial development and testing of the cache memory system is done in conjunction with the HMC team. The remaining stages are done separate from the HMC team and involves evaluating the temporal performance of the design, the evaluation of the fabricated microprocessor, packaging, and setting up a software environment on the packaged system. The first stage begins with the Verilog specification that has already been developed and verified. This starting point involves learning Verilog, a hardware description language, and then determining what modules were used and the overall interface for the memory system. The design of the system in Verilog has been developed using ModelSim. Familiarity with this development environment is therefore a requirement.
 
 The next stage of the design flow involves designing schematics from the Verilog system description. This is possible since this Verilog source code contains the RTL description for each module. Schematics will be built using the VLSI design suite Electric. Once the schematics are designed a Verilog deck containing the schematic netlist of a module will be extracted for use in Verilog testbenches in ModelSim. This will enable incremental development and checking of individual schematics for logical correctness. Care needs to be taken at this stage to match the interface of the schematic with the rest of the system. As an alternative to Verilog test benches for smaller leaf cells, a faster option is to run IRSIM within Electric and apply a short series of stimuli to check on logical behaviour.
 
@@ -89,6 +89,9 @@ At present, further testing procedures planned involve examining the timing aspe
 
 As testing of circuits progresses circuits that are found to have poor temporal performance that may violate timing requirements will be examined and redesigned at the schematic level. The layouts of these sections will then be redone to reflect the changes at the schematic level. Once the design is found to be free from timing problems the design may be sent off for fabrication.
 
+After the design is sent for fabrication, various extensions to the project are to be implemented in parallel. These include design modifications to introduce low power design to the microprocessor, testing of the fabricated microprocessor, installing a software package on the packaged system, and developing a packaging for the microprocessor for public presentation including peripherals.
+
+Low power design will focus on the most significant source of power consumption in a microprocessor, namely dynamic power dissipation. The principles that will be followed for reduction of dynamic power dissipation will include optimising some circuitry to inactivate unused blocks, and improving the defined architecture of the implementation of the MIPS microprocessor to achieve the same functionality with less processing. The designs produced will be implemented and evaluated.
 %joel's bit
 The hardware testing of the processor is split into two sections, being firstly simulated hardware in the form of verilog implemented on FPGA, and once it is available, fabricated hardware.
 
@@ -104,14 +107,8 @@ The system will be both a testbed and demonstration unit, to be put on display f
 
 \begin{figure}
 \centering 
-\includegraphics[width=\textwidth]{designflowA.jpg}
+\includegraphics[width=\textwidth]{designflowALL.jpg}
 \caption{Flow chart for first part of the design process for the project.}
-\label{designflowA}
+\label{designflowALL}
 \end{figure}
 
-\begin{figure}
-\centering 
-\includegraphics[width=\textwidth]{designflowB.jpg}
-\caption{Flow chart for second part of the design process for the project.}
-\label{designflowB}
-\end{figure}
