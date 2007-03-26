@@ -4,7 +4,7 @@
 
 The cache is the focus of our project. A thorough description of
 the memory system for this project can be found in
-\cite{various07}. The MIPS microprocessor has been designed by the
+\cite{hmcmemsys}. The MIPS microprocessor has been designed by the
 microarchitecture team from HMC under the supervision of Professor David
 Harris. An interface of the entire system has been defined and all modules used to perform
 the logical functions have been described in Verilog using a development tool
@@ -31,7 +31,7 @@ the cache system. Major modules are described below:
 \end{figure}
 
 The Adelaide team will be involved in the continued design and
-verification of the Cache Controller and the Cache Ram. \cite{various07} details the functions performed by the cache. A summary of the features is given below:
+verification of the Cache Controller and the Cache Ram. \cite{hmcmemsys} details the functions performed by the cache. A summary of the features is given below:
 \begin{enumerate}
 \item \textbf{Write-through: }When a data write is requested from the processor, it is written immediately to memory (or write buffer) as well as the cached. The cache never holds a newer copy of data than main memory (or write buffer).
 \item \textbf{Write buffer: }To improve performance, so the CPU does not stall for the entire external memory write time, a FIFO (first-in, first-out) write buffer is used. Once the write buffer is full, the CPU stalls until a space is available in the write buffer.
@@ -97,7 +97,7 @@ The hardware testing of the processor is split into two sections, being firstly 
 
 The initial hardware testing will consist of two FPGA boards, one containing a memory input output controller and associated RAM for the CPU to operate, the other containing a FPGA implementation of our CPU.
 
-Once the fabricated hardware becomes available, the FPGA board containing the simulated CPU will be replaced with a PCB, designed by the Mudders. It will provide a hardware socket for the microprocessor package, associated power circuitry, and a LCD for displaying outputs. It will use the FPGA memory for it's RAM needs.
+Once the fabricated hardware becomes available, the FPGA board containing the simulated CPU will be replaced with a PCB, designed by the HMC team. It will provide a hardware socket for the microprocessor package, associated power circuitry, and a LCD for displaying outputs. It will use the FPGA memory for it's RAM needs.
 
 The software will be programmed directly into the memory on the FPGA. A bootloader will be developed, along with a C compiler toolchain to enable simple software to be run on the board.
 
@@ -108,7 +108,7 @@ The system will be both a testbed and demonstration unit, to be put on display f
 \begin{figure}
 \centering 
 \includegraphics[width=\textwidth]{designflowALL.jpg}
-\caption{Flow chart for first part of the design process for the project.}
+\caption{Flow chart for the design process for the project.}
 \label{designflowALL}
 \end{figure}
 
