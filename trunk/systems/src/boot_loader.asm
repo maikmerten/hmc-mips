@@ -71,25 +71,33 @@ set_sr2:
 	# write bytes to 0x8000 8000 so that we do not clobber what is in
 	# the ROM region and so that we don't write into the device I/O.
 	# This means we only support up to 32K cache sizes.  (Our cache is
-	# 512 MB).  Just for the sake of a more generalizable bootloader, 
+	# 512 MB).  
+
+	# Just for the sake of a more generalizable bootloader, 
 	# I include code for discovering the cache size. 
-	li	$9, 0x8000	# $9 is initially 32K (2^15).
-	li	$10, 0x0400	# $10 is the smallest cache size (0.5K) (2^9)
-	lui	$11, 0x8000	# $11 = kseg0 = 0x8000 0000
-size_i:
-	add	$8, $11, $9	# $8 = kseg0 + current size
-	sw	$8, 0($9)	# After we're done looping, leaves the cache
+	# li	$9, 0x8000	# $9 is initially 32K (2^15).
+	# li	$10, 0x0400	# $10 is the smallest cache size (0.5K) (2^9)
+	# lui	$11, 0x8000	# $11 = kseg0 = 0x8000 0000
+#size_i:
+	# add	$8, $11, $9	# $8 = kseg0 + current size
+	#sw	$8, 0($9)	# After we're done looping, leaves the cache
 				# size in mem address 0x8000 0000
-	srl	$9, $9, 1	# divide the size we're looking for by two
-	bne	$9, $10, size_i
+	# srl	$9, $9, 1	# divide the size we're looking for by two
+	# bne	$9, $10, size_i
 				# Move on if we've finished all cache sizes
 				# loop otherwise.
-	nop
-read_size_i:
-	lw	$9, 0($11)	# Loads the value of kseg0 into $9
+	# nop
+#read_size_i:
+	# lw	$9, 0($11)	# Loads the value of kseg0 into $9
 				# Our cache size is now in $9
 				# Conveniently, $10 holds the value we want to
 				# start writing at
+
+# Originally, my intention was to generalize the bootloader for any
+# cache size, but it is far easier to assume the 512 B cache that
+# is on our HMC-MIPS chip.
+
+	li	$9, 0x0400  # The cach size is 512 B
 inval_i_loop:
 	sb	$0, 0($10)	# Invalidate the word at address $10
 	addi	$10, $10, 4	# Move to next word address
@@ -111,27 +119,31 @@ swap_i_for_d:
 
 # Having swapped the caches, we can repeat the same operation on the D-cache
 # that we did on the I-cache.
-	lui	$9, 0x0004	# $9 is initially 256K.
-	li	$10, 0x0400	# $10 is the smallest cache size (0.5K) 
-	lui	$11, 0x8000	# $11 = kseg0 = 0x8000 0000
-size_d:
-	add	$8, $11, $9	# $8 = kseg0 + current size
-	sw	$8, 0($9)	# After we're done looping, leaves the cache
+
+# I have stricken the sizing operations from this code, as well.
+	# lui	$9, 0x0004	# $9 is initially 256K.
+	# li	$10, 0x0400	# $10 is the smallest cache size (0.5K) 
+	# lui	$11, 0x8000	# $11 = kseg0 = 0x8000 0000
+# size_d:
+	# add	$8, $11, $9	# $8 = kseg0 + current size
+	# sw	$8, 0($9)	# After we're done looping, leaves the cache
 				# size in mem address 0x8000 0000
-	srl	$9, $9, 1	# divide the size we're looking for by two
-	bne	$9, $10, size_d
+	# srl	$9, $9, 1	# divide the size we're looking for by two
+	# bne	$9, $10, size_d
 				# Move on if we've finished all cache sizes
 				# loop otherwise.
-	nop
-read_size_d:
-	lw	$9, 0($11)	# Loads the value of kseg0 into $9
+	# nop
+# read_size_d:
+	# lw	$9, 0($11)	# Loads the value of kseg0 into $9
 				# Our cache size is now in $9
-	addi	$10, $0, 0	# Conveniently, $10 holds the value we want to
+	# addi	$10, $0, 0	# Conveniently, $10 holds the value we want to
 				# start writing at
+
+	li	$9, 0x0400	# The cache size is again 512 B
 inval_d_loop:
 	sb	$0, 0($10)	# Invalidate the word at address $10
 	addi	$10, $10, 4	# Move to next word address
-	addi	$9, $10, -4	# Use cache size to count down loop iterations
+	addi	$9, $9, -4	# Use cache size to count down loop iterations
 	bnez	$9, inval_d_loop
 				# Keep writing bytes until we run out of space.
 
