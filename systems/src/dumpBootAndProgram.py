@@ -20,13 +20,14 @@ def dumpBootAndProgram(params):
     try:
         print params
         reset_name = params['reset_name']
-        reset_loc = int(params['reset_loc'])
+        reset_loc = int(params['reset_loc'], 16)
         except_name = params['except_name']
-        except_loc = int(params['except_loc'])
+        except_loc = int(params['except_loc'], 16)
         program_name = params['program_name']
-        program_loc = int(params['program_loc'])
-        mem_size = int(params['mem_size'])
+        program_loc = int(params['program_loc'], 16)
+        mem_size = int(params['mem_size'], 16)
         output_name = params['output_name']
+        debug = params['debug']
     except KeyError:
         print "dumpBootAndProgram: A needed parameter was not defined!"    
 
@@ -37,6 +38,8 @@ def dumpBootAndProgram(params):
     #First open the bootstrapper start file and output the lines.
     reset_file = open(reset_name, 'rU')
     for line in reset_file:
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write(line)
         current_loc += 4
     reset_file.close()
@@ -50,14 +53,18 @@ def dumpBootAndProgram(params):
 
     # Write 0's as a buffer between reset and exception.
     while current_loc < except_loc :
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write("00000000\n")
         current_loc += 4
 
     print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
 
-    # Next open the bootloader and output its lines.
+    # Next open the boot_loader and output its lines.
     except_file = open(except_name, 'rU')
     for line in except_file:
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write(line)
         current_loc += 4
     except_file.close()
@@ -70,6 +77,8 @@ def dumpBootAndProgram(params):
     
     # Write 0's as a buffer between the boot_loader and the program
     while current_loc < program_loc :
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write("00000000\n")
         current_loc += 4
 
@@ -78,6 +87,8 @@ def dumpBootAndProgram(params):
     # Last, write the program out to the memory.  
     program_file = open(program_name, 'rU')
     for line in program_file:
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write(line)
         current_loc += 4
     program_file.close()
@@ -90,6 +101,8 @@ def dumpBootAndProgram(params):
 
     # Write 0's as a buffer between the program and the end of memory
     while current_loc < mem_size :
+        if debug:
+            output_file.write("%X: " % current_loc)
         output_file.write("00000000\n")
         current_loc += 4
         
@@ -111,11 +124,9 @@ if "--help" in args or not("-params" in args and "-output" in args):
     sys.exit(0)
     
 if "-debug" in args:
-    DEBUG = 1
+    params = {'debug': True}
 else:
-    DEBUG = 0
-
-params = {'debug': DEBUG}
+    params = {'debug': False}
 
 # Continue parsing
 try:

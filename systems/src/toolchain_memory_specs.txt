@@ -1,6 +1,6 @@
-reset_loc:00000000
+reset_loc:0x00000000
 reset_name:boot_start.dat
-except_loc:00000100
+except_loc:0x00000100
 except_name:boot_loader.dat
-program_loc:00001000
-mem_size:00008000
+program_loc:0x00001000
+mem_size:0x00005000

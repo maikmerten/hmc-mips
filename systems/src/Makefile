@@ -1,8 +1,9 @@
-CC = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-gcc.exe 
-AS = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-as.exe 
-LD = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-ld.exe
-DUMP = /home/Matt/yoda_warrior/bin/mips-cygwin-elf-objdump.exe 
+CC = ~/yoda_warrior/bin/mips-cygwin-elf-gcc-4.1.1 
+AS = ~/yoda_warrior/bin/mips-cygwin-elf-as.exe 
+LD = ~/yoda_warrior/bin/mips-cygwin-elf-ld.exe
+DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe 
 BLD = ../build 
+DEBUG = -nodebug
 SRC = ./ 
 CFLAGS = -Wall -msoft-float -march=r3000 -EL 
 
@@ -15,7 +16,7 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 .PRECIOUS: %.dat %.dump %.o %.s %.asm
 
 %.rom: %.dat boot_loader.dat boot_start.dat
-	python dumpBootAndProgram.py -params toolchain_memory_specs.txt -program $< -output $@
+	python dumpBootAndProgram.py $(DEBUG) -params toolchain_memory_specs.txt -program $< -output $@
 
 # This magic grep command strips out the instruction hex from the objdump 
 # output.
@@ -26,13 +27,13 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.out: %.o
-	$(LD) -EL -Ttext=0x9fc00000 -o $@ $<
+	$(LD) -EL -Ttext=0x9fc01000 -o $@ $<
 
 boot_start.out: boot_start.o boot_loader.o
 	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
 
 boot_loader.out: boot_loader.o
-	$(LD) -EL -Ttext=0xbfc00E00 -o $@ $<
+	$(LD) -EL -Ttext=0xbfc00100 -o $@ $<
 
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
@@ -45,3 +46,6 @@ boot_loader.out: boot_loader.o
 
 clean:
 	rm *.o *.dump *.coe *.rom
+
+clean-all:
+	rm *.o *.dump *.coe *.rom *.dat
