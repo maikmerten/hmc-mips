@@ -48,7 +48,7 @@ boot_loader.out: boot_loader.o
 	$(CC) $(CFLAGS) -S -c $< -o $@
 
 clean:
-	rm *.o *.dump *.coe 
+	rm *.o *.out *.dump *.coe 
 
-clean-all:
-	rm *.o *.dump *.coe *.rom *.dat *.v
+clean-all: 
+	rm *.o *.out *.dump *.coe *.rom *.dat *.v

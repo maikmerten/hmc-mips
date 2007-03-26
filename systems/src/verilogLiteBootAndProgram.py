@@ -36,7 +36,7 @@ def verilogLiteBootAndProgram(params):
 
     # We will construct our output in a string.
     outputString = ""
-    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data)"
+    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data);"
 
     
     # Last, write the program out to the memory.  
@@ -49,7 +49,7 @@ def verilogLiteBootAndProgram(params):
         outputString += caseStmt
                                                  
         if debug:
-            outputString += "//Line %X" % current_loc
+            outputString += " //Line %X" % current_loc
         outputString += "\n"
         current_loc += 1
     program_file.close()
@@ -68,7 +68,7 @@ def verilogLiteBootAndProgram(params):
         caseStmt = caseStmt.replace("(data)", "00000000")
         outputString += caseStmt
         if debug:
-            outputString += "//Line %X" % current_loc
+            outputString += " //Line %X" % current_loc
         outputString += "\n"
         current_loc += 1
 
