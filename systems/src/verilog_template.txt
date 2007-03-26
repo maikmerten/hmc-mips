@@ -28,7 +28,7 @@ module ROM(clock, en, address, instr);
 		if(en)
 		begin
 			case(address)
-				$(case_statements)
+				(case_statements)
 				default: instr <= 32'hXXXXXXXX;
 			endcase
 		end

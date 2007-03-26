@@ -33,11 +33,10 @@ def verilogLiteBootAndProgram(params):
 
     # Initialize the current location and the output file.
     current_loc = 0
-    output_file = open(output_name, 'wb')
 
     # We will construct our output in a string.
     outputString = ""
-    caseStmtTemplate = "{1'b0, 16'h$(address)}: instr <= 32'h$(data)"
+    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data)"
 
     
     # Last, write the program out to the memory.  
@@ -45,8 +44,8 @@ def verilogLiteBootAndProgram(params):
     for line in program_file:
         line_data = line.replace("\n","")
         caseStmt = caseStmtTemplate
-        caseStmt.replace("$(address)", "%x" % current_loc)
-        caseStmt.replace("$(data)", line_data)
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", line_data)
         outputString += caseStmt
                                                  
         if debug:
@@ -65,8 +64,8 @@ def verilogLiteBootAndProgram(params):
     while current_loc < mem_size :
         line_data = line.replace("\n","")
         caseStmt = caseStmtTemplate
-        caseStmt.replace("$(address)", "%x" % current_loc)
-        caseStmt.replace("$(data)", "00000000")
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", "00000000")
         outputString += caseStmt
         if debug:
             outputString += "//Line %X" % current_loc
@@ -77,8 +76,12 @@ def verilogLiteBootAndProgram(params):
     # in the template file with that string.
     verilog_file = open(template_name, 'rU')
     verilog_output = verilog_file.read()
-    verilog_output.replace("$(case_statements)", outputString)
-    verilog_file.write(verilog_output)
+    verilog_file.close()
+    
+    verilog_output = verilog_output.replace("(case_statements)", outputString)
+
+    output_file = open(output_name, 'wb')
+    output_file.write(verilog_output)
     output_file.close()
 
     print "Boot and Program Verilog: output %d words to file %s" % (current_loc / 4, output_name)
