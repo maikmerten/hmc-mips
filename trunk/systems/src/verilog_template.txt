@@ -1,0 +1,36 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    03:54:13 03/25/2007 
+// Design Name: 
+// Module Name:    ROM 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module ROM(clock, en, address, instr);
+    input clock;
+    input en;
+    input [16:0] address;
+    output reg [31:0] instr;
+	 
+	 always @(posedge clock)
+		if(en)
+		begin
+			case(address)
+				$(case_statements)
+				default: instr <= 32'hXXXXXXXX;
+			endcase
+		end
+
+endmodule
