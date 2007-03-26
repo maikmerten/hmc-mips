@@ -115,7 +115,7 @@ module testbench;
       case (currentTest)
         0:
           if(memwrite) begin
-            if(dataadr === 32'h14 & writedata === 21) begin
+            if(writedata === 2201) begin
               currentSuccess <= 1;
             end else begin
        //       $display("Writing value %d to address %h", writedata, dataadr);
