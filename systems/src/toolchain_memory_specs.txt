@@ -4,3 +4,4 @@ except_loc:0x00000100
 except_name:boot_loader.dat
 program_loc:0x00001000
 mem_size:0x00005000
+verilog_template:verilog_template.txt
