@@ -214,20 +214,20 @@ module controller(input        ph1, ph2, reset, pendingexception,
 
   // pipeline registers
   flopenr #(1) regD(ph1, ph2, reset, ~stallD, {bdsF}, {bdsD});
-  flopenrc #(31) regE(ph1, ph2, reset, ~stallE, flushE,
+  flopenrc #(30) regE(ph1, ph2, reset, ~stallE, flushE,
                   {memtoregD, memwriteD, alusrcD, regdstD, regwriteD, 
                   aluoutsrcD, alushcontrolD, loadsignedD, luiD, cop0writeD,
                   byteD, halfwordD, overflowableD, bdsD,
                   syscallD, breakD, riD, fpuD,
                   adesableD, adelableD, 
-                  mdstartD, hilosrcD, hiloselD, hilodisablealushD, 
+                  mdstartD, hilosrcD, hilodisablealushD, 
                   specialregsrcD, rfeD}, 
                   {memtoregE, memwriteE, alusrcE, regdstE, regwriteE,  
                   aluoutsrcE, alushcontrolE, loadsignedE, luiE, cop0writeE,
                   byteE, halfwordE, overflowableE, bdsE,
                   syscallE, breakE, riE, fpuE,
                   adesableE, adelableE, 
-                  mdstartE, hilosrcE, hiloselE, hilodisablealushE, 
+                  mdstartE, hilosrcE, hilodisablealushE, 
                   specialregsrcE, rfeE});
   flopenrc #(7) regM(ph1, ph2, reset, ~stallM, flushM,
                   {memtoregE, memwriteE, regwriteE, cop0writeE, loadsignedE,
