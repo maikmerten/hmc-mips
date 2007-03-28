@@ -61,16 +61,16 @@ def verilogLiteBootAndProgram(params):
                   "  Read %d lines from %s" % (current_loc - program_loc, program_file)
 
     # Write 0's as a buffer between the program and the end of memory
-    while current_loc < mem_size :
-        line_data = line.replace("\n","")
-        caseStmt = caseStmtTemplate
-        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-        caseStmt = caseStmt.replace("(data)", "00000000")
-        outputString += caseStmt
-        if debug:
-            outputString += " //Line %X" % current_loc
-        outputString += "\n"
-        current_loc += 1
+    #while current_loc < mem_size :
+    #    line_data = line.replace("\n","")
+    #    caseStmt = caseStmtTemplate
+    #    caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+    #    caseStmt = caseStmt.replace("(data)", "00000000")
+    #    outputString += caseStmt
+    #    if debug:
+    #        outputString += " //Line %X" % current_loc
+    #    outputString += "\n"
+    #    current_loc += 1
 
     # Now that we have constructed the replacement string, we will replace the token
     # in the template file with that string.
