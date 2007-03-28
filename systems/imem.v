@@ -19,14 +19,15 @@
 
 // To become the actual external memory system.             
 module extmem(input ph1, ph2,reset,
-               input [12:0] adr,
+               input [17:0] adr,
                inout [31:0] data,
                input [3:0] byteen,
                input rwb, en,
                output done);
 
   // 0x200 = 2^10 = 1024
-  reg  [31:0] RAM[8191:0];
+  // reg  [31:0] RAM[8191:0];
+  reg  [31:0] RAM[65536:0];
   wire [1:0] state;
   reg [1:0] nextstate;
   wire [7:0] byte1, byte2, byte3, byte4;
@@ -39,7 +40,7 @@ module extmem(input ph1, ph2,reset,
   initial
     begin
       $readmemh("src/test_016.rom",RAM);
-      #5000000;
+      #150000;
       // The other tests aren't ready yet.
       //$readmemh("src/test_016.dat",RAM);  // Occurs at 90us
       //#15000;
@@ -66,6 +67,7 @@ module extmem(input ph1, ph2,reset,
     
     always @(posedge ph1)
       if(~rwb) begin
+		if(adr > 0'h65FF)
           RAM[adr] <= {byte4, byte3, byte2, byte1};
       end
 endmodule
