@@ -6,6 +6,9 @@ BLD = ../build
 DEBUG = -nodebug
 SRC = ./ 
 CFLAGS = -Wall -msoft-float -march=r3000 -EL 
+RESET_LOC = 0xbfc00000
+BOOT_LOC = 0xbfc00100
+PROG_LOC = 0x9fc01000
 
 all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test_017.dat test_026.dat test_026.asm yoda_test_001.dat yoda_test_001.asm
 
@@ -30,13 +33,13 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.out: %.o
-	$(LD) -EL -Ttext=0x9fc01000 -o $@ $<
+	$(LD) -EL -Ttext=$(PROG_LOC) -o $@ $<
 
 boot_start.out: boot_start.o boot_loader.o
-	$(LD) -EL -Ttext=0xbfc00000 -o $@ $<
+	$(LD) -EL -Ttext=$(RESET_LOC) -o $@ $<
 
 boot_loader.out: boot_loader.o
-	$(LD) -EL -Ttext=0xbfc00100 -o $@ $<
+	$(LD) -EL -Ttext=$(BOOT_LOC) -o $@ $<
 
 # ".set noreorder" in the assembly code prevents the removal of unneeded nops 
 # and swapping branches
