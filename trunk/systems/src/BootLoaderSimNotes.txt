@@ -1,0 +1,4 @@
+When the bootloader was simulated using the ideal memory, the following was observed.
+
+21.11 us = end of first run through cache
+42.47 us = end of boot loader
