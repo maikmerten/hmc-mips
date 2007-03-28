@@ -42,7 +42,7 @@ module testbench;
         reset <= 1; # 30; reset <= 0;
         // Pausing
         if(currentTest == 0)begin
-          # 4999970;
+          # 149970;
         end
 
         if(currentSuccess) begin
