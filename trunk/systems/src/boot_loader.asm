@@ -97,7 +97,8 @@ set_sr2:
 # cache size, but it is far easier to assume the 512 B cache that
 # is on our HMC-MIPS chip.
 
-	li	$9, 0x0400  # The cach size is 512 B
+	li	$9, 0x0400 	# The cache size is 512 B
+	lui	$10, 1		# Load $10 with the address 0x00010000
 inval_i_loop:
 	sb	$0, 0($10)	# Invalidate the word at address $10
 	addi	$10, $10, 4	# Move to next word address
@@ -140,6 +141,7 @@ swap_i_for_d:
 				# start writing at
 
 	li	$9, 0x0400	# The cache size is again 512 B
+	lui	$10, 1		# Load $10 with 0x00010000
 inval_d_loop:
 	sb	$0, 0($10)	# Invalidate the word at address $10
 	addi	$10, $10, 4	# Move to next word address
