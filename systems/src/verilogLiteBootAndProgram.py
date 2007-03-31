@@ -21,7 +21,7 @@ def verilogLiteBootAndProgram(params):
 
     # Get pertinent values out of the parameters
     try:
-        print params
+        # print params
         program_name = params['program_name']
         program_loc = int(params['program_loc'], 16)
         mem_size = int(params['mem_size'], 16)
@@ -48,8 +48,6 @@ def verilogLiteBootAndProgram(params):
         caseStmt = caseStmt.replace("(data)", line_data)
         outputString += caseStmt
                                                  
-        if debug:
-            outputString += " //Line %X" % current_loc
         outputString += "\n"
         current_loc += 1
     program_file.close()
@@ -59,18 +57,6 @@ def verilogLiteBootAndProgram(params):
     if offset < 0:
         print "Boot and Program Verilog:  The program exceeded available memory region." \
                   "  Read %d lines from %s" % (current_loc - program_loc, program_file)
-
-    # Write 0's as a buffer between the program and the end of memory
-    #while current_loc < mem_size :
-    #    line_data = line.replace("\n","")
-    #    caseStmt = caseStmtTemplate
-    #    caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-    #    caseStmt = caseStmt.replace("(data)", "00000000")
-    #    outputString += caseStmt
-    #    if debug:
-    #        outputString += " //Line %X" % current_loc
-    #    outputString += "\n"
-    #    current_loc += 1
 
     # Now that we have constructed the replacement string, we will replace the token
     # in the template file with that string.
