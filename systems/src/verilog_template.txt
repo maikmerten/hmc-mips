@@ -29,7 +29,7 @@ module ROM(clock, en, address, instr);
 		begin
 			case(address)
 				(case_statements)
-				default: instr <= 32'hXXXXXXXX;
+				default: instr <= 32'h00000000;
 			endcase
 		end
 
