@@ -7,6 +7,9 @@ HMC Spring 2007 CMOS VLSI, MIPS project
 This script is designed to accept three dat files (each file composed of
 MIPS instructions in hex, one instruction per line) and convert them to a
 verilog file that can be synthesized for the chip.
+
+It would definitely be nice to generalize the execution of this function
+so that code isn't copied and pasted, but since it works, I won't touch it.
 """
 
 import sys
@@ -18,7 +21,7 @@ def verilogBootAndProgram(params):
 
     # Get pertinent values out of the parameters
     try:
-        print params
+        # print params
         reset_name = params['reset_name']
         reset_loc = int(params['reset_loc'], 16)
         except_name = params['except_name']
@@ -34,20 +37,20 @@ def verilogBootAndProgram(params):
 
     # Initialize the current location and the output file.
     current_loc = reset_loc
-    output_file = open(output_name, 'wb')
 
     # We will construct our output in a string.
     outputString = ""
-    caseStmtTemplate = Template("{1'b0, 16'h$(address)}: instr <= 32'h$(data)")
+    caseStmtTemplate = Template("{1'b0, 16'h(address)}: instr <= 32'h(data)")
     
     #First open the bootstrapper start file and output the lines.
     reset_file = open(reset_name, 'rU')
     for line in reset_file:
         line_data = line.replace("\n","")
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "%x" % line_data)
-        if debug:
-            outputString += "//Line %X" % current_loc)
+        caseStmt = caseStmtTemplate
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", line_data)
+        outputString += caseStmt
+        
         outputString += "\n"
         current_loc += 1
     reset_file.close()
@@ -61,10 +64,11 @@ def verilogBootAndProgram(params):
 
     # Write 0's as a buffer between reset and exception.
     while current_loc < except_loc :
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "00000000")
-        if debug:
-            outputString += "//Line %X" % current_loc)
+        caseStmt = caseStmtTemplate
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", "00000000")
+        outputString += caseStmt
+        
         outputString += "\n"
         current_loc += 1
 
@@ -74,10 +78,11 @@ def verilogBootAndProgram(params):
     except_file = open(except_name, 'rU')
     for line in except_file:
         line_data = line.replace("\n","")
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "%x" % line_data)
-        if debug:
-            outputString += "//Line %X" % current_loc)
+        caseStmt = caseStmtTemplate
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", line_data)
+        outputString += caseStmt
+        
         outputString += "\n"
         current_loc += 1
     except_file.close()
@@ -90,11 +95,11 @@ def verilogBootAndProgram(params):
     
     # Write 0's as a buffer between the boot_loader and the program
     while current_loc < program_loc :
-        line_data = line.replace("\n","")
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "00000000")
-        if debug:
-            outputString += "//Line %X" % current_loc)
+        caseStmt = caseStmtTemplate
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", "00000000")
+        outputString += caseStmt
+        
         outputString += "\n"
         current_loc += 1
 
@@ -104,10 +109,11 @@ def verilogBootAndProgram(params):
     program_file = open(program_name, 'rU')
     for line in program_file:
         line_data = line.replace("\n","")
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "%x" % line_data)
-        if debug:
-            outputString += "//Line %X" % current_loc)
+        caseStmt = caseStmtTemplate
+        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+        caseStmt = caseStmt.replace("(data)", line_data)
+        outputString += caseStmt
+        
         outputString += "\n"
         current_loc += 1
     program_file.close()
@@ -118,21 +124,16 @@ def verilogBootAndProgram(params):
         print "Boot and Program Verilog:  The program exceeded available memory region." \
                   "  Read %d lines from %s" % (current_loc - program_loc, program_file)
 
-    # Write 0's as a buffer between the program and the end of memory
-    while current_loc < mem_size :
-        line_data = line.replace("\n","")
-        outputString += caseStmtTemplate.substitute(address = "%x" % current_loc,
-                                                    data = "00000000")
-        if debug:
-            outputString += "//Line %X" % current_loc)
-        outputString += "\n"
-        current_loc += 1
-
     # Now that we have constructed the replacement string, we will replace the token
     # in the template file with that string.
     verilog_file = open(template_name, 'rU')
-    verilog_template = Template(verilog_file.read())
-    output_file.write(verilog_template.substitute(case_statements = outputString))
+    verilog_output = verilog_file.read()
+    verilog_file.close()
+
+    verilog_output = verilog_output.replace("(case_statements)", outputString)
+
+    output_file = open(output_name, 'wb')
+    output_file.write(verilog_output)
     output_file.close()
 
     print "Boot and Program Verilog: output %d words to file %s" % (current_loc / 4, output_name)
