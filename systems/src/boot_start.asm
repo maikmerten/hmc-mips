@@ -29,7 +29,6 @@ load:
 	lui	$8, 0x9FC0
 	ori	$8, $8, 0x1000
 	jr	$8
-	j	load
 	nop
 
 # Originally, we were going to jump to a location to prove that the processor is
