@@ -40,6 +40,8 @@
 #define SWITCH_ON ((char)0x00)
 #define SWITCH_OFF ((char)0xFF)
 
+/* Heap start location */
+#define HEAP_START ((void*)0x80016A80
 
 /* Sets the LED lights in the binary pattern supplied in value */
 void setLED(char value);

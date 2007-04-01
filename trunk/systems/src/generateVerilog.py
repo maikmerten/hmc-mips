@@ -31,7 +31,7 @@ def verilogBootAndProgram(params):
         mem_size = int(params['mem_size'], 16)
         output_name = params['output_name']
         debug = params['debug']
-        template_name = params['verilog_template.v']
+        verilog_template = params['verilog_template']
     except KeyError:
         print "verilogBootAndProgram: A needed parameter was not defined!"    
 
@@ -40,7 +40,7 @@ def verilogBootAndProgram(params):
 
     # We will construct our output in a string.
     outputString = ""
-    caseStmtTemplate = Template("{1'b0, 16'h(address)}: instr <= 32'h(data)")
+    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data)"
     
     #First open the bootstrapper start file and output the lines.
     reset_file = open(reset_name, 'rU')
@@ -126,7 +126,7 @@ def verilogBootAndProgram(params):
 
     # Now that we have constructed the replacement string, we will replace the token
     # in the template file with that string.
-    verilog_file = open(template_name, 'rU')
+    verilog_file = open(verilog_template, 'rU')
     verilog_output = verilog_file.read()
     verilog_file.close()
 

@@ -113,9 +113,11 @@ inval_d_loop:
 				# Keep writing bytes until we run out of space.
 	nop
 
-# Step 3: Initialize $sp and reset $12 to proper values. 
-	lui	$29, 0x001
-	ori	$29, $29, 0x31FC  # The highest the stack goes is 0x00131FF.
+# Step 3: Initialize $sp ($29) and $gp ($28) and reset $12 to proper values. 
+	lui	$29, 0x8004
+	ori	$29, $29, 0x3FFC  # We want the stack pointer at 0x80043FFC
+
+	#lui	$28, 0x8004
 
 # Set register bits:
 #   22 (BEV) = 0 now that we have initialized the cache.
