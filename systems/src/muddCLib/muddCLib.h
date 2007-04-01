@@ -16,14 +16,14 @@
 
 
 /* LED addresses encoded for easy use of functions */
-#define LEDS ((void*)0xA0044000)
+#define LEDS ((char*)0xA0044000)
 
 /* Button addresses encoded for function use */
-#define BUTTON_UP ((void*)0x80008010)
-#define BUTTON_DOWN ((void*)0x80008014)
-#define BUTTON_LEFT ((void*)0x80008018)
-#define BUTTON_RIGHT ((void*)0x8000801C)
-#define BUTTON_MID ((void*)0x80008020)
+#define BUTTON_UP ((char*)0x80008010)
+#define BUTTON_DOWN ((char*)0x80008014)
+#define BUTTON_LEFT ((char*)0x80008018)
+#define BUTTON_RIGHT ((char*)0x8000801C)
+#define BUTTON_MID ((char*)0x80008020)
 
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
@@ -31,10 +31,10 @@
 #define BUTTON_RELEASED ((char)0xFF)
 
 /* Switch addresses encoded for function use */
-#define SWITCH1 ((void*)0x80008024)
-#define SWITCH2 ((void*)0x80008028)
-#define SWITCH3 ((void*)0x8000802C)
-#define SWITCH4 ((void*)0x80008030)
+#define SWITCH1 ((char*)0x80008024)
+#define SWITCH2 ((char*)0x80008028)
+#define SWITCH3 ((char*)0x8000802C)
+#define SWITCH4 ((char*)0x80008030)
 
 /* If a switch is up (on) then a value of 0 is returned. */
 #define SWITCH_ON ((char)0x00)
@@ -49,7 +49,7 @@ void setLED(char value);
 /* Reads the button or switch at the address specified
    Use the BUTTON_X or SWITCH# constants!
  */
-char ReadSwitch(void* switchOrButton);
+char ReadSwitch(char* switchOrButton);
 
 /*
  *  LCD MANIPULATION METHODS

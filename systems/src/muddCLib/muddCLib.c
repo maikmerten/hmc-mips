@@ -10,11 +10,11 @@
 #include "muddCLib.h"
 
 void setLED(char value) {
-	*((char*)LEDS) = value;		/* Turn the LED specified on. */
+	*LEDS = value;		/* Turn the LED specified on. */
 }
 
-char ReadSwitch(void* switchOrButton) {
-	return *((char*)switchOrButton);	
+char ReadSwitch(char *switchOrButton) {
+	return *switchOrButton;
 	/* The button value is either BUTTON_PRESSED or BUTTON_RELEASED. */
 }
 
