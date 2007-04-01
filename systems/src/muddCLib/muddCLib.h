@@ -16,44 +16,38 @@
 
 
 /* LED addresses encoded for easy use of functions */
-#define LED1 (0x80008000)
-#define LED2 (0x80008004)
-#define LED3 (0x80008008)
-#define LED4 (0x8000800C)
+#define LEDS ((void*)0xA0044000)
 
 /* Button addresses encoded for function use */
-#define BUTTON_UP (0x80008010)
-#define BUTTON_DOWN (0x80008014)
-#define BUTTON_LEFT (0x80008018)
-#define BUTTON_RIGHT (0x8000801C)
-#define BUTTON_MID (0x80008020)
+#define BUTTON_UP ((void*)0x80008010)
+#define BUTTON_DOWN ((void*)0x80008014)
+#define BUTTON_LEFT ((void*)0x80008018)
+#define BUTTON_RIGHT ((void*)0x8000801C)
+#define BUTTON_MID ((void*)0x80008020)
 
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
-#define BUTTON_PRESSED 0
-#define BUTTON_RELEASED 1
+#define BUTTON_PRESSED ((char)0x00)
+#define BUTTON_RELEASED ((char)0xFF)
 
 /* Switch addresses encoded for function use */
-#define SWITCH1 (0x80008024)
-#define SWITCH2 (0x80008028)
-#define SWITCH3 (0x8000802C)
-#define SWITCH4 (0x80008030)
+#define SWITCH1 ((void*)0x80008024)
+#define SWITCH2 ((void*)0x80008028)
+#define SWITCH3 ((void*)0x8000802C)
+#define SWITCH4 ((void*)0x80008030)
 
 /* If a switch is up (on) then a value of 0 is returned. */
-#define SWITCH_ON 0
-#define SWITCH_OFF 1
+#define SWITCH_ON ((char)0x00)
+#define SWITCH_OFF ((char)0xFF)
 
 
-/* Turns on the LED at the address supplied */
-void LEDoff(void* led);
-
-/* Turns off the LED at the address supplied */
-void LEDon(void* led);
+/* Sets the LED lights in the binary pattern supplied in value */
+void setLED(char value);
 
 /* Reads the button or switch at the address specified
    Use the BUTTON_X or SWITCH# constants!
  */
-bool ReadSwitch(void* button);
+char ReadSwitch(void* switchOrButton);
 
 /*
  *  LCD MANIPULATION METHODS
