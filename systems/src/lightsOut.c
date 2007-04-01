@@ -119,7 +119,36 @@ void update(char* input)
 	   carat in the appropriate direction. */
 	if(input == BUTTON_LEFT)
 	{
-
+		if(lightPosition != 0)
+			lightPosition -= 1;
+	}
+	else if(input == BUTTON_RIGHT)
+	{
+		if(lightPosition != (NUM_LIGHTS - 1) )
+			lightPosition += 1;
+	}
+	/* If the button was the up button, we want to flip the values 
+	   in the square pointed to by the carat, and also its neighbors. */
+	else if(input == BUTTON_UP)
+	{
+		/* Consider the corners first, and if we aren't at a corner,
+		   then just flip the one pointed at and its neighbors. */
+		if(lightPosition == 0)
+		{
+			lights[0] = (~lights[0]) & 0x1;
+			lights[1] = (~lights[0]) & 0x1;
+		}
+		else if(lightPosition == NUM_LIGHTS - 1)
+		{
+			lights[NUM_LIGHTS - 1] = (~lights[NUM_LIGHTS - 1]) & 0x1;
+			lights[NUM_LIGHTS - 2] = (~lights[NUM_LIGHTS - 2]) & 0x1;
+		}
+		else
+		{
+			lights[lightPosition - 1] = (~lights[lightPosition - 1]) & 0x1;
+			lights[lightPosition] = (~lights[lightPosition]) & 0x1;
+			lights[lightPosition + 1] = (lights[lightPosition + 1]) & 0x1;
+		}
 	}
 }
 
