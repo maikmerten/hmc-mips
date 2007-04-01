@@ -25,7 +25,9 @@ int lightPosition;
    button is being pressed. */
 char* readInput();
 
-/* update shall update global variables based on the value of input. */
+/* update shall shift the lightPosition carat if it receives a 
+   left or right button, or else it shall flip the corresponding
+   lights if it sees an up button. */
 void update(char* input);
 
 /* areLightsOut returns true if all of the lights are out. */
