@@ -1,28 +1,36 @@
+# Tell where various toolchain utilities exist.
 CC = ~/yoda_warrior/bin/mips-cygwin-elf-gcc-4.1.1 
 AS = ~/yoda_warrior/bin/mips-cygwin-elf-as.exe 
 LD = ~/yoda_warrior/bin/mips-cygwin-elf-ld.exe
-DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe 
-BLD = ../build 
-DEBUG = -nodebug
-SRC = ./ 
+DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe
+
+# Where the source directories are
+BLD = ../build
+SRC = ./
+
+# These variables control the build process.
 CFLAGS = -Wall -msoft-float -march=r3000 -EL 
+DEBUG = -nodebug
+BOOTLOAD = true
+MEM_SPECS = toolchain_memory_specs.txt
 RESET_LOC = 0xbfc00000
 BOOT_LOC = 0xbfc00100
 PROG_LOC = 0x9fc01000
 
+# Build all of the main programs in the src folder
 all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test_017.dat test_026.dat test_026.asm yoda_test_001.dat yoda_test_001.asm
-
-# All c-compiled programs must have their first instruction changed so that it
-# sets the stack pointer
 
 # This line prevents make from automatically deleting these files as temporary
 .PRECIOUS: %.dat %.dump %.o %.s %.asm
 
 %.rom: %.dat boot_loader.dat boot_start.dat
-	python dumpBootAndProgram.py $(DEBUG) -params toolchain_memory_specs.txt -program $< -output $@
+	python dumpBootAndProgram.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 
 %.v: %.dat
-	python verilogLiteBootAndProgram.py $(DEBUG) -params toolchain_memory_specs.txt -program $< -output $@
+ifeq ($(BOOTLOAD),true)
+	python generateVerilog.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+else
+	python generateVerilogNoBoot.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 
 # This magic grep command strips out the instruction hex from the objdump 
 # output.
