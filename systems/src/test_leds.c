@@ -10,9 +10,9 @@ int main() {
 	{
 
 	switch0 = 0x1;
-	switch1 = 0x10;
-	switch2 = 0x100;
-	switch3 = 0x1000;
+	switch1 = 0x2;
+	switch2 = 0x4;
+	switch3 = 0x8;
 
 	if(ReadSwitch(SWITCH0) == SWITCH_ON)
 		switch0 = 0;
