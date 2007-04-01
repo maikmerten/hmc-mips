@@ -21,14 +21,15 @@ def verilogBootAndProgram(params):
 
     # Get pertinent values out of the parameters
     try:
-        # print params
+        # We bit-shift the addresses by 2 because the memory controller treats
+        # memory as word-addressable, and masks to provide byte-addressing.
         reset_name = params['reset_name']
-        reset_loc = int(params['reset_loc'], 16)
+        reset_loc = int(params['reset_loc'], 16) >> 2
         except_name = params['except_name']
-        except_loc = int(params['except_loc'], 16)
+        except_loc = int(params['except_loc'], 16) >> 2
         program_name = params['program_name']
-        program_loc = int(params['program_loc'], 16)
-        mem_size = int(params['mem_size'], 16)
+        program_loc = int(params['program_loc'], 16) >> 2
+        mem_size = int(params['mem_size'], 16) >> 2
         output_name = params['output_name']
         debug = params['debug']
         verilog_template = params['verilog_template']
@@ -40,7 +41,7 @@ def verilogBootAndProgram(params):
 
     # We will construct our output in a string.
     outputString = ""
-    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data)"
+    caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data);"
     
     #First open the bootstrapper start file and output the lines.
     reset_file = open(reset_name, 'rU')

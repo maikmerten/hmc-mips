@@ -21,10 +21,11 @@ def verilogLiteBootAndProgram(params):
 
     # Get pertinent values out of the parameters
     try:
-        # print params
+        # Bit-shift addresses by 2 because the memory system treats memory
+        # like it is word-addressable.
         program_name = params['program_name']
-        program_loc = int(params['program_loc'], 16)
-        mem_size = int(params['mem_size'], 16)
+        program_loc = int(params['program_loc'], 16) >> 2
+        mem_size = int(params['mem_size'], 16) >> 2
         output_name = params['output_name']
         debug = params['debug']
         template_name = params['verilog_template']
