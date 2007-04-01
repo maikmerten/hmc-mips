@@ -16,22 +16,31 @@
 
 #include "lightsOut.h"
 #include "muddCLib/muddCLib.h"
+#include "muddCLib/mtRand.h"
 
 int main() 
 {
 	/* Initialize variables */
 	int i;
 	int buttonPressed;
+	int numberSeed = 2;
+	int numberExtracted;
 
 	while(1)  /* The main program loop */
 	{
 
+	/* Initialize the random number generator. */
+	initializeGenerator(numberSeed);
+	generateNumbers();
+	numberExtracted = extractNumber(NUM_LIGHTS);
+	
 	/* Initialize variables, array, and LCD. */
 	for(i = 0; i < NUM_LIGHTS; ++i) 
 	{
 		/* For now, we won't randomize the lights, we'll just make them
 		   all on initially. */
-		lights[i] = LIGHT_ON;
+		lights[i] = numberExtracted & 0x1;
+		numberExtracted = numberExtracted >> 1;
 	}
 	lightsOut = 0;
 	lightPosition = 0;
@@ -191,7 +200,7 @@ int areLightsOut()
 	int i;
 	for(i = 0; i < NUM_LIGHTS; ++i)
 	{
-		if(lights[i] != 0)
+		if(lights[i] == LIGHT_ON)
 			return 0;
 	}
 

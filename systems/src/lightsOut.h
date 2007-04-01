@@ -14,8 +14,8 @@
 
 #define NUM_LIGHTS 16
 
-#define LIGHT_OFF 0
-#define LIGHT_ON 1
+#define LIGHT_OFF 1
+#define LIGHT_ON 0
 
 int lights[NUM_LIGHTS];
 int lightsOut;
