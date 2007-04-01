@@ -7,7 +7,7 @@
  *  Supplies code for the functions defined in muddCLib.h
  */
 
-#include <"muddCLib.h">
+#include "muddCLib.h"
 
 void setLED(char value) {
 	*((char*)LEDS) = value;		/* Turn the LED specified on. */

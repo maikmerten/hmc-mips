@@ -26,11 +26,12 @@ all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test
 %.rom: %.dat boot_loader.dat boot_start.dat
 	python dumpBootAndProgram.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 
-%.v: %.dat
+%.v: %.dat boot_loader.dat boot_start.dat
 ifeq ($(BOOTLOAD),true)
 	python generateVerilog.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 else
 	python generateVerilogNoBoot.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+endif
 
 # This magic grep command strips out the instruction hex from the objdump 
 # output.
@@ -56,7 +57,13 @@ boot_loader.out: boot_loader.o
 	$(AS) -EL -o $@ $<
 
 %.asm: %.c
-	$(CC) $(CFLAGS) -S -c $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
+
+test_leds.asm: test_leds.c muddCLib/muddCLib.o boot_start.dat boot_loader.dat
+	$(CC) $(CFLAGS) -S test_leds.c -o test_leds.asm
+
+test_leds.out: test_leds.o muddCLib/muddCLib.o
+	$(LD) -EL -Ttext=$(PROG_LOC) -o test_leds.out test_leds.o muddCLib/muddCLib.o
 
 clean:
 	rm *.o *.out *.dump *.coe 
