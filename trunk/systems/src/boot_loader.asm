@@ -114,8 +114,8 @@ inval_d_loop:
 	nop
 
 # Step 3: Initialize $sp ($29) and $gp ($28) and reset $12 to proper values. 
-	lui	$29, 0x8004
-	ori	$29, $29, 0x3FFC  # We want the stack pointer at 0x80043FFC
+	lui	$29, 0xA004
+	ori	$29, $29, 0x3FFC  # We want the stack pointer at 0xA0043FFC
 
 	#lui	$28, 0x8004
 
