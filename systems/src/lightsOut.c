@@ -8,6 +8,12 @@
  *  hmc-mips system.
  */
 
+#define DEBUG_SIMULATOR 1
+
+#ifdef DEBUG_SIMULATOR
+#include <stdio.h>
+#endif
+
 #include "lightsOut.h"
 #include "muddCLib/muddCLib.h"
 
@@ -33,20 +39,29 @@ int main()
 
 	/* Randomize the array. */
 
+#ifdef DEBUG_SIMULATOR
+	printf("LightsOut!\n");
+#else
 	/* printLED("LightsOut!"); */
+#endif
 
 	while(!lightsOut)
 	{
+		printLights();
 		/* Read input from the buttons and update the game state. */
 		update(readInput());
 		lightsOut = areLightsOut();
-		printLights();
 	}
 
 	while(!buttonPressed)
 	{
+#ifdef DEBUG_SIMULATOR
+		printLights();
+		printf("You win!\nPlay again?\n");
+#else
 		/* printLED("You win!"); */
 		/* printLED("Play again?"); */
+#endif
 		buttonPressed = (int)readInput();
 	}
 	
@@ -59,8 +74,24 @@ int main()
 char *lastPressed = 0;
 char lastVal = 0;
 
-char* readInput() 
+char* readInput()
 {
+#ifdef DEBUG_SIMULATOR /* Are we simulating? */
+
+	char c;
+	scanf(" %c", &c);
+
+	if(c == 'a')
+		return BUTTON_LEFT;
+	if(c == 'd')
+		return BUTTON_RIGHT;
+	if(c == 'w')
+		return BUTTON_UP;
+
+	return (char*)0;
+
+#else /* This would mean we aren't simulating. */
+
 	char leftVal;
 	char rightVal;
 	char upVal;
@@ -111,6 +142,9 @@ char* readInput()
 	}
 
 	return (char*)0;
+
+#endif /* We determined whether we want the simulator version of readInput
+		  or the real version. */
 }
 
 void update(char* input) 
@@ -136,7 +170,7 @@ void update(char* input)
 		if(lightPosition == 0)
 		{
 			lights[0] = (~lights[0]) & 0x1;
-			lights[1] = (~lights[0]) & 0x1;
+			lights[1] = (~lights[1]) & 0x1;
 		}
 		else if(lightPosition == NUM_LIGHTS - 1)
 		{
@@ -147,7 +181,7 @@ void update(char* input)
 		{
 			lights[lightPosition - 1] = (~lights[lightPosition - 1]) & 0x1;
 			lights[lightPosition] = (~lights[lightPosition]) & 0x1;
-			lights[lightPosition + 1] = (lights[lightPosition + 1]) & 0x1;
+			lights[lightPosition + 1] = (~lights[lightPosition + 1]) & 0x1;
 		}
 	}
 }
@@ -167,5 +201,29 @@ int areLightsOut()
 
 void printLights()
 {
+#ifdef DEBUG_SIMULATOR
+	int i;
 
+	printf("--\n");
+
+	for(i = 0; i < NUM_LIGHTS; ++i)
+	{
+		if(lights[i] == LIGHT_ON)
+			printf("_");
+		else
+			printf("*");
+	}
+	printf("\n");
+	for(i = 0; i < NUM_LIGHTS; ++i)
+	{
+		if(i == lightPosition)
+			printf("^");
+		else
+			printf(" ");
+	}
+	printf("\n\n");
+
+#else
+
+#endif
 }
