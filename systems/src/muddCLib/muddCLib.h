@@ -19,11 +19,11 @@
 #define LEDS ((char*)0xA0044000)
 
 /* Button addresses encoded for function use */
-#define BUTTON_UP ((char*)0x80008010)
-#define BUTTON_DOWN ((char*)0x80008014)
-#define BUTTON_LEFT ((char*)0x80008018)
-#define BUTTON_RIGHT ((char*)0x8000801C)
-#define BUTTON_MID ((char*)0x80008020)
+#define BUTTON_UP ((char*)0xA0044018)
+#define BUTTON_DOWN ((char*)0xA004401C)
+#define BUTTON_LEFT ((char*)0xA0044020)
+#define BUTTON_RIGHT ((char*)0xA0044024)
+#define BUTTON_MID ((char*)0xA0044014)
 
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
@@ -31,10 +31,10 @@
 #define BUTTON_RELEASED ((char)0xFF)
 
 /* Switch addresses encoded for function use */
-#define SWITCH1 ((char*)0x80008024)
-#define SWITCH2 ((char*)0x80008028)
-#define SWITCH3 ((char*)0x8000802C)
-#define SWITCH4 ((char*)0x80008030)
+#define SWITCH0 ((char*)0xA0044004)
+#define SWITCH1 ((char*)0xA0044008)
+#define SWITCH2 ((char*)0xA004400C)
+#define SWITCH3 ((char*)0xA0044010)
 
 /* If a switch is up (on) then a value of 0 is returned. */
 #define SWITCH_ON ((char)0x00)
