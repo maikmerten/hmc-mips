@@ -22,7 +22,7 @@ int main() {
 		switch2 = 0;
 	if(ReadSwitch(SWITCH3) == SWITCH_ON)
 		switch3 = 0;
-	setLED((char)0x09);
+	setLED((char)(switch0 + switch1 + switch2 + switch3));
 
 	}
 	return 0;

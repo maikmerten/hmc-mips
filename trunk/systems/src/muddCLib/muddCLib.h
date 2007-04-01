@@ -28,7 +28,7 @@
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
 #define BUTTON_PRESSED ((char)0x00)
-#define BUTTON_RELEASED ((char)0xFF)
+#define BUTTON_RELEASED ((char)0x01)
 
 /* Switch addresses encoded for function use */
 #define SWITCH0 ((char*)0xA0044004)
@@ -38,7 +38,7 @@
 
 /* If a switch is up (on) then a value of 0 is returned. */
 #define SWITCH_ON ((char)0x00)
-#define SWITCH_OFF ((char)0xFF)
+#define SWITCH_OFF ((char)0x01)
 
 /* Heap start location */
 #define HEAP_START ((void*)0x80016A80
