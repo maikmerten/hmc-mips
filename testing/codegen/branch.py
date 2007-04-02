@@ -33,7 +33,7 @@ class Block:
         
         if vector:
             #if we jumped at all, we'll need a BDS op
-            outBlock += makeInstruction(machine) + "\n"
+            outBlock += makeInstruction(machine, bds=True) + "\n"
             # for the rest, if we're following the branch, don't act
             for x in xrange(vector-1):
                 outBlock += (makeInstruction(machine, act=(not taken)) + '\n')

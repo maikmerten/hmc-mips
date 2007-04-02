@@ -11,20 +11,23 @@ class Memop:
     name = 'nop'
     mask = (2**LENGTH) - 1
     isLoad = True
+    bdsSafe = False
     
     # sw $1 42($1)
     def __init__(self):
         self.ops = (sreg(), sreg())
         
-    def __call__(self, machine):
+    def __call__(self, machine, act=True):
         outIns = ""
         # determine where we'll be jumping to
         loc = memloc().location
         addressReg = treg()
         offset = random.randint(0,32)
-        regVector = machine.regs[addressReg.reg] = loc - offset
+        regVector = loc - offset
+        if act:
+            machine.regs[addressReg.reg] = regVector
         
-        outIns += "addi %s $0 %d\n" % (str(addressReg.reg), regVector)
+        outIns += "addi $%s $0 %d\n" % (str(addressReg.reg), regVector)
         
         if self.isLoad:
             dataReg = treg()
@@ -33,10 +36,12 @@ class Memop:
             except KeyError:
                 # assuming we load 0 from nowhere
                 data = 0
-            machine.regs[dataReg.reg] = data
+            if act:
+                machine.regs[dataReg.reg] = data
         else:
             dataReg = sreg()
-            machine.mem[loc] = (machine.regs[dataReg.reg] & self.mask)
+            if act:
+                machine.mem[loc] = (machine.regs[dataReg.reg] & self.mask)
             
         # print the instruction
         outIns += "%s %s %d(%s)" % \
@@ -61,19 +66,6 @@ class lb(Memop):
     isLoad = True
     mask = 0xFF
 
-weights =  [(sw,    5),
-            (lw,    5),
-            (sb,    1),
-            (lb,    1)]
-            
-# make weight table. if a weight is too big, this gets kinda slow
-instructions = []            
-for (op, weight) in weights:
-    instructions += weight * [op]
-
-def makeMemop(machine, act=True):
-    ins = random.choice(instructions)()
-    return ins(machine)            
 
 #debug
 if __name__ == '__main__':

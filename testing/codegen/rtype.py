@@ -11,7 +11,7 @@ class Rtype(Instruction):
     operands = ()
     actFunction = None
     name = 'nop'
-    size = 1
+    bdsSafe = True
 
     def __call__(self, m, act=True):
         self.operands = [op() for op in self.operandTypes]
