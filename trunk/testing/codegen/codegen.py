@@ -30,15 +30,9 @@ for (regname, value) in machine.regs.iteritems():
 instructionsLeft = DESIRED_INSTRUCTION_COUNT
 
 while instructionsLeft > 0:
-    # fudge numbers to direct tester.
-    # if not time==2.45am: code.clean()
-    direction = random.randint(0,5)
-    if 0 <= direction <=2:
+    if random.randint(0,5):
         print makeInstruction(machine)
-        instructionsLeft -= 1
-    elif 3<= direction <=4:
-        print makeMemop(machine)
-        instructionsLeft -= 2
+        instructionsLeft -= 1.25
     else:
         print makeBlock(machine)
         instructionsLeft -= 3
