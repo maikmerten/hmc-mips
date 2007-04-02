@@ -78,6 +78,9 @@ module memsys(input ph1, ph2, reset,
   assign enF = reF;
   assign enM = reM | memwriteM;
 
+  assign #1 imemadr = iadr[26:0];
+  assign #1 dmemadr = dadr[26:0];
+  
   // This swaps the output if swc is asserted.
   // The first is the swapped case, second is normal.
   // Inputs:
@@ -126,12 +129,12 @@ module memsys(input ph1, ph2, reset,
   
   cache dcache(ph1, ph2, reset, dadr, ddata, dbyteen,
                            drwb, den, ddone,
-                           dmemadr,dmemdata,dmembyteen,
+                           dmemdata,dmembyteen,
                            dmemrwb, dmemen,dmemdone);
                          
   cache icache(ph1, ph2, reset, iadr, idata, ibyteen,
                            irwb, ien, idone,
-                           imemadr,imemdata,imembyteen,
+                           imemdata,imembyteen,
                            imemrwb, imemen,imemdone);
 
   writebuffer writebuf(ph1, ph2, reset, wbadr, wbdata, wbbyteen,
@@ -204,7 +207,6 @@ module cache(input ph1, ph2, reset,
              input rwb, en,
              output done,
              
-             output [26:0] memadr, 
              inout  [31:0] memdata,
              output [3:0] membyteen,
              output memrwb,
@@ -244,7 +246,6 @@ module cache(input ph1, ph2, reset,
   assign #1 validnew = ((& byteen) | reading) & memdone;  // valid if reading or writing all
                                                                     // bytes.
   // Memory controls                  
-  assign #1 memadr = adr[26:0];
   mux2 #(4) membyteenmux(byteen, 4'b1, reading, membyteen);
   assign #1 memrwb = rwb;
   assign #1 memen = waiting;
