@@ -6,33 +6,80 @@
 
 from operands import *
 
-class addu(Instruction):
+class Rtype(Instruction):
+    operandTypes = ()
+    operands = ()
+    actFunction = None
+    name = 'nop'
+    size = 1
+
+    def __call__(self, m, act=True):
+        self.operands = [op() for op in self.operandTypes]
+        if act:
+            self.actFunction(m, self.operands)
+        return self.name + " " + ", ".join([str(op) for op in self.operands])
+
+class addu(Rtype):
     name = 'addu'
     operandTypes = (treg, sreg, sreg)
     actFunction = lambda self, m, (d,s,t): \
             m.setReg(d.reg, (m.regs[s.reg] + m.regs[t.reg]))
             
-class subu(Instruction):
+class subu(Rtype):
     name = 'subu'
     operandTypes = (treg, sreg, sreg)
     actFunction = lambda self, m, (d,s,t): \
             m.setReg(d.reg, (m.regs[s.reg] - m.regs[t.reg]))
 
-class addiu(Instruction):
+class addiu(Rtype):
     name = 'addiu'
     operandTypes = (treg, sreg, simm16)
     actFunction = lambda self, m, (d,s,j): \
             m.setReg(d.reg, (m.regs[s.reg] + j.imm))
+
             
-class subiu(Instruction):
-    name = 'subiu'
-    operandTypes = (treg, sreg, simm16)
+class and_ins(Rtype):
+    name = 'and'
+    operandTypes = (treg, sreg, sreg)
+    actFunction = lambda self, m, (d,s,t): \
+            m.setReg(d.reg, (m.regs[s.reg] & m.regs[t.reg]))
+
+class or_ins(Rtype):
+    name = 'or'
+    operandTypes = (treg, sreg, sreg)
+    actFunction = lambda self, m, (d,s,t): \
+            m.setReg(d.reg, (m.regs[s.reg] | m.regs[t.reg]))
+            
+class xor_ins(Rtype):
+    name = 'xor'
+    operandTypes = (treg, sreg, sreg)
+    actFunction = lambda self, m, (d,s,t): \
+            m.setReg(d.reg, (m.regs[s.reg] ^ m.regs[t.reg]))
+            
+# nor not yet implemented
+
+class andi(Rtype):
+    name = 'andi'
+    operandTypes = (treg, sreg, uimm16)
     actFunction = lambda self, m, (d,s,j): \
-            m.setReg(d.reg, (m.regs[s.reg] - j.imm))
+            m.setReg(d.reg, (m.regs[s.reg] & j.imm))
             
-# debug goes here
-m = MIPSComputer()
-print m.regs
-i = subiu()
-print i(m)
-print m.regs
+class ori(Rtype):
+    name = 'ori'
+    operandTypes = (treg, sreg, uimm16)
+    actFunction = lambda self, m, (d,s,j): \
+            m.setReg(d.reg, (m.regs[s.reg] | j.imm))
+            
+class xori(Rtype):
+    name = 'xori'
+    operandTypes = (treg, sreg, uimm16)
+    actFunction = lambda self, m, (d,s,j): \
+            m.setReg(d.reg, (m.regs[s.reg] ^ j.imm))
+
+#debug
+if __name__ == '__main__':
+    m = MIPSComputer()
+    print m.regs
+    ins = ori()
+    print ins(m)
+    print m.regs

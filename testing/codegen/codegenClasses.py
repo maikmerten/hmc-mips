@@ -1,9 +1,7 @@
 # codegenClasses.py
-# random directed code generator for MIPS
+# helper classes for codegen
 # 26mar2007, Thomas W. Barr
 # tbarr at cs dot hmc dot edu
-
-# unidirectional code tester (code never branches backwards)
 
 import random
 
@@ -16,6 +14,7 @@ class MIPSError(Exception):
 class MIPSComputer:
     regs = {} # stores unsigned values
     mem = {} # memory not yet implemented
+    blockCounter = 0 #increment on block
     
     def __init__(self):
         for reg in range(32):
@@ -59,16 +58,7 @@ class Operand:
     pass
 
 class Instruction:
-    operandTypes = ()
-    operands = ()
-    actFunction = None
-    name = 'nop'
-
-    def __call__(self, m, act=True):
-        self.operands = [op() for op in self.operandTypes]
-        if act:
-            self.actFunction(m, self.operands)
-        return self.name + " " + ", ".join([str(op) for op in self.operands])
+    pass
     
 def unsigned(signedInt, length=LENGTH):
     # make sure we're in bounds for either signed or unsigned
