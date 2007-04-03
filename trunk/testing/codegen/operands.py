@@ -6,6 +6,8 @@
 from codegenClasses import *
 import random
 
+mempool = [2000, 2004, 2008, 2012, 2016, 2020]
+
 class sreg(Operand):
     reg = None
     
@@ -56,4 +58,4 @@ class memloc:
     location = None
     
     def __init__(self):
-        self.location = (random.randint(0, 5) + 500) * 4
+        self.location = random.choice(mempool)
