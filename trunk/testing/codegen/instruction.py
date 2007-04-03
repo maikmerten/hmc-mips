@@ -16,7 +16,7 @@ weights =  [(addu,    1),
             (andi,    1),
             (ori,     1),
             (xori,    1),
-            (sw,      0),
+            (sw,      5),
             (lw,      5),
             (sb,      0),
             (sb,      0)

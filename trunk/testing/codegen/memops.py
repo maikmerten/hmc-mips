@@ -22,7 +22,7 @@ class Memop:
         # determine where we'll be jumping to
         loc = memloc().location
         addressReg = treg()
-        offset = 0
+        offset = random.randint(0,32)
         regVector = loc - offset
         if act:
             machine.regs[addressReg.reg] = regVector
