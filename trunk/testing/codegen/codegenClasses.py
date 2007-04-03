@@ -6,7 +6,7 @@
 import random
 
 LENGTH = 32 #word length of machine, tested for mips32, should work for mips64
-DEBUG = True
+DEBUG = False
 
 class MIPSError(Exception):
     pass
