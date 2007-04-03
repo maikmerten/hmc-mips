@@ -12,10 +12,11 @@ from codegenClasses import *
 from rtype import *
 import random
 
-DESIRED_INSTRUCTION_COUNT = 500
-
+DESIRED_INSTRUCTION_COUNT = 0
 
 print "# randomly generated test\n"
+print ".set noreorder"
+
 print "main:"
 # start by creating a machine and populating some registers
 machine = MIPSComputer()
@@ -40,7 +41,8 @@ while instructionsLeft > 0:
 print "# done.\n"
 
 # xor all the regs together
-for x in range(31):
+for x in range(29):
+    x += 2
     print "xor $%s, $%s, $%s" % (x+1, x+1, x)
     machine.regs[x+1] = machine.regs[x+1] ^ machine.regs[x]
 
