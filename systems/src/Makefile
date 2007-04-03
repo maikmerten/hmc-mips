@@ -7,10 +7,11 @@ DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe
 # Where the source directories are
 BLD = ../build
 SRC = ./
-INCLUDEFILES = boot.mk testLED.mk testLCD.mk lightsOut.mk
+INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk
 
 # These variables control the build process.
 CFLAGS = -Wall -msoft-float -march=r3000 -EL 
+LDFLAGS = -Tdata=0x80016A80 -EL
 DEBUG = -nodebug
 BOOTLOAD = true
 MEM_SPECS = toolchain_memory_specs.txt
@@ -35,7 +36,7 @@ include $(INCLUDEFILES)
 	$(AS) -EL -o $@ $<
 
 %.out: %.o
-	$(LD) -EL -Ttext=$(PROG_LOC) -o $@ $<
+	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $<
 
 %.dump: %.out
 	$(DUMP) -d --disassemble-zeroes $< > $@
