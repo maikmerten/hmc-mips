@@ -9,13 +9,30 @@
 
 #include "muddCLib.h"
 
-void setLED(char value) {
+void setLED(char value) 
+{
 	*LEDS = value;		/* Turn the LED specified on. */
 }
 
-char readSwitch(char *switchOrButton) {
+char readSwitch(char *switchOrButton) 
+{
 	return *switchOrButton;
 	/* The button value is either BUTTON_PRESSED or BUTTON_RELEASED. */
+}
+
+/*****************************
+ *  CYCLE COUNTER METHODS
+ *****************************/
+
+int getKCycleCount() 
+{
+	return KCYCLE_CNT;
+}
+
+void delay1KTCYx(int n)
+{
+	int cycle_count = CYCLE_STEP * n;
+	while(!cycle_count) --cycle_count;
 }
 
 /*****************************
@@ -93,8 +110,9 @@ void dispMessage(char* line1, char* line2)
 void move(unsigned char position)
 {
 	// Check if the given position is within the bounds of the display
-	if ((position >= (unsigned char)0x00) && (position <= (unsigned char)0x0F) ||
-		(position >= (unsigned char)0x40) && (position <= (unsigned char)0x4F))
+	// (position must be >= 0x00 because of its type.)
+	if ( (position <= (unsigned char)0x0F) ||
+		 ((position >= (unsigned char)0x40) && (position <= (unsigned char)0x4F))   )
 	{
 		// Need to set high bit so LCD knows you want to move cursor position
 		sendInst(0x80 | position);
@@ -130,8 +148,8 @@ void sendInst(unsigned char instruction)
 unsigned char checkLoc(unsigned char location)
 {
 	// Valid location
-	if (((location >= 0x00) && (location < 0x10)) 
-		|| ((location >= 0x40) && (location < 0x50)))
+	if ( (location < 0x10) ||
+		 ((location >= 0x40) && (location < 0x50)))
 	{
 		return location;
 	}
