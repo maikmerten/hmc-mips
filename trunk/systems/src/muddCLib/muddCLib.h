@@ -43,7 +43,7 @@
 #define SWITCH_OFF ((char)0x00)
 
 /* Heap start location */
-#define HEAP_START ((void*)0x80016A80
+#define HEAP_START ((void*)0x80026A80)
 
 /* Sets the LED lights in the binary pattern supplied in value */
 void setLED(char value);
@@ -65,14 +65,14 @@ char readSwitch(char* switchOrButton);
    cycles.
    Note that this macro defines it as dereferenced.  This
    makes it easy to set and get CYCLE_CNT.  */
-#define KCYCLE_CNT (*(char*)0xA0044028)
+#define CYCLE_CNT (*(char*)0xA004402C)
 /* Each increment on the cycle counter is 1000 cycles. */
 #define CYCLE_STEP 1000
 
 /* Gets the cycle count from the memory contoller's clock.
  * The cycle count is returned in thousands of cycles.
  */
-int getKCycleCount();
+int getCycleCount();
 
 /* Delay for CYCLE_STEP*n clock cycles. */
 void delay1KTCYx(int n);
@@ -86,9 +86,17 @@ void delay1KTCYx(int n);
  *  Controller With Multiple Buffers," dated Dec. 9, 2005.
  */
 
-#define LCD_RS (*(char*)0xA004402C) // Reset bit on the LCD
-#define LCD_E (*(char*)0xA0044030) // Enable bit on the LCD
-#define LCD_DATA (*(char*)0xA0044034) // The data register on the LCD
+/* In hardware, we only have one address to write to.
+   Bits 0-7 are data, bit 8 is RS.  */
+//#define LCD_RS (*(char*)0xA004402C) // Reset bit on the LCD
+//#define LCD_E (*(char*)0xA0044030) // Enable bit on the LCD
+//#define LCD_DATA (*(char*)0xA0044034) // The data register on the LCD
+#define LCD_E_MASK 0x200
+#define LCD_RS_MASK 0x100
+#define LCD_DATA_MASK 0x0FF
+
+#define LCD_DATA (*(char*)0xA0044028)
+int lastData = 0;
 
 #define LCD_WIDTH 16
 
