@@ -36,6 +36,8 @@
 #define SWITCH2 ((char*)0xA004400C)
 #define SWITCH3 ((char*)0xA0044010)
 
+#define NOSWITCH ((char*)0)
+
 /* If a switch is up (on) then a value of 0 is returned. */
 #define SWITCH_ON ((char)0x01)
 #define SWITCH_OFF ((char)0x00)
