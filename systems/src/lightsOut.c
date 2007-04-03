@@ -8,7 +8,7 @@
  *  hmc-mips system.
  */
 
-/* #define DEBUG_SIMULATOR 1 */
+//#define DEBUG_SIMULATOR 1
 
 #ifdef DEBUG_SIMULATOR
 #include <stdio.h>
@@ -22,27 +22,27 @@ int main()
 {
 	/* Initialize variables */
 	int i;
-	char buttonPressed;
+	char* buttonPressed;
 	int numberExtracted;
+	int done;
 
 #ifdef DEBUG_SIMULATOR
-	int numberSeed = getKCycleCount();
-#else
+	printf("LightsOut!\n");
 	int numberSeed = 2;
-#endif
-
+#else
 	/* Initialize the LCD display. */
 	initLCD();
+	dispMessage("LightsOut!", "     HMC-MIPS 07");
 
-#ifdef DEBUG_SIMULATOR
-		printf("LightsOut!\n");
-#else
-		dispMessage("LightsOut!", "     HMC-MIPS 07");
-		/* Wait for a button press. */
-		while(readSwitch(BUTTON_UP) == BUTTON_RELEASED);
+	/* Wait for a button press. */
+	while(readInput() == NOSWITCH);
+
+	int numberSeed = getKCycleCount();
 #endif
 
-	while(1)  /* The main program loop */
+	/* Initialize done to be 0. */
+	done = 0;
+	while(!done)  /* The main program loop */
 	{
 
 	/* Initialize the random number generator.
@@ -70,7 +70,8 @@ int main()
 		lightsOut = areLightsOut();
 	}
 
-	while(buttonPressed == BUTTON_RELEASED)
+	/* Any button press continues except down, which ends. */
+	while(buttonPressed == NOSWITCH)
 	{
 #ifdef DEBUG_SIMULATOR
 		printLights();
@@ -79,13 +80,22 @@ int main()
 		dispMessage("You win!", "Play again?");
 #endif
 		buttonPressed = readInput();
+		if(buttonPressed == BUTTON_DOWN)
+		{
+			done = 1;
+		}
 	}
-	
 
 	} /* END of the main program loop. */
 
+#ifndef DEBUG_SIMULATOR
+	sendInst(L_off);
+	while(1);	/* Loop forever instead of letting the program
+				   counter run up. */
+#endif
+
 	return 0;
-}
+} /* END of the main function. */
 
 char *lastPressed = 0;
 char lastVal = 0;
@@ -103,25 +113,32 @@ char* readInput()
 		return BUTTON_RIGHT;
 	if(c == 'w')
 		return BUTTON_UP;
+	if(c == 's')
+		return BUTTON_DOWN;
 
-	return (char*)0;
+	return NOSWITCH;
 
 #else /* This would mean we aren't simulating. */
 
 	char leftVal;
 	char rightVal;
 	char upVal;
+	char downVal;
 
 	leftVal = readSwitch(BUTTON_LEFT);
 	rightVal = readSwitch(BUTTON_RIGHT);
 	upVal = readSwitch(BUTTON_UP);
+	downVal = readSwitch(BUTTON_DOWN);
 
 	/* Ignore input if more than one button is pressed. */
 	if( (leftVal == BUTTON_PRESSED && rightVal == BUTTON_PRESSED)
 		|| (leftVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)
-		|| (rightVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED) )
+		|| (rightVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)
+		|| (downVal == BUTTON_PRESSED && leftVal == BUTTON_PRESSED)
+		|| (downVal == BUTTON_PRESSED && rightVal == BUTTON_PRESSED)
+		|| (downVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)    )
 	{
-		return (char*)0;
+		return NOSWITCH;
 	}
 
 	/* Check to see if any button was just pressed. */
@@ -146,18 +163,26 @@ char* readInput()
 		lastVal = BUTTON_PRESSED;
 		return BUTTON_UP;
 	}
+	else if(downVal == BUTTON_PRESSED
+		&& !(lastPressed == BUTTON_DOWN && lastVal == BUTTON_PRESSED) )
+	{
+		lastPressed = BUTTON_DOWN;
+		lastVal = BUTTON_PRESSED;
+		return BUTTON_DOWN;
+	}
 
 	/* If no button was just pressed, check to see if all buttons are
 	   released, and if they are then show the last value as having
 	   been released.  */
 	if( leftVal == BUTTON_RELEASED
 		&& rightVal == BUTTON_RELEASED
-		&& upVal == BUTTON_RELEASED    )
+		&& upVal == BUTTON_RELEASED
+		&& downVal == BUTTON_RELEASED  )
 	{
 		lastVal = BUTTON_RELEASED;
 	}
 
-	return (char*)0;
+	return NOSWITCH;
 
 #endif /* We determined whether we want the simulator version of readInput
 		  or the real version. */

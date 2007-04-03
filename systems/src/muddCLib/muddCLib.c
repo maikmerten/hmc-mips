@@ -46,7 +46,7 @@ void initLCD(void)
 {
 	// Delay 40000 clock cycles (2 ms)
 	delay1KTCYx(40);
-	// Set port C to output and clear it
+	// Clear data bus.
 	LCD_DATA = 0;
 	// Set the LCD into 8-bit mode
 	sendInst(L_8bit);

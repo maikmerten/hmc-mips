@@ -64,10 +64,10 @@ endif
 
 
 clean:
-	rm *.o *.out *.dump *.coe 
+	rm *.o *.out *.dump *.coe *.dat
 	rm muddCLib/*.o
 
 clean-all: 
-	rm *.o *.out *.dump *.coe *.rom *.dat *.v
-	rm muddCLib/*.o
+	make clean
+	rm *.rom *.v 
 
