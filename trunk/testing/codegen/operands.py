@@ -56,4 +56,4 @@ class memloc:
     location = None
     
     def __init__(self):
-        self.location = (random.randint(0, 0) + 1000) * 4
+        self.location = (random.randint(0, 5) + 100) * 4

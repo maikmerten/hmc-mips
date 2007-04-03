@@ -16,10 +16,10 @@ weights =  [(addu,    1),
             (andi,    1),
             (ori,     1),
             (xori,    1),
-            (sw,      2),
-            (lw,      2),
-            (sb,      2),
-            (sb,      2)
+            (sw,      0),
+            (lw,      0),
+            (sb,      0),
+            (sb,      0)
             ]
 
 # make weight table. if a weight is too big, this gets kinda slow
