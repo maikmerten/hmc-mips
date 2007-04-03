@@ -14,13 +14,13 @@ int main() {
 	switch2 = 0x4;
 	switch3 = 0x8;
 
-	if(ReadSwitch(SWITCH0) == SWITCH_ON)
+	if(readSwitch(SWITCH0) == SWITCH_ON)
 		switch0 = 0;
-	if(ReadSwitch(SWITCH1) == SWITCH_ON)
+	if(readSwitch(SWITCH1) == SWITCH_ON)
 		switch1 = 0;
-	if(ReadSwitch(SWITCH2) == SWITCH_ON)
+	if(readSwitch(SWITCH2) == SWITCH_ON)
 		switch2 = 0;
-	if(ReadSwitch(SWITCH3) == SWITCH_ON)
+	if(readSwitch(SWITCH3) == SWITCH_ON)
 		switch3 = 0;
 	setLED((char)(switch0 + switch1 + switch2 + switch3));
 

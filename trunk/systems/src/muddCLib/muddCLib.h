@@ -23,7 +23,7 @@
 #define BUTTON_DOWN ((char*)0xA004401C)
 #define BUTTON_LEFT ((char*)0xA0044020)
 #define BUTTON_RIGHT ((char*)0xA0044024)
-#define BUTTON_MID ((char*)0xA0044014)
+#define BUTTON_ENTER ((char*)0xA0044014)
 
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
@@ -49,12 +49,66 @@ void setLED(char value);
 /* Reads the button or switch at the address specified
    Use the BUTTON_X or SWITCH# constants!
  */
-char ReadSwitch(char* switchOrButton);
+char readSwitch(char* switchOrButton);
 
-/*
- *  LCD MANIPULATION METHODS
+
+/*  =============================================
+ *	TIME FUNCTIONS
+ *
+ *  These functions use the timing unit that we
+ *  built into the memory controller.
  */
 
+/* Gets the cycle count from the memory contoller's clock.
+ * The cycle count is returned in thousands of cycles.
+ */
+int getKCycleCount();
+
+/* Delay for 1000*n clock cycles. */
+void delay1KTCYx(int n);
+
+
+/*  =============================================
+ *  LCD MANIPULATION METHODS
+ *	
+ *	These methods were mostly taken from Bart Oegema's and
+ *	Bill Hewitt's final E155 project, "PS/2 Keyboard and LCD
+ *  Controller With Multiple Buffers," dated Dec. 9, 2005.
+ */
+
+#define LCD_RS (*(char*)0xAFFF0000) // Reset bit on the LCD
+#define LCD_E (*(char*)0xAFFF0004) // Enable bit on the LCD
+#define LCD_DATA (*(char*)0xAFFF0008) // The data register on the LCD
+
+#define L_init 0x30		// Standard LCD initialization code
+#define L_8bit 0x38		// Code indicating 8-bit operating mode
+#define L_off 0x08		// Code to turn off LCD screen
+#define L_on 0x0F		// Code to turn on LCD screen
+#define L_clear 0x01	// Code to clear the LCD
+#define L_entrymode 0x03 // Sets cursor increments when writing to DRAM
+#define L_shiftleft 0x18 // Code that shifts the display to the left
+#define L_shiftright 0x1C // Code that shifts the display to the right
+
+/* Initialize the LCD. */
+void initLCD(void);
+
+/* Display the given character at the current location. */
+void dispChar(char character);
+
+/* Display the two strings passed on the first and second lines. */
+void dispMessage(char* line1, char* line2);
+
+/* Move the carat to the given position. */
+void move(unsigned char position);
+
+/* Pulse the enable bit on the LCD. */
+void pulseE(void);
+
+/* Send the specified instruction to the LCD. */
+void sendInst(unsigned char instruction);
+
+/* Check to see if the location specified is valid. */
+unsigned char checkLoc(unsigned char location);
 
 
 #endif // MUDDCLIB_INCLUDED

@@ -105,9 +105,9 @@ char* readInput()
 	char rightVal;
 	char upVal;
 
-	leftVal = ReadSwitch(BUTTON_LEFT);
-	rightVal = ReadSwitch(BUTTON_RIGHT);
-	upVal = ReadSwitch(BUTTON_UP);
+	leftVal = readSwitch(BUTTON_LEFT);
+	rightVal = readSwitch(BUTTON_RIGHT);
+	upVal = readSwitch(BUTTON_UP);
 
 	/* Ignore input if more than one button is pressed. */
 	if( (leftVal == BUTTON_PRESSED && rightVal == BUTTON_PRESSED)
