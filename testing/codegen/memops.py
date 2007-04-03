@@ -22,29 +22,27 @@ class Memop:
         # determine where we'll be jumping to
         loc = memloc().location
         addressReg = treg()
-        offset = random.randint(0,32)
+        offset = 0
         regVector = loc - offset
         if act:
             machine.regs[addressReg.reg] = regVector
         
-        outIns += "addi $%s $0 %d\n" % (str(addressReg.reg), regVector)
+        outIns += "addiu $%s, $0, %d\n" % (str(addressReg.reg), regVector)
         
         if self.isLoad:
             dataReg = treg()
-            try:
-                data = (machine.mem[loc] & self.mask)
-            except KeyError:
-                # assuming we load 0 from nowhere
-                data = 0
+            data = (machine.mem[loc] & self.mask)
             if act:
-                machine.regs[dataReg.reg] = data
+                print "#BEFORE\n# memSpace: %s\n# regs: %s" % (machine.mem, machine.regs)
+                machine.setReg(dataReg.reg, data)
+                print "#AFTER\n# memSpace: %s\n# regs: %s" % (machine.mem, machine.regs)
         else:
             dataReg = sreg()
             if act:
                 machine.mem[loc] = (machine.regs[dataReg.reg] & self.mask)
             
         # print the instruction
-        outIns += "%s %s %d(%s)" % \
+        outIns += "%s %s, %d(%s)\nnop\nnop" % \
                 (self.name, str(dataReg), offset, str(addressReg))
         return outIns
                 
