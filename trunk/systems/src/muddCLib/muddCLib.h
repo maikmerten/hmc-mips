@@ -15,20 +15,20 @@
 #define MUDDCLIB_INCLUDED 1
 
 
-/* LED addresses encoded for easy use of functions */
+/* LED addresses encoded for easy use of functions. */
 #define LEDS ((char*)0xA0044000)
 
 /* Button addresses encoded for function use */
+#define BUTTON_ENTER ((char*)0xA0044014)
 #define BUTTON_UP ((char*)0xA0044018)
 #define BUTTON_DOWN ((char*)0xA004401C)
 #define BUTTON_LEFT ((char*)0xA0044020)
 #define BUTTON_RIGHT ((char*)0xA0044024)
-#define BUTTON_ENTER ((char*)0xA0044014)
 
 /* if a button is pressed, then a value of 0 is returned by
    the memory system.  */
-#define BUTTON_PRESSED ((char)0x00)
-#define BUTTON_RELEASED ((char)0x01)
+#define BUTTON_PRESSED ((char)0x01)
+#define BUTTON_RELEASED ((char)0x00)
 
 /* Switch addresses encoded for function use */
 #define SWITCH0 ((char*)0xA0044004)
@@ -37,8 +37,8 @@
 #define SWITCH3 ((char*)0xA0044010)
 
 /* If a switch is up (on) then a value of 0 is returned. */
-#define SWITCH_ON ((char)0x00)
-#define SWITCH_OFF ((char)0x01)
+#define SWITCH_ON ((char)0x01)
+#define SWITCH_OFF ((char)0x00)
 
 /* Heap start location */
 #define HEAP_START ((void*)0x80016A80
@@ -59,12 +59,20 @@ char readSwitch(char* switchOrButton);
  *  built into the memory controller.
  */
 
+/* The location of the cycle counter.  It counts every thousand 
+   cycles.
+   Note that this macro defines it as dereferenced.  This
+   makes it easy to set and get CYCLE_CNT.  */
+#define KCYCLE_CNT (*(char*)0xA0044028)
+/* Each increment on the cycle counter is 1000 cycles. */
+#define CYCLE_STEP 1000
+
 /* Gets the cycle count from the memory contoller's clock.
  * The cycle count is returned in thousands of cycles.
  */
 int getKCycleCount();
 
-/* Delay for 1000*n clock cycles. */
+/* Delay for CYCLE_STEP*n clock cycles. */
 void delay1KTCYx(int n);
 
 
@@ -76,9 +84,11 @@ void delay1KTCYx(int n);
  *  Controller With Multiple Buffers," dated Dec. 9, 2005.
  */
 
-#define LCD_RS (*(char*)0xAFFF0000) // Reset bit on the LCD
-#define LCD_E (*(char*)0xAFFF0004) // Enable bit on the LCD
-#define LCD_DATA (*(char*)0xAFFF0008) // The data register on the LCD
+#define LCD_RS (*(char*)0xA004402C) // Reset bit on the LCD
+#define LCD_E (*(char*)0xA0044030) // Enable bit on the LCD
+#define LCD_DATA (*(char*)0xA0044034) // The data register on the LCD
+
+#define LCD_WIDTH 16
 
 #define L_init 0x30		// Standard LCD initialization code
 #define L_8bit 0x38		// Code indicating 8-bit operating mode

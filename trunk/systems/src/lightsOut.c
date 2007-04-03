@@ -8,7 +8,7 @@
  *  hmc-mips system.
  */
 
-#define DEBUG_SIMULATOR 1
+/* #define DEBUG_SIMULATOR 1 */
 
 #ifdef DEBUG_SIMULATOR
 #include <stdio.h>
@@ -22,14 +22,31 @@ int main()
 {
 	/* Initialize variables */
 	int i;
-	int buttonPressed;
-	int numberSeed = 2;
+	char buttonPressed;
 	int numberExtracted;
+
+#ifdef DEBUG_SIMULATOR
+	int numberSeed = getKCycleCount();
+#else
+	int numberSeed = 2;
+#endif
+
+	/* Initialize the LCD display. */
+	initLCD();
+
+#ifdef DEBUG_SIMULATOR
+		printf("LightsOut!\n");
+#else
+		dispMessage("LightsOut!", "     HMC-MIPS 07");
+		/* Wait for a button press. */
+		while(readSwitch(BUTTON_UP) == BUTTON_RELEASED);
+#endif
 
 	while(1)  /* The main program loop */
 	{
 
-	/* Initialize the random number generator. */
+	/* Initialize the random number generator.
+	   Seed it with the cycle count.			*/
 	initializeGenerator(numberSeed);
 	generateNumbers();
 	numberExtracted = extractNumber(NUM_LIGHTS);
@@ -37,22 +54,13 @@ int main()
 	/* Initialize variables, array, and LCD. */
 	for(i = 0; i < NUM_LIGHTS; ++i) 
 	{
-		/* For now, we won't randomize the lights, we'll just make them
-		   all on initially. */
+		/* We'll place the lights randomly. */
 		lights[i] = numberExtracted & 0x1;
 		numberExtracted = numberExtracted >> 1;
 	}
 	lightsOut = 0;
 	lightPosition = 0;
 	buttonPressed = 0;
-
-	/* Randomize the array. */
-
-#ifdef DEBUG_SIMULATOR
-	printf("LightsOut!\n");
-#else
-	/* printLED("LightsOut!"); */
-#endif
 
 	while(!lightsOut)
 	{
@@ -62,16 +70,15 @@ int main()
 		lightsOut = areLightsOut();
 	}
 
-	while(!buttonPressed)
+	while(buttonPressed == BUTTON_RELEASED)
 	{
 #ifdef DEBUG_SIMULATOR
 		printLights();
 		printf("You win!\nPlay again?\n");
 #else
-		/* printLED("You win!"); */
-		/* printLED("Play again?"); */
+		dispMessage("You win!", "Play again?");
 #endif
-		buttonPressed = (int)readInput();
+		buttonPressed = readInput();
 	}
 	
 
@@ -233,6 +240,26 @@ void printLights()
 	printf("\n\n");
 
 #else
+	char str1[LCD_WIDTH];	/* The upper LCD bar */
+	char str2[LCD_WIDTH];	/* The lower LCD bar */
+	int i;
 
+	for(i = 0; i < NUM_LIGHTS; ++i)
+	{
+		if(lights[i] == LIGHT_ON)
+			str1[i] = '_';
+		else
+			str2[i] = '*';
+	}
+
+	for(i = 0; i < NUM_LIGHTS; ++i)
+	{
+		if(i == lightPosition)
+			str2[i] = '^';
+		else
+			str2[i] = ' ';
+	}
+
+	dispMessage(str1, str2);
 #endif
 }

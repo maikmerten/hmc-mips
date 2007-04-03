@@ -65,9 +65,9 @@ endif
 
 clean:
 	rm *.o *.out *.dump *.coe 
-	rm muddCLib/muddCLib.o
+	rm muddCLib/*.o
 
 clean-all: 
 	rm *.o *.out *.dump *.coe *.rom *.dat *.v
-	rm muddCLib/muddCLib.o
+	rm muddCLib/*.o
 
