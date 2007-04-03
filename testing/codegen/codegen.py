@@ -13,7 +13,7 @@ from rtype import *
 import random
 import sys
 
-DESIRED_INSTRUCTION_COUNT = 50
+DESIRED_INSTRUCTION_COUNT = 300
 
 print "# randomly generated test\n"
 print ".set noreorder"
@@ -49,12 +49,12 @@ for (regname, value) in machine.regs.iteritems():
 instructionsLeft = DESIRED_INSTRUCTION_COUNT
 
 while instructionsLeft > 0:
-    if random.randint(1,5):
+    if random.randint(0,5):
         print makeInstruction(machine)
-        instructionsLeft -= 1.25
+        instructionsLeft -= 2
     else:
         print makeBlock(machine)
-        instructionsLeft -= 3
+        instructionsLeft -= 10
         
 print "# done.\n"
 

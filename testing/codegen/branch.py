@@ -70,12 +70,12 @@ class bgez(ZeroBlock):
     name = 'bgez'
     comp_func = lambda self, s: s >= 0
 
-weights =  [(beq, 5),
-            (bne, 5),
-            (bgtz, 1),
-            (blez, 1),
-            (bltz, 1),
-            (bgez, 1)]
+weights =  [(beq,  5),
+            (bne,  5),
+            (bgtz, 2),
+            (blez, 2),
+            (bltz, 2),
+            (bgez, 2)]
 
 # make weight table. if a weight is too big, this gets kinda slow
 instructions = []            
