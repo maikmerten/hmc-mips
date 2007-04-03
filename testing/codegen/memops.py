@@ -33,16 +33,14 @@ class Memop:
             dataReg = treg()
             data = (machine.mem[loc] & self.mask)
             if act:
-                print "#BEFORE\n# memSpace: %s\n# regs: %s" % (machine.mem, machine.regs)
                 machine.setReg(dataReg.reg, data)
-                print "#AFTER\n# memSpace: %s\n# regs: %s" % (machine.mem, machine.regs)
         else:
             dataReg = sreg()
             if act:
                 machine.mem[loc] = (machine.regs[dataReg.reg] & self.mask)
             
         # print the instruction
-        outIns += "%s %s, %d(%s)\nnop\nnop" % \
+        outIns += "%s %s, %d(%s)" % \
                 (self.name, str(dataReg), offset, str(addressReg))
         return outIns
                 
