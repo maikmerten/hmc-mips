@@ -24,9 +24,9 @@ char readSwitch(char *switchOrButton)
  *  CYCLE COUNTER METHODS
  *****************************/
 
-int getKCycleCount() 
+int getCycleCount() 
 {
-	return KCYCLE_CNT;
+	return CYCLE_CNT;
 }
 
 void delay1KTCYx(int n)
@@ -47,7 +47,8 @@ void initLCD(void)
 	// Delay 40000 clock cycles (2 ms)
 	delay1KTCYx(40);
 	// Clear data bus.
-	LCD_DATA = 0;
+	lastData = 0;
+	LCD_DATA = lastData;
 	// Set the LCD into 8-bit mode
 	sendInst(L_8bit);
 	// Turn off the LCD
@@ -65,8 +66,9 @@ void initLCD(void)
 */
 void dispChar(char character)
 {
-	LCD_DATA = character;
-	LCD_RS = 1;
+	lastData = (lastData | (LCD_DATA_MASK & character));
+	lastData = lastData | LCD_RS_MASK;
+	LCD_DATA = lastData;
 	pulseE();
 	// Delay 1000 clock cycles (50 us)
 	delay1KTCYx(1);
@@ -124,10 +126,10 @@ void move(unsigned char position)
 */
 void pulseE(void)
 {
-	LCD_E = 1;
+	LCD_DATA = lastData | LCD_E_MASK;
 	// Delay 2000 clock cycles (100 us)
 	delay1KTCYx(2);
-	LCD_E = 0;
+	LCD_DATA = lastData & (~LCD_E_MASK);
 }
 
 /*
@@ -135,8 +137,9 @@ void pulseE(void)
 */
 void sendInst(unsigned char instruction)
 {
-	LCD_DATA = instruction;
-	LCD_RS = 0;
+	lastData = lastData | (LCD_DATA_MASK & instruction);
+	lastData = lastData & (~LCD_RS_MASK);
+	LCD_DATA = lastData
 	pulseE();
 	// Delay 1000 clock cycles (50 us)
 	delay1KTCYx(1);
