@@ -139,7 +139,7 @@ void sendInst(unsigned char instruction)
 {
 	lastData = lastData | (LCD_DATA_MASK & instruction);
 	lastData = lastData & (~LCD_RS_MASK);
-	LCD_DATA = lastData
+	LCD_DATA = lastData;
 	pulseE();
 	// Delay 1000 clock cycles (50 us)
 	delay1KTCYx(1);

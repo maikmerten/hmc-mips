@@ -96,7 +96,7 @@ void delay1KTCYx(int n);
 #define LCD_DATA_MASK 0x0FF
 
 #define LCD_DATA (*(char*)0xA0044028)
-int lastData = 0;
+int lastData;
 
 #define LCD_WIDTH 16
 
