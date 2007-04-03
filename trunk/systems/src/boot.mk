@@ -4,8 +4,8 @@
 #
 
 boot_start.out: boot_start.o
-	$(LD) -EL -Ttext=$(RESET_LOC) -o $@ $<
+	$(LD) $(LDFLAGS) -Ttext=$(RESET_LOC) -o $@ $<
 
 boot_loader.out: boot_loader.o
-	$(LD) -EL -Ttext=$(BOOT_LOC) -o $@ $<
+	$(LD) $(LDFLAGS) -Ttext=$(BOOT_LOC) -o $@ $<
 
