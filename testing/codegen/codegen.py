@@ -29,8 +29,9 @@ machine = MIPSComputer()
 for x in range(6):
     resetAddr = ((x+500)*4)
     print "addi $1, $0, %d" % resetAddr
-    print "sw $0, 0($1)"
-    machine.mem[resetAddr] = 0
+    print "addi $2, $0, 42"
+    print "sw $2, 0($1)"
+    machine.mem[resetAddr] = 42
 
 # reset all regs to zero
 for x in range(31):
