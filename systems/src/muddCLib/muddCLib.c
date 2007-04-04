@@ -31,9 +31,8 @@ int getCycleCount()
 
 void delay1KTCYx(int n)
 {
-	int x = 0xdeadbeef;
-	/*int cycle_count = CYCLE_STEP * n;
-	while(cycle_count) --cycle_count;*/
+	int cycle_count = CYCLE_STEP * n;
+	while(cycle_count) --cycle_count;
 }
 
 /*****************************
