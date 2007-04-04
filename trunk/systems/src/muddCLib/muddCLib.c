@@ -45,8 +45,8 @@ void delay1KTCYx(int n)
 void initLCD(void)
 {
 
-	// No Delay 40000 clock cycles (20 ms)
-	// delay1KTCYx(40);
+	// Delay 4000 clock cycles
+	delay1KTCYx(4);
 	// Clear data bus.
 	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
@@ -83,9 +83,11 @@ void dispMessage(char* line1, char* line2)
 	sendInst(L_clear);
 
 	// Display first row (display addresses 0x00 - 0x0F)
-	move(0x00);
-	while ((*curchar != 0 ) && (count < 16))
+	//move(0x00); unnecessary.
+	for(count = 0; count < LCD_WIDTH; ++count)
 	{
+		if(*curchar == '\0')
+			break;
 		dispChar(*curchar);
 		++curchar;
 		++count;
@@ -94,7 +96,7 @@ void dispMessage(char* line1, char* line2)
 	curchar = line2;
 	count = 0;
 	move(0x40);
-	while ((*curchar != 0 ) && (count < 16))
+	while ((*curchar != '\0' ) && (count < 16))
 	{
 		dispChar(*curchar);
 		++curchar;
