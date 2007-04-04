@@ -12,7 +12,7 @@ int main()
 
 	for(i = 0; i < 13; ++i)
 	{
-		move((char)i);
+		//move((char)i);
 		dispChar(str1[i]);
 	}
 
