@@ -31,8 +31,9 @@ int getCycleCount()
 
 void delay1KTCYx(int n)
 {
-	int cycle_count = CYCLE_STEP * n;
-	while(!cycle_count) --cycle_count;
+	int x = 0xdeadbeef;
+	/*int cycle_count = CYCLE_STEP * n;
+	while(cycle_count) --cycle_count;*/
 }
 
 /*****************************
@@ -44,11 +45,11 @@ void delay1KTCYx(int n)
 */
 void initLCD(void)
 {
-	// Delay 40000 clock cycles (2 ms)
+
+	// Delay 40000 clock cycles (20 ms)
 	delay1KTCYx(40);
 	// Clear data bus.
-	lastData = 0;
-	LCD_DATA = lastData;
+	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
 	sendInst(L_8bit);
 	// Turn off the LCD
@@ -66,10 +67,8 @@ void initLCD(void)
 */
 void dispChar(char character)
 {
-	lastData = (lastData | (LCD_DATA_MASK & character));
-	lastData = lastData | LCD_RS_MASK;
-	LCD_DATA = lastData;
-	pulseE();
+	LCD_DATA = LCD_RS_MASK | (LCD_DATA_MASK & character);
+	// pulseE();
 	// Delay 1000 clock cycles (50 us)
 	delay1KTCYx(1);
 }
@@ -124,23 +123,20 @@ void move(unsigned char position)
 /*
 * Pulse the enable bit to tell the LCD a new instruction is available
 */
-void pulseE(void)
+/*void pulseE(void)
 {
-	LCD_DATA = lastData | LCD_E_MASK;
+	LCD_DATA = LCD_E_MASK;
 	// Delay 2000 clock cycles (100 us)
 	delay1KTCYx(2);
-	LCD_DATA = lastData & (~LCD_E_MASK);
-}
+	LCD_DATA = (~LCD_E_MASK);
+}*/
 
 /*
 * Sends an instruction over the LCD data address
 */
 void sendInst(unsigned char instruction)
 {
-	lastData = lastData | (LCD_DATA_MASK & instruction);
-	lastData = lastData & (~LCD_RS_MASK);
-	LCD_DATA = lastData;
-	pulseE();
+	LCD_DATA = (LCD_DATA_MASK & instruction);
 	// Delay 1000 clock cycles (50 us)
 	delay1KTCYx(1);
 }
