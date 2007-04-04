@@ -13,7 +13,7 @@ from rtype import *
 import random
 import sys
 
-DESIRED_INSTRUCTION_COUNT = 300
+DESIRED_INSTRUCTION_COUNT = 10000
 
 print "# randomly generated test\n"
 print ".set noreorder"
@@ -28,7 +28,7 @@ machine = MIPSComputer()
 # reset the memory space we're looking at
 for addr in mempool:
     if CACHED:
-        print "lui $1, 0x8000"
+        print "lui $1, 0x8002"
     print "addi $1, $1, %d" % addr
     print "addi $2, $0, 42"
     print "sw $2, 0($1)"
@@ -51,11 +51,13 @@ instructionsLeft = DESIRED_INSTRUCTION_COUNT
 
 while instructionsLeft > 0:
     if random.randint(0,5):
-        print makeInstruction(machine)
-        instructionsLeft -= 2
+        insout = makeInstruction(machine)
+        instructionsLeft -= len(insout.split('\n'))
+        print insout
     else:
-        print makeBlock(machine)
-        instructionsLeft -= 10
+        insout = makeBlock(machine)
+        instructionsLeft -= len(insout.split('\n'))
+        print insout
         
 print "# done.\n"
 

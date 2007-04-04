@@ -28,12 +28,12 @@ class Memop:
         regVector = loc - offset
         if act:
             if CACHED:
-                machine.regs[addressReg.reg] = (regVector + 0x80000000) 
+                machine.regs[addressReg.reg] = (regVector + 0x80020000) 
             else:
                 machine.regs[addressReg.reg] = regVector
         
         if CACHED:
-            outIns += "lui $%s, 0x8000\n" % str(addressReg.reg)
+            outIns += "lui $%s, 0x8002\n" % str(addressReg.reg)
         
         outIns += "addiu $%s, $%s, %d\n" % (str(addressReg.reg), 
                 str(addressReg.reg), regVector)
