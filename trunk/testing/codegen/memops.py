@@ -7,6 +7,8 @@ from operands import *
 from codegenClasses import *
 import random
 
+CACHED = True
+
 class Memop:
     name = 'nop'
     mask = (2**LENGTH) - 1
@@ -25,9 +27,16 @@ class Memop:
         offset = random.randint(0,32)
         regVector = loc - offset
         if act:
-            machine.regs[addressReg.reg] = regVector
+            if CACHED:
+                machine.regs[addressReg.reg] = (regVector + 0x80000000) 
+            else:
+                machine.regs[addressReg.reg] = regVector
         
-        outIns += "addiu $%s, $0, %d\n" % (str(addressReg.reg), regVector)
+        if CACHED:
+            outIns += "lui $%s, 0x8000\n" % str(addressReg.reg)
+        
+        outIns += "addiu $%s, $%s, %d\n" % (str(addressReg.reg), 
+                str(addressReg.reg), regVector)
         
         if self.isLoad:
             dataReg = treg()
