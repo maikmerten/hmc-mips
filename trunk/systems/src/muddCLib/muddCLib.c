@@ -53,12 +53,12 @@ void initLCD(void)
 	sendInst(L_8bit);
 	// Turn off the LCD
 	sendInst(L_off);
+	// Set entry mode
+	sendInst(L_moveRight);
 	// Clear the LCD
 	sendInst(L_clear);
-	// Set entry mode
-	sendInst(L_entrymode);
 	// Turn on the LCD
-	sendInst(L_on);
+	sendInst(L_disp | L_curs | L_blink);
 }
 
 /*
@@ -115,7 +115,7 @@ void move(unsigned char position)
 		 ((position >= (unsigned char)0x40) && (position <= (unsigned char)0x4F))   )
 	{
 		// Need to set high bit so LCD knows you want to move cursor position
-		sendInst(0x80 | position);
+		sendInst(L_moveMask | position);
 	}
 }
 
