@@ -18,6 +18,13 @@
 #include "muddCLib/muddCLib.h"
 #include "muddCLib/mtRand.h"
 
+char[LCD_WIDTH] lightsOutMsg;
+char[LCD_WIDTH] hmcMipsMsg;
+char[LCD_WIDTH] youWinMsg;
+char[LCD_WIDTH] playAgainMsg;
+char[LCD_WIDTH] gameOverMsg;
+char[LCD_WIDTH] blankMsg;
+
 int main() 
 {
 	/* Initialize variables */
@@ -26,13 +33,22 @@ int main()
 	int numberExtracted;
 	int done;
 
+	/* Construct all of the strings used in the game. */
+	lightsOutMsg = {' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
+	hmcMipsMsg = {'H', 'M', 'C', '-', 'M', 'I', 'P', 'S', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
+	youWinMsg = {'Y', 'o', 'u', ' ', 'w', 'i', 'n', '!'}
+	playAgainMsg = {'P', 'l', 'a', 'y', ' ', 'a', 'g', 'a', 'i', 'n', '?'};
+	gameOverMsg = {' ', ' ', ' ', 'G', 'a', 'm', 'e', ' ', 'O', 'v', 'e', 'r'};
+	blankMsg = {'\0'};
+
 #ifdef DEBUG_SIMULATOR
 	printf("LightsOut!\n");
 	int numberSeed = 2;
 #else
 	/* Initialize the LCD display. */
 	initLCD();
-	dispMessage("LightsOut!", "     HMC-MIPS 07");
+	sendInst(L_disp);
+	dispMessage(lightsOutMsg, hmcMipsMsg);
 
 	/* Wait for a button press. */
 	while(readInput() == NOSWITCH);
@@ -77,7 +93,7 @@ int main()
 		printLights();
 		printf("You win!\nPlay again?\n");
 #else
-		dispMessage("You win!", "Play again?");
+		dispMessage(youWinMsg, playAgainMsg);
 #endif
 		buttonPressed = readInput();
 		if(buttonPressed == BUTTON_DOWN)
@@ -89,7 +105,7 @@ int main()
 	} /* END of the main program loop. */
 
 #ifndef DEBUG_SIMULATOR
-	dispMessage("done", "");
+	dispMessage(gameOverMsg, "");
 	while(1);	/* Loop forever instead of letting the program
 				   counter run up. */
 #endif

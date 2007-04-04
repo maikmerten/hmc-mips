@@ -79,7 +79,7 @@ void dispMessage(char* line1, char* line2)
 {
 	char* curchar = line1;
 	int count = 0;
-	// Clear the LCD
+	// Clear the LCD.
 	sendInst(L_clear);
 
 	// Display first row (display addresses 0x00 - 0x0F)
