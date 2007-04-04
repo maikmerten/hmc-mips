@@ -6,7 +6,7 @@
 from codegenClasses import *
 import random
 
-mempool = [2000, 2004, 2008, 2012, 2016, 2020]
+mempool = [x*4 + 0x1000 for x in range(20)]
 
 class sreg(Operand):
     reg = None
