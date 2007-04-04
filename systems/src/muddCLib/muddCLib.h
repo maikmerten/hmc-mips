@@ -88,10 +88,6 @@ void delay1KTCYx(int n);
 
 /* In hardware, we only have one address to write to.
    Bits 0-7 are data, bit 8 is RS.  */
-//#define LCD_RS (*(char*)0xA004402C) // Reset bit on the LCD
-//#define LCD_E (*(char*)0xA0044030) // Enable bit on the LCD
-//#define LCD_DATA (*(char*)0xA0044034) // The data register on the LCD
-#define LCD_E_MASK 0x200
 #define LCD_RS_MASK 0x100
 #define LCD_DATA_MASK 0x0FF
 
@@ -101,12 +97,22 @@ void delay1KTCYx(int n);
 
 #define L_init 0x30		// Standard LCD initialization code
 #define L_8bit 0x38		// Code indicating 8-bit operating mode
-#define L_off 0x08		// Code to turn off LCD screen
-#define L_on 0x0F		// Code to turn on LCD screen
 #define L_clear 0x01	// Code to clear the LCD
-#define L_entrymode 0x04 // Sets cursor increments when writing to DRAM
-#define L_shiftleft 0x18 // Code that shifts the display to the left
-#define L_shiftright 0x1C // Code that shifts the display to the right
+
+#define L_off 0x08		// Turns off the LCD
+#define L_disp 0x0C		// Include this in a bitwise OR to turn on the LCD.
+#define L_curs 0x0A		// Include this in a bitwise OR to turn on the cursor.
+#define L_blink 0x09	// Include this in a bitwise OR to make the cursor blink.
+
+#define L_single 0x04 // Write a single character & deactivate cursor
+#define L_moveRight 0x14 // move cursor to right.
+#define L_moveLeft 0x10 // move cursor to left.
+#define L_shiftLeft 0x18 // Shifts the display to the left
+#define L_shiftRight 0x1C // Shifts the display to the right
+
+#define L_moveHome 0x02	  // Places the cursor back at 0x00 without changing data.
+#define L_moveMask 0x80	  // Bitwise OR this with an int to set the cursor position.
+#define L_secondRow 0x40  // The start of the second row.
 
 /* Initialize the LCD. */
 void initLCD(void);

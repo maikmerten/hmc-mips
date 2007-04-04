@@ -11,7 +11,7 @@ INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk
 
 # These variables control the build process.
 CFLAGS = -Wall -msoft-float -march=r3000 -EL 
-LDFLAGS = -Tdata=0x80016A80 -EL
+LDFLAGS = -Tdata 0x80016A80 -EL
 DEBUG = -nodebug
 BOOTLOAD = true
 MEM_SPECS = toolchain_memory_specs.txt
@@ -65,10 +65,10 @@ endif
 
 
 clean:
-	rm *.o *.out *.dump *.coe *.dat
-	rm muddCLib/*.o
+	rm -f *.o *.out *.dump *.coe *.dat
+	rm -f muddCLib/*.o
 
 clean-all: 
+	rm -f *.rom *.v 
 	make clean
-	rm *.rom *.v 
 
