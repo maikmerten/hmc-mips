@@ -105,6 +105,7 @@ void delay1KTCYx(int n);
 #define L_blink 0x09	// Include this in a bitwise OR to make the cursor blink.
 
 #define L_single 0x04 // Write a single character & deactivate cursor
+
 #define L_moveRight 0x14 // move cursor to right.
 #define L_moveLeft 0x10 // move cursor to left.
 #define L_shiftLeft 0x18 // Shifts the display to the left
