@@ -37,7 +37,7 @@ int main()
 	/* Wait for a button press. */
 	while(readInput() == NOSWITCH);
 
-	int numberSeed = getKCycleCount();
+	int numberSeed = getCycleCount();
 #endif
 
 	/* Initialize done to be 0. */
@@ -89,7 +89,7 @@ int main()
 	} /* END of the main program loop. */
 
 #ifndef DEBUG_SIMULATOR
-	sendInst(L_off);
+	dispMessage("done", "");
 	while(1);	/* Loop forever instead of letting the program
 				   counter run up. */
 #endif
@@ -100,6 +100,8 @@ int main()
 char *lastPressed = 0;
 char lastVal = 0;
 
+/* This will find out if a button was just pressed and return the
+   pointer to its address. */
 char* readInput()
 {
 #ifdef DEBUG_SIMULATOR /* Are we simulating? */
@@ -188,6 +190,8 @@ char* readInput()
 		  or the real version. */
 }
 
+/* Update the array and the carat according to the button that
+   was pressed.  */
 void update(char* input) 
 {
 	/* If the button was the right or left button, we want to move the
@@ -227,6 +231,7 @@ void update(char* input)
 	}
 }
 
+/* Return 1 if the lights are out, 0 otherwise */
 int areLightsOut() 
 {
 	int i;

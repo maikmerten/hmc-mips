@@ -45,8 +45,8 @@ void delay1KTCYx(int n)
 void initLCD(void)
 {
 
-	// Delay 40000 clock cycles (20 ms)
-	delay1KTCYx(40);
+	// No Delay 40000 clock cycles (20 ms)
+	// delay1KTCYx(40);
 	// Clear data bus.
 	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
@@ -69,7 +69,7 @@ void dispChar(char character)
 	LCD_DATA = LCD_RS_MASK | (LCD_DATA_MASK & character);
 	// pulseE();
 	// Delay 1000 clock cycles (50 us)
-	delay1KTCYx(1);
+	//delay1KTCYx(1);
 }
 
 /*
@@ -137,7 +137,7 @@ void sendInst(unsigned char instruction)
 {
 	LCD_DATA = (LCD_DATA_MASK & instruction);
 	// Delay 1000 clock cycles (50 us)
-	delay1KTCYx(1);
+	//delay1KTCYx(1);
 }
 
 /*
