@@ -65,7 +65,7 @@ char readSwitch(char* switchOrButton);
    cycles.
    Note that this macro defines it as dereferenced.  This
    makes it easy to set and get CYCLE_CNT.  */
-#define CYCLE_CNT (*(char*)0xA004402C)
+#define CYCLE_CNT (*(int*)0xA004402C)
 /* Each increment on the cycle counter is 1000 cycles. */
 #define CYCLE_STEP 1000
 
@@ -95,8 +95,7 @@ void delay1KTCYx(int n);
 #define LCD_RS_MASK 0x100
 #define LCD_DATA_MASK 0x0FF
 
-#define LCD_DATA (*(char*)0xA0044028)
-int lastData;
+#define LCD_DATA (*(int*)0xA0044028)
 
 #define LCD_WIDTH 16
 
@@ -105,7 +104,7 @@ int lastData;
 #define L_off 0x08		// Code to turn off LCD screen
 #define L_on 0x0F		// Code to turn on LCD screen
 #define L_clear 0x01	// Code to clear the LCD
-#define L_entrymode 0x03 // Sets cursor increments when writing to DRAM
+#define L_entrymode 0x04 // Sets cursor increments when writing to DRAM
 #define L_shiftleft 0x18 // Code that shifts the display to the left
 #define L_shiftright 0x1C // Code that shifts the display to the right
 
@@ -121,8 +120,8 @@ void dispMessage(char* line1, char* line2);
 /* Move the carat to the given position. */
 void move(unsigned char position);
 
-/* Pulse the enable bit on the LCD. */
-void pulseE(void);
+/* Pulse the enable bit on the LCD.  Hardware no longer needs this.*/
+/* void pulseE(void); */
 
 /* Send the specified instruction to the LCD. */
 void sendInst(unsigned char instruction);
