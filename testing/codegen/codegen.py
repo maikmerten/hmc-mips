@@ -27,7 +27,9 @@ machine = MIPSComputer()
 # for the simulation, we need to reset everything we touch
 # reset the memory space we're looking at
 for addr in mempool:
-    print "addi $1, $0, %d" % addr
+    if CACHED:
+        print "lui $1, 0x8000"
+    print "addi $1, $1, %d" % addr
     print "addi $2, $0, 42"
     print "sw $2, 0($1)"
     machine.mem[addr] = 42
