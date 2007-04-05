@@ -66,16 +66,17 @@ char readSwitch(char* switchOrButton);
    Note that this macro defines it as dereferenced.  This
    makes it easy to set and get CYCLE_CNT.  */
 #define CYCLE_CNT (*(int*)0xA004402C)
-/* Each increment on the cycle counter is 1000 cycles. */
-#define CYCLE_STEP 1000
 
 /* Gets the cycle count from the memory contoller's clock.
  * The cycle count is returned in thousands of cycles.
  */
 int getCycleCount();
 
-/* Delay for CYCLE_STEP*n clock cycles. */
-void delay1KTCYx(int n);
+/* Delay for 1000*n clock cycles. */
+void delay1000clock(int n);
+
+/* Delay for cycle_count clock cycles. */
+void delay1clock(int cycle_count);
 
 
 /*  =============================================
@@ -104,7 +105,8 @@ void delay1KTCYx(int n);
 #define L_curs 0x0A		// Include this in a bitwise OR to turn on the cursor.
 #define L_blink 0x09	// Include this in a bitwise OR to make the cursor blink.
 
-#define L_single 0x04 // Write a single character & deactivate cursor
+#define L_single 0x04 // Write a single character & deactivate cursor mode
+#define L_normEntry 0x06 // Normal mode
 
 #define L_moveRight 0x14 // move cursor to right.
 #define L_moveLeft 0x10 // move cursor to left.
