@@ -1,0 +1,44 @@
+\documentclass{article}
+\begin{document}
+\author{Joel Stanley, Rhys Bowden, Robert Moric, Melanie Say Tan}
+\title{MIPS Testing Outline}
+\maketitle
+
+\section{Testing Overview}
+The design of the MIPS microprocesor is reaching it's final stages. We now turn to verifying the correctness of our design, with the uncovering of bugs in the implimentation in mind.
+\\The top level verilog description of the processor shall be used to record the input/output state of the processor under sumulation. This state information will then be used to generate IRSIM testbenches to run against both extracted schmeatics and the manual layout.
+
+\section{Method}
+\subsection{Signal list}
+The mipstest verliog testbench is loaded into Modelsim, and using the
+"add->list" functioanlity of Modelsim all the input/output signals of
+the processor is added to a list.
+\\This provides us with a way of
+recording the input/output state of the top level verilog description.
+The test vectors are then run through the sumulator, which causes the
+list to outputted input/output states. This is stored in list.text.
+
+\subsection{IRSIM testbench}
+A Perl script is used to extract the generated input/output signals
+from the list.txt and convert it into a IRSIM command file. This is
+then loaded into Electric, and run agasint the schematic and layout
+level description of the processor.
+
+\section{Test Vectors}
+We have decided to used the well-debugged 27 testbenches written by HMC
+students. These were chosen due to their extensive converage of the
+microprocessor's functionality.
+
+\section{Timeline}
+\subsection{Proposal Submission}
+Friday 6th
+
+\subsection{Delivery of beta}
+April 13th
+
+\subsection{Delivery of final version}
+April 17th
+
+
+\end{document}
+
