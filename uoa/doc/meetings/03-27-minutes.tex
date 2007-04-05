@@ -1,0 +1,78 @@
+\documentclass{article}
+\begin{document}
+\author{Mel}
+\title{Meeting Minutes - 27 March 2007}
+\maketitle
+\begin{flushleft}
+
+Attendees
+Joel (Chair)
+Mel (Sec)
+Rob
+Rhys
+Braden
+\newline
+
+\begin{enumerate}
+  \item Prior Business
+    \begin{itemize}
+    \item AI: Joel - follow up on which FPGA board to purchace
+    \item AI: Rhys - follow up on logo requrements of our chip.
+                     use Xchiplogo program to generate our logo
+    \end{itemize}
+
+  \item Progress on the system level verification
+    \begin{itemize}
+    \item EDA tools (Rob) - Simulate Verilog on Cadence or Synopsis
+    \item VCD parse (Joel) - Parse the Verilog command dump files (vcd) and
+          convert to a form usable by IRSIM. Run the spec simulation and 
+          generate VCD from that
+    \item Verilog trace writes (Mel) - Braden briefly explained that trace
+          writes in the Verilog file should produce a dump file which
+          contains all inputs and outputs of the MIPS on different clock cycles.
+    \item Snoopgen (Rhys) - Concept similar to Verilog trace writes but
+          using snoopgen.
+    \end{itemize}
+
+  \item  Deadlines for the system level verification testing
+    \begin{itemize}
+    \item Deadline for the chip based on HMC milestone: 10th April 2007
+    \item Joel suggested that team should send out status emails
+          specifing progress on friday afternoon, and whomever
+          had made the most progress will help other team members
+          with their problems.
+    \end{itemize}
+
+  \item Next set of deliverables
+    \begin{itemize}
+    \item Reults from system level verifications
+    \item Electrical tests
+    \end{itemize}
+
+  \item Supervisor feedback (proposal seminar)
+    \begin{itemize}
+    \item Assessment will be on the team and also on individual team members.
+    \item Overall performance is good, outstanding team members are Joel
+          and Rhys.
+    \end{itemize}
+  
+  \item Actions
+    \begin{itemize}
+    \item Order FPGA board.
+    \item Generate a chip logo for our team.
+    \item Each member has to work out their individual part of the system
+          level verification.
+    \item Bring \$20 to the next meeting, deposit for borrowing stuff from
+          the store.
+    \end{itemize}
+
+  \item Other business
+    \begin{itemize}
+    \item Braden mentioned that a copy of the Project Implimentation Plan
+          should be included on the Project CD
+    \end{itemize}
+\end{enumerate}
+
+\end{flushleft}
+
+\end{document}

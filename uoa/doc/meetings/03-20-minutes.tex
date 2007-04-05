@@ -1,0 +1,119 @@
+\documentclass{article}
+\begin{document}
+\author{Rhys}
+\title{Meeting Minutes - 20 March 2007}
+\maketitle
+\begin{flushleft}
+
+Attendees
+Mel (Chair)
+Rhys (Sec)
+Rob
+Joel
+Braden
+\newline
+
+\begin{enumerate}
+  \item Prior Business
+    \begin{itemize}
+    \item AI: Mel - Seminar times sent to Charlie
+    \item AI: Rob -  Decided on dynamic power dissipation vs static
+    \item BBQ expenses paid to Braden
+    \end{itemize}
+
+  \item Delivered to mudders 
+    \begin{itemize}
+    \item Joel sent off copy of shared folder 
+    \item Rhys still working on decoder
+    \item Once Rhys done, Rob will combine decoder and SRAM array, send off
+    \item Mel's components done
+    \item Next job - parrallel testing and fixes of layout/schematics
+    \item Mudd deadlines avaliable on the web, linked from code repos
+    \end{itemize}
+
+  \item Project plan and proposal 
+    \begin{itemize}
+      \item Joel wants to be in charge of putting interactive demo program
+            on the uP. Suggested program be a web server (as opposed to 
+            ELIZA).
+      \item AI: (all) Review of Gantt chart.
+      \item AI: (all) Write proposal secion in text format
+      \item Demo - FPGA with custom PCB
+      \begin{itemize}
+        \item LCD and FPGA RAM; chosen by the Mudders
+        \item Serial port, possibly Ethernet port; chosen by us
+      \end{itemize}
+      \item Noted that it should be possible to reconfigure FPGA with
+            peripherals.
+      \item Joel also intends to get Linux runningon uP
+      \item Braden notes that the PCB is likey to have power supply,
+            socket for MIPS, and connection for FPGA.
+      \item The mask is layed out already for the PCB the Mudders intend to use
+    \end{itemize}
+
+  \item Tasks for the next few weeks 
+    \begin{itemize}
+    \item Software testing of schematics/layouts
+    \item Start working on FPGA board
+    \item Simulate chip on FPGA board
+    \item Possibly write Verilog blocks for peripherals
+    \item Possible change in deliverables:
+    \item 3rd deliverable:
+    \begin{itemize}
+      \item Test programs/procedures
+      \item Test results
+      \item These can be handed on to future years.
+    \end{itemize}
+    \item Models for testing include:
+    \begin{itemize}
+      \item The Verilog specification model
+      \item Extracted Verilog
+        \begin{itemize}
+          \item From schematics
+          \item From layout
+        \end{itemize}
+    The testing uses either:
+
+    * IRSIM
+          o Schematics
+          o Layout
+    * A faster version of SPICE (FastSPICE ?)
+    * And FPGA
+
+ 
+
+Problem 1 Generate IRSIM or FastSPICE decks from Verilog simulations 
+
+Alternatives and allocation:
+
+(Rob) Use pre-existing tools, i.e. Synopsis and Cadence
+
+(Joel) Parse vcd files
+
+(Mel) Annotate Verilog with trace writes
+
+(Rhys) Recreate “mini-snoopgen” (Use the programming interface to Verilog) 
+
+Problem 2 SPICE simulations of critical or paths and components that require analogue-type models. This includes the Cache RAM and the clock paths. However, the clock paths are not our problem. 
+
+Problem 3
+
+    * Buy FPGA board
+    * Get it working
+    * Start thinking about peripherals
+
+    \end{itemize}
+
+  \item Tasks for after tape-out 
+    \begin{itemize}
+    \end{itemize}
+  
+  \item Other business
+    \begin{itemize}
+      \item None
+    \end{itemize}
+\end{enumerate}
+
+\end{flushleft}
+
+\end{document}
