@@ -29,10 +29,14 @@ int getCycleCount()
 	return CYCLE_CNT;
 }
 
-void delay1KTCYx(int n)
+void delay1000clock(int n)
 {
-	int cycle_count = CYCLE_STEP * n;
-	while(cycle_count) --cycle_count;
+	delay1clock(1000 * n);
+}
+
+void delay1clock(int cycle_count)
+{
+	while(cycle_count > 0) --cycle_count;
 }
 
 /*****************************
@@ -46,17 +50,17 @@ void initLCD(void)
 {
 
 	// Delay 4000 clock cycles
-	delay1KTCYx(4);
+	delay1000clock(4);
 	// Clear data bus.
 	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
 	sendInst(L_8bit);
 	// Turn off the LCD
 	sendInst(L_off);
-	// Set entry mode
-	sendInst(L_moveRight);
 	// Clear the LCD
 	sendInst(L_clear);
+	// Set entry mode
+    sendInst(L_normEntry);
 	// Turn on the LCD
 	sendInst(L_disp | L_curs | L_blink);
 }
@@ -67,9 +71,7 @@ void initLCD(void)
 void dispChar(char character)
 {
 	LCD_DATA = LCD_RS_MASK | (LCD_DATA_MASK & character);
-	// pulseE();
-	// Delay 1000 clock cycles (50 us)
-	//delay1KTCYx(1);
+	delay1clock(10);
 }
 
 /*
@@ -128,7 +130,7 @@ void move(unsigned char position)
 {
 	LCD_DATA = LCD_E_MASK;
 	// Delay 2000 clock cycles (100 us)
-	delay1KTCYx(2);
+	delay1000clock(2);
 	LCD_DATA = (~LCD_E_MASK);
 }*/
 
@@ -138,8 +140,11 @@ void move(unsigned char position)
 void sendInst(unsigned char instruction)
 {
 	LCD_DATA = (LCD_DATA_MASK & instruction);
-	// Delay 1000 clock cycles (50 us)
-	//delay1KTCYx(1);
+	if(instruction == L_clear || instruction == L_moveHome)
+		delay1clock(200);		// We need at least 1.53 ms delay for a clear.
+	else
+		delay1clock(10);		// All of the other instructions take
+								// less than 50us.
 }
 
 /*

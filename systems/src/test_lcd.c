@@ -14,13 +14,13 @@ int main()
 		move(L_secondRow);
 		dispChar('*');
 
-		delay1KTCYx(1000);
+		delay1000clock(100);
 
 		sendInst(L_clear);
 		move(0x08);
 		dispChar('*');
 
-		delay1KTCYx(1000);
+		delay1000clock(100);
 
 		// Print "Hello, Word!"
 		//       "   HMC VLSI 07"
@@ -44,11 +44,9 @@ int main()
 			dispChar(str2[i]);
 		}
 
-		delay1KTCYx(10000);
+		delay1000clock(1000);
 
 		sendInst(L_clear);
-
-		delay1KTCYx(1000);
 	}
 
 	/* for some reason, dispMessage doesn't work. */
