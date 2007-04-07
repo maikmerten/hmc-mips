@@ -10,7 +10,7 @@ SRC = ./
 INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk
 
 # These variables control the build process.
-CFLAGS = -Wall -msoft-float -march=r3000 -EL 
+CFLAGS = -Wall -msoft-float -march=r3000 -EL
 LDFLAGS = -Tdata 0x80016A80 -EL
 DEBUG = -nodebug
 BOOTLOAD = true
