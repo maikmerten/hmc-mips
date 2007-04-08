@@ -50,7 +50,7 @@ void initLCD(void)
 {
 
 	// Delay 4000 clock cycles
-	//delay1000clock(4);
+	delay1000clock(4);
 	// Clear data bus.
 	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
@@ -60,9 +60,9 @@ void initLCD(void)
 	// Clear the LCD
 	sendInst(L_clear);
 	// Set entry mode
-    sendInst(L_normEntry);
+    sendInst(L_single);
 	// Turn on the LCD
-	sendInst(L_disp | L_curs | L_blink);
+	sendInst(0x0F);
 }
 
 /*

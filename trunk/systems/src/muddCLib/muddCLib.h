@@ -106,7 +106,7 @@ void delay1clock(int cycle_count);
 #define L_blink 0x09	// Include this in a bitwise OR to make the cursor blink.
 
 #define L_single 0x04 // Write a single character & deactivate cursor mode
-#define L_normEntry 0x06 // Normal mode
+#define L_normEntry 0x06 // Normal mode: move to the right as char's entered.
 
 #define L_moveRight 0x14 // move cursor to right.
 #define L_moveLeft 0x10 // move cursor to left.
