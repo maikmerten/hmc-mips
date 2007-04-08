@@ -59,10 +59,10 @@ void initLCD(void)
 	sendInst(L_off);
 	// Clear the LCD
 	sendInst(L_clear);
-	// Set entry mode
-    sendInst(L_single);
+	// Set entry mode - removed this command to see if it fixes the init code.
+    sendInst(L_normEntry);
 	// Turn on the LCD
-	sendInst(0x0F);
+	sendInst(L_on);
 }
 
 /*
