@@ -18,12 +18,12 @@
 #include "muddCLib/muddCLib.h"
 #include "muddCLib/mtRand.h"
 
-char[LCD_WIDTH] lightsOutMsg;
-char[LCD_WIDTH] hmcMipsMsg;
-char[LCD_WIDTH] youWinMsg;
-char[LCD_WIDTH] playAgainMsg;
-char[LCD_WIDTH] gameOverMsg;
-char[LCD_WIDTH] blankMsg;
+/*char lightsOutMsg[LCD_WIDTH];
+char hmcMipsMsg[LCD_WIDTH];
+char youWinMsg[LCD_WIDTH];
+char playAgainMsg[LCD_WIDTH];
+char gameOverMsg[LCD_WIDTH];
+char blankMsg[LCD_WIDTH];*/
 
 int main() 
 {
@@ -34,12 +34,12 @@ int main()
 	int done;
 
 	/* Construct all of the strings used in the game. */
-	lightsOutMsg = {' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
-	hmcMipsMsg = {'H', 'M', 'C', '-', 'M', 'I', 'P', 'S', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
-	youWinMsg = {'Y', 'o', 'u', ' ', 'w', 'i', 'n', '!'}
-	playAgainMsg = {'P', 'l', 'a', 'y', ' ', 'a', 'g', 'a', 'i', 'n', '?'};
-	gameOverMsg = {' ', ' ', ' ', 'G', 'a', 'm', 'e', ' ', 'O', 'v', 'e', 'r'};
-	blankMsg = {'\0'};
+	char lightsOutMsg[LCD_WIDTH] = {' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
+	char hmcMipsMsg[LCD_WIDTH] = {'H', 'M', 'C', '-', 'M', 'I', 'P', 'S', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
+	char youWinMsg[LCD_WIDTH] = {'Y', 'o', 'u', ' ', 'w', 'i', 'n', '!'};
+	char playAgainMsg[LCD_WIDTH] = {'P', 'l', 'a', 'y', ' ', 'a', 'g', 'a', 'i', 'n', '?'};
+	char gameOverMsg[LCD_WIDTH] = {' ', ' ', ' ', 'G', 'a', 'm', 'e', ' ', 'O', 'v', 'e', 'r'};
+	char blankMsg[LCD_WIDTH] = {'\0'};
 
 #ifdef DEBUG_SIMULATOR
 	printf("LightsOut!\n");
@@ -105,7 +105,7 @@ int main()
 	} /* END of the main program loop. */
 
 #ifndef DEBUG_SIMULATOR
-	dispMessage(gameOverMsg, "");
+	dispMessage(gameOverMsg, blankMsg);
 	while(1);	/* Loop forever instead of letting the program
 				   counter run up. */
 #endif
