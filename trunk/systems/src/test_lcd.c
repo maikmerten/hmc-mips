@@ -22,6 +22,10 @@ int main()
 		delay1000clock(10);
 		setLED(0x9);
 
+		// Resetting may be the cure we need.
+		sendInst(L_clear);
+		sendInst(L_on);
+
 		// Move test
 		move(L_secondRow);
 		dispChar('*');

@@ -101,6 +101,7 @@ void delay1clock(int cycle_count);
 #define L_clear 0x01	// Code to clear the LCD
 
 #define L_off 0x08		// Turns off the LCD
+#define L_on 0x0F
 #define L_disp 0x0C		// Include this in a bitwise OR to turn on the LCD.
 #define L_curs 0x0A		// Include this in a bitwise OR to turn on the cursor.
 #define L_blink 0x09	// Include this in a bitwise OR to make the cursor blink.
