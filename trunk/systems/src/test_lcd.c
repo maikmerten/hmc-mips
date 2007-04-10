@@ -13,26 +13,30 @@ int main()
 		// Make some LEDs blink so we know we're getting
 		// some response from the board.
 		setLED(0x1);
-		delay1000clock(100);
+		delay1000clock(300);
 		setLED(0x2);
-		delay1000clock(100);
+		delay1000clock(300);
 		setLED(0x4);
-		delay1000clock(100);
+		delay1000clock(300);
 		setLED(0x8);
-		delay1000clock(100);
+		delay1000clock(300);
 		setLED(0x9);
 
 		// Move test
-		move(L_secondRow);
+		//move(L_secondRow);
 		dispChar('*');
 
-		delay1000clock(200);
+		delay1000clock(1000);  // Show * for 1 second.
 
-		sendInst(L_clear);
-		move(0x08);
-		dispChar('*');
+		setLED(0x00);
 
-		delay1000clock(200);
+		//sendInst(L_clear);
+		//move(0x08);
+		//dispChar('*');
+
+		//delay1000clock(200);
+
+		//setLED(0x00);
 
 		// Print "Hello, Word!"
 		//       "   HMC VLSI 07"
@@ -56,7 +60,7 @@ int main()
 			dispChar(str2[i]);
 		}
 
-		delay1000clock(1500);
+		delay1000clock(3000);
 
 		sendInst(L_clear);
 	}

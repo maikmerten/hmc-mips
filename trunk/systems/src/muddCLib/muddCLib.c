@@ -36,7 +36,8 @@ void delay1000clock(int n)
 
 void delay1clock(int cycle_count)
 {
-	while(cycle_count > 0) --cycle_count;
+	//while(cycle_count > 0) --cycle_count;
+	while(cycle_count) --cycle_count;
 }
 
 /*****************************
@@ -51,8 +52,6 @@ void initLCD(void)
 
 	// Delay 4000 clock cycles
 	delay1000clock(4);
-	// Clear data bus.
-	LCD_DATA = 0x00;
 	// Set the LCD into 8-bit mode
 	sendInst(L_8bit);
 	// Turn off the LCD
@@ -71,7 +70,7 @@ void initLCD(void)
 void dispChar(char character)
 {
 	LCD_DATA = LCD_RS_MASK | (LCD_DATA_MASK & character);
-	delay1clock(10);
+	delay1clock(200);
 }
 
 /*
@@ -141,9 +140,10 @@ void sendInst(unsigned char instruction)
 {
 	LCD_DATA = (LCD_DATA_MASK & instruction);
 	if(instruction == L_clear || instruction == L_moveHome)
-		delay1clock(200);		// We need at least 1.53 ms delay for a clear.
+		setLED(0x1);			// Make an LED turn on if we get a clear.
+		delay1000clock(5);		// We need at least 1.53 ms delay for a clear.
 	else
-		delay1clock(10);		// All of the other instructions take
+		delay1clock(200);		// All of the other instructions take
 								// less than 50us.
 }
 
