@@ -21,11 +21,11 @@
 #include <stdlib.h>
 #include <string.h> */
 #include "dhry.h"
-#include "../muddCLib/muddCLib.h"
+#include "muddCLib/muddCLib.h"
 
 /* Global Variables: */
 
-Rec_Type		Rec_Glob;
+Rec_Type		Rec_Glob,
 				Next_Rec_Glob;
 Rec_Pointer     Ptr_Glob,
                 Next_Ptr_Glob;
@@ -39,18 +39,25 @@ int             Arr_2_Glob [50] [50];
 /* CHANGE:  No longer need this string.
 	char Reg_Define[] = "Register option selected."; */
 
+/* CHANGE:
+	You go away because you declare the function wrong!!
 Enumeration     Func_1 ();
-  /* 
-  forward declaration necessary since Enumeration may not simply be int
-  */
+  //forward declaration necessary since Enumeration may not simply be int
+  
+*/
 
+/* CHANGE:
+	I don't know where it's supposed to get ROPT, but I don't
+	see it anywhere, so it's going away.
 #ifndef ROPT
 #define REG
-        /* REG becomes defined as empty */
-        /* i.e. no register variables   */
+        // REG becomes defined as empty
+        // i.e. no register variables 
 #else
 #define REG register
 #endif
+*/
+#define REG		// Make REG empty.
 
 /* CHANGE:
 	We'll be measuring our timing by hand!
@@ -132,7 +139,7 @@ int main ()
 
   /* "DHRYSTONE PROGRAM, 1'ST STRING" */
   char first_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', "'", 'S', 'T', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', '\'', 'S', 'T', ' ', 
 	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
   strcpy (Ptr_Glob->variant.var_1.Str_Comp, some_string);
@@ -189,11 +196,11 @@ int main ()
   /* Before we count down, we need to define the strings that will
      be used in the tests. "DHRYSTONE PROGRAM, 2'ND STRING" */
   char second_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '2', "'", 'N', 'D', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '2', '\'', 'N', 'D', ' ', 
 	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
   /* "DHRYSTONE PROGRAM, 3'RD STRING" */
   char third_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', "'", 'R', 'D', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', '\'', 'R', 'D', ' ', 
 	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
   /* The LEDs count down one at a time, then flash to indicate the
@@ -285,11 +292,11 @@ int main ()
 
   if(testsSucceeded)
   {
-
+	/* LEDs blink one way */
   }
   else
   {
-
+	/* LEDs blink another way */
   }
 
 
@@ -398,16 +405,25 @@ int main ()
   fclose(Ap);
 #endif  
   }
+  */
+
   return (0);
-}
-*/
+
+} /* End of main() */
 
 
+
+
+
+/* CHANGE:
+	This code didn't seem to work properly!
 Proc_1 (Ptr_Val_Par)
-/******************/
+	// *****************
 
 REG Rec_Pointer Ptr_Val_Par;
-    /* executed once */
+    //executed once 
+*/
+void Proc_1 (Rec_Pointer Ptr_Val_Par)
 {
   REG Rec_Pointer Next_Record = Ptr_Val_Par->Ptr_Comp;  
                                         /* == Ptr_Glob_Next */
@@ -437,12 +453,16 @@ REG Rec_Pointer Ptr_Val_Par;
 } /* Proc_1 */
 
 
+/* CHANGE:
+	This doesn't appear to be valid C!
 Proc_2 (Int_Par_Ref)
-/******************/
-    /* executed once */
-    /* *Int_Par_Ref == 1, becomes 4 */
+// ******************
+    // executed once
+    // *Int_Par_Ref == 1, becomes 4
 
 One_Fifty   *Int_Par_Ref;
+*/
+void Proc_2 (One_Fifty *Int_Par_Ref)
 {
   One_Fifty  Int_Loc;
   Enumeration   Enum_Loc;
@@ -460,13 +480,16 @@ One_Fifty   *Int_Par_Ref;
 } /* Proc_2 */
 
 
+/* CHANGE:
+	This doesn't appear to be valid C!
 Proc_3 (Ptr_Ref_Par)
-/******************/
-    /* executed once */
-    /* Ptr_Ref_Par becomes Ptr_Glob */
+// ******************
+    // executed once
+    // Ptr_Ref_Par becomes Ptr_Glob
 
 Rec_Pointer *Ptr_Ref_Par;
-
+*/
+void Proc_3 (Rec_Pointer *Ptr_Ref_Par)
 {
   if (Ptr_Glob != Null)
     /* then, executed */
@@ -475,7 +498,7 @@ Rec_Pointer *Ptr_Ref_Par;
 } /* Proc_3 */
 
 
-Proc_4 () /* without parameters */
+void Proc_4 (void) /* without parameters */
 /*******/
     /* executed once */
 {
@@ -487,7 +510,7 @@ Proc_4 () /* without parameters */
 } /* Proc_4 */
 
 
-Proc_5 () /* without parameters */
+void Proc_5 (void) /* without parameters */
 /*******/
     /* executed once */
 {
@@ -499,10 +522,10 @@ Proc_5 () /* without parameters */
         /* Procedure for the assignment of structures,          */
         /* if the C compiler doesn't support this feature       */
 #ifdef  NOSTRUCTASSIGN
-memcpy (d, s, l)
-register char   *d;
-register char   *s;
-register int    l;
+memcpy (register char *d, register char *s, register int l)
+//register char   *d;
+//register char   *s;
+//register int    l;
 {
         while (l--) *d++ = *s++;
 }

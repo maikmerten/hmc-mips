@@ -192,19 +192,20 @@ unsigned char checkLoc(unsigned char location)
  *  LIBRARY EMULATION METHODS
  *****************************/
 
-strcpy(char *str1, char *str2)
+char* strcpy(char *dest, char *src)
 {
-	char current = *str2;
+	char current = *src;
 
 	while(current != '\0')
 	{
-		*str1 = current;
-		++str1;
-		++str2;
-		current = *str2;
+		*dest = current;
+		++dest;
+		++src;
+		current = *src;
 	}
 
 	/* At the end of the copy, put a null terminator at 
 	   the end of string 1. */
-	*str1 = '\0';
+	*dest = '\0';
+	return dest;
 }
