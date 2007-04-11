@@ -1,0 +1,3 @@
+makeCharArrayFromString.py:
+_ The output strings are not null-terminated, but room for '\0' in the array is given.
+_ The output gives "'" instead of '\'' because of how Python works.
