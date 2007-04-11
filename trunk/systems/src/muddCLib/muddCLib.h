@@ -150,6 +150,6 @@ unsigned char checkLoc(unsigned char location);
 
 /* The string copy function puts the data in str2 into str1.
    It assumes that there is enough space in str1 to copy all of str2! */
-strcpy(char *str1, char *str2);
+char* strcpy(char *dest, char *src);
 
 #endif // MUDDCLIB_INCLUDED
