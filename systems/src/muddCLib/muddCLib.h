@@ -140,4 +140,16 @@ void sendInst(unsigned char instruction);
 unsigned char checkLoc(unsigned char location);
 
 
+/*  =============================================
+ *  LIBRARY EMULATION METHODS
+ *	
+ *	These methods are used in place of standard library
+ *  functions that we cannot use because of the limitations
+ *  of yoda_warrior.
+ */
+
+/* The string copy function puts the data in str2 into str1.
+   It assumes that there is enough space in str1 to copy all of str2! */
+strcpy(char *str1, char *str2);
+
 #endif // MUDDCLIB_INCLUDED
