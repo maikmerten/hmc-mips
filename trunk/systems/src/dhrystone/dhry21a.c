@@ -15,13 +15,18 @@
  *************************************************************************
  */
 
-#include <stdio.h>
+/* CHANGE:
+	These includes were originally used, but cannot happen with Yoda_warrior */
+/*#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> */
 #include "dhry.h"
+#include "../muddCLib/muddCLib.h"
 
 /* Global Variables: */
 
+Rec_Type		Rec_Glob;
+				Next_Rec_Glob;
 Rec_Pointer     Ptr_Glob,
                 Next_Ptr_Glob;
 int             Int_Glob;
@@ -31,7 +36,8 @@ char            Ch_1_Glob,
 int             Arr_1_Glob [50];
 int             Arr_2_Glob [50] [50];
 
-char Reg_Define[] = "Register option selected.";
+/* CHANGE:  No longer need this string.
+	char Reg_Define[] = "Register option selected."; */
 
 Enumeration     Func_1 ();
   /* 
@@ -46,11 +52,13 @@ Enumeration     Func_1 ();
 #define REG register
 #endif
 
+/* CHANGE:
+	We'll be measuring our timing by hand!
 
-/* variables for time measurement: */
+// variables for time measurement:
 
 #define Too_Small_Time 2
-                /* Measurements should last at least 2 seconds */
+                // Measurements should last at least 2 seconds
 
 double          Begin_Time,
                 End_Time,
@@ -60,6 +68,8 @@ double          Microseconds,
                 Dhrystones_Per_Second,
                 Vax_Mips;
 
+*/
+
 /* end of variables for time measurement */
 
 
@@ -68,8 +78,10 @@ int main ()
 
   /* main program, corresponds to procedures        */
   /* Main and Proc_0 in the Ada version             */
-{
-  double   dtime();
+{  
+	/* CHANGE:
+	We no longer use the code itself for timing.
+	double   dtime(); */
 
         One_Fifty       Int_1_Loc;
   REG   One_Fifty       Int_2_Loc;
@@ -79,10 +91,14 @@ int main ()
         Str_30          Str_1_Loc;
         Str_30          Str_2_Loc;
   REG   int             Run_Index;
-  REG   int             Number_Of_Runs;
+  REG   int             Number_Of_Runs = 100000;
+		int				i;
+		int				testsSucceeded;
+  /* We'll hard-code 100,000 runs in for now and see how that does. */
 
   /* Initializations */
 
+/* CHANGE:  We're never using sde!!
 #if !#system(sde)
         FILE            *Ap;
 
@@ -92,17 +108,35 @@ int main ()
        exit(1);
     }
 #endif
+*/
 
+  /* CHANGE: We don't have a malloc function. 
   Next_Ptr_Glob = (Rec_Pointer) malloc (sizeof (Rec_Type));
-  Ptr_Glob = (Rec_Pointer) malloc (sizeof (Rec_Type));
+  Ptr_Glob = (Rec_Pointer) malloc (sizeof (Rec_Type));     */
+  Next_Ptr_Glob = &Next_Rec_Glob;
+  Ptr_Glob = &Rec_Glob;
 
   Ptr_Glob->Ptr_Comp                    = Next_Ptr_Glob;
   Ptr_Glob->Discr                       = Ident_1;
   Ptr_Glob->variant.var_1.Enum_Comp     = Ident_3;
   Ptr_Glob->variant.var_1.Int_Comp      = 40;
-  strcpy (Ptr_Glob->variant.var_1.Str_Comp, 
-          "DHRYSTONE PROGRAM, SOME STRING");
-  strcpy (Str_1_Loc, "DHRYSTONE PROGRAM, 1'ST STRING");
+
+  /* CHANGE:
+     We need a strcpy function in MuddCLib.  Since we don't pull
+	 string literal data out of object files, we have to put them 
+	 on the stack.  */
+  /* "DHRYSTONE PROGRAM, SOME STRING" */
+  char some_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', 'S', 'O', 'M', 'E', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
+  /* "DHRYSTONE PROGRAM, 1'ST STRING" */
+  char first_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', "'", 'S', 'T', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
+  strcpy (Ptr_Glob->variant.var_1.Str_Comp, some_string);
+  strcpy (Str_1_Loc, first_string);
 
   Arr_2_Glob [8][7] = 10;
         /* Was missing in published program. Without this statement,    */
@@ -110,9 +144,13 @@ int main ()
         /* Warning: With 16-Bit processors and Number_Of_Runs > 32000,  */
         /* overflow may occur for this array element.                   */
 
+
+  /* CHANGE:
+	No printing necessary!
   printf ("\n");
   printf ("Dhrystone Benchmark, Version 2.1 (Language: C)\n");
-  printf ("\n");
+  printf ("\n");*/
+
 /*  
   if (Reg)
   {
@@ -126,9 +164,11 @@ int main ()
   }
 */
 
+/* CHANGE:  We'll never run this on sde and we set the number of runs
+			at the beginning of main, so we don't need to read it!
 #if #system(sde)
-  /* Call a non-inlineable function to prevent loop unrolling
-     from knowing the number of loops. */
+  // Call a non-inlineable function to prevent loop unrolling
+  //   from knowing the number of loops.
   Number_Of_Runs = number_of_runs ();
 #else
   printf ("Please give the number of runs through the benchmark: ");
@@ -138,15 +178,46 @@ int main ()
     Number_Of_Runs = n;
   }
   printf ("\n");
-#endif
+#endif */
 
+  /* CHANGE:
+		Instead of printing that execution starts here, we'll
+		flash some LEDs.
   printf ("Execution starts, %d runs through Dhrystone\n",Number_Of_Runs);
+  */
+
+  /* Before we count down, we need to define the strings that will
+     be used in the tests. "DHRYSTONE PROGRAM, 2'ND STRING" */
+  char second_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '2', "'", 'N', 'D', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+  /* "DHRYSTONE PROGRAM, 3'RD STRING" */
+  char third_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', "'", 'R', 'D', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
+  /* The LEDs count down one at a time, then flash to indicate the
+	 beginning of tests. */
+  setLED(0x8);
+  delay1000clock(1);
+  setLED(0x4);
+  delay1000clock(1);
+  setLED(0x2);
+  delay1000clock(1);
+  setLED(0x1);
+  delay1000clock(1);
+  setLED(0xF);
+  delay1clock(100);
+  setLED(0x0);
 
   /***************/
   /* Start timer */
   /***************/
  
+  /* CHANGE:
+	  No more internal timing.
   Begin_Time = dtime();
+  */
   
   for (Run_Index = 1; Run_Index <= Number_Of_Runs; ++Run_Index)
   {
@@ -156,7 +227,7 @@ int main ()
       /* Ch_1_Glob == 'A', Ch_2_Glob == 'B', Bool_Glob == true */
     Int_1_Loc = 2;
     Int_2_Loc = 3;
-    strcpy (Str_2_Loc, "DHRYSTONE PROGRAM, 2'ND STRING");
+    strcpy (Str_2_Loc, second_string);
     Enum_Loc = Ident_2;
     Bool_Glob = ! Func_2 (Str_1_Loc, Str_2_Loc);
       /* Bool_Glob == 1 */
@@ -179,7 +250,7 @@ int main ()
           /* then, not executed */
         {
         Proc_6 (Ident_1, &Enum_Loc);
-        strcpy (Str_2_Loc, "DHRYSTONE PROGRAM, 3'RD STRING");
+        strcpy (Str_2_Loc, third_string);
         Int_2_Loc = Run_Index;
         Int_Glob = Run_Index;
         }
@@ -198,6 +269,34 @@ int main ()
   /* Stop timer */
   /**************/
 
+  /* Flash the LEDs to indicate the end of the tests. */
+  for(i = 0; i < 10; ++i)
+  {
+	  setLED(0xF);
+	  delay1clock(100);
+	  setLED(0x0);
+	  delay1clock(100);
+  }
+
+  /* Check all of the results, and display pass or fail on the LEDs. */
+  /* Assume tests succeeded and challenge. */
+  testsSucceeded = true;
+  testsSucceeded = Int_Glob == 5 && testsSucceeded;
+
+  if(testsSucceeded)
+  {
+
+  }
+  else
+  {
+
+  }
+
+
+  /* CHANGE:
+	  We don't print any of the data, but we'll validate it and flash
+	  the LEDs accordingly.
+	
   End_Time = dtime();
 
   printf ("Execution ends\n");
@@ -267,12 +366,16 @@ int main ()
     Dhrystones_Per_Second = (double) Number_Of_Runs / User_Time;
     Vax_Mips = Dhrystones_Per_Second / 1757.0;
 
+	*/
+
+  /* CHANGE:
+  All of these data will be recorded by a human datataker and a stopwatch.
 #ifdef ROPT
     printf ("Register option selected?  YES\n");
 #else
     printf ("Register option selected?  NO\n");
-    /* XXX bug in dhrystone - writes beyond end of Reg_Define XXX */
-    /*strcpy(Reg_Define, "Register option not selected.");*/
+    // XXX bug in dhrystone - writes beyond end of Reg_Define XXX 
+    // strcpy(Reg_Define, "Register option not selected.");
 #endif
     printf ("Microseconds for one run through Dhrystone: ");
     printf ("%7.1lf \n", Microseconds);
@@ -297,6 +400,7 @@ int main ()
   }
   return (0);
 }
+*/
 
 
 Proc_1 (Ptr_Val_Par)
