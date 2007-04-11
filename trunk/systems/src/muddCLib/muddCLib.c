@@ -187,3 +187,24 @@ unsigned char checkLoc(unsigned char location)
 		location = 0;
 	return location;
 }
+
+/*****************************
+ *  LIBRARY EMULATION METHODS
+ *****************************/
+
+strcpy(char *str1, char *str2)
+{
+	char current = *str2;
+
+	while(current != '\0')
+	{
+		*str1 = current;
+		++str1;
+		++str2;
+		current = *str2;
+	}
+
+	/* At the end of the copy, put a null terminator at 
+	   the end of string 1. */
+	*str1 = '\0';
+}
