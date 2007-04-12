@@ -22,7 +22,9 @@ print "Don't forget to add null terminators to strings! \
 for param in sys.stdin:
     # Don't interpret newlines.
     outputString = param.replace("\n","").replace("\r","")
-    strLength = len(outputString) + 1
+    # Make the length include null terminators we don't use, and don't forget
+    # that we must declare one greater than the length.
+    strLength = len(outputString) + 2
 
     # Turn the string into a string list.
     outputList = strToList(outputString)
