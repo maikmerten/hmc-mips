@@ -12,7 +12,15 @@
 #ifndef LIGHTSOUT_INCLUDED
 #define LIGHTSOUT_INCLUDED 1
 
-#define NUM_LIGHTS 16
+/* Comment this line to use the LCD instead of LEDs */
+#define USE_LEDS 1
+
+#ifdef USE_LEDS
+	#define NUM_LIGHTS 4
+	int lastOn;
+#else
+	#define NUM_LIGHTS 16
+#endif
 
 #define LIGHT_OFF 1
 #define LIGHT_ON 0

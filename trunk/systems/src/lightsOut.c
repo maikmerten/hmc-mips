@@ -33,6 +33,7 @@ int main()
 	int numberExtracted;
 	int done;
 
+#ifndef USE_LEDS
 	/* Construct all of the strings used in the game. */
 	char lightsOutMsg[LCD_WIDTH] = {' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
 	char hmcMipsMsg[LCD_WIDTH] = {'H', 'M', 'C', '-', 'M', 'I', 'P', 'S', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
@@ -40,15 +41,20 @@ int main()
 	char playAgainMsg[LCD_WIDTH] = {'P', 'l', 'a', 'y', ' ', 'a', 'g', 'a', 'i', 'n', '?'};
 	char gameOverMsg[LCD_WIDTH] = {' ', ' ', ' ', 'G', 'a', 'm', 'e', ' ', 'O', 'v', 'e', 'r'};
 	char blankMsg[LCD_WIDTH] = {'\0'};
+#endif
 
 #ifdef DEBUG_SIMULATOR
 	printf("LightsOut!\n");
 	int numberSeed = 2;
 #else
+  #ifdef USE_LEDS
+	lastOn = 0;
+  #else // USE_LEDS not defined
 	/* Initialize the LCD display. */
 	initLCD();
 	sendInst(L_disp);
 	dispMessage(lightsOutMsg, hmcMipsMsg);
+  #endif //USE_LEDS
 
 	/* Wait for a button press. */
 	while(readInput() == NOSWITCH);
@@ -86,6 +92,11 @@ int main()
 		lightsOut = areLightsOut();
 	}
 
+	/* The lights are out, the game is over */
+#ifdef USE_LEDS
+	lastOn = 0;
+#endif
+
 	/* Any button press continues except down, which ends. */
 	while(buttonPressed == NOSWITCH)
 	{
@@ -93,7 +104,29 @@ int main()
 		printLights();
 		printf("You win!\nPlay again?\n");
 #else
+  #ifdef USE_LEDS
+		/* Finite-state fireworks animation */
+		switch(lastOn)
+		{
+			case 0: setLED(0x2);
+			break;
+			case 1: setLED(0x5);
+			break;
+			case 2: setLED(0x8);
+			break;
+			case 10: setLED(0x4);
+			break;
+			case 11: setLED(0xA);
+			break;
+			case 12: setLED(0x1);
+			break;
+		default: setLED(0x0);
+		}
+
+		++lastOn;
+  #else
 		dispMessage(youWinMsg, playAgainMsg);
+  #endif
 #endif
 		buttonPressed = readInput();
 		if(buttonPressed == BUTTON_DOWN)
@@ -105,7 +138,9 @@ int main()
 	} /* END of the main program loop. */
 
 #ifndef DEBUG_SIMULATOR
+  #ifndef USE_LEDS
 	dispMessage(gameOverMsg, blankMsg);
+  #endif
 	while(1);	/* Loop forever instead of letting the program
 				   counter run up. */
 #endif
@@ -261,6 +296,8 @@ int areLightsOut()
 	return 1;
 }
 
+
+/* Display the lights in some form the user can interact with. */
 void printLights()
 {
 #ifdef DEBUG_SIMULATOR
@@ -286,6 +323,28 @@ void printLights()
 	printf("\n\n");
 
 #else
+  #ifdef USE_LEDS
+	/* If we're using LEDs, we need to make the cursor blink. */
+	char output = 0x00;
+	int i;
+
+	// Look at each "light" and give the proper LED bit its value.
+	for(i = 0; i < NUM_LIGHTS;  ++i)
+	{
+		output = output | (lights[i] << i);
+	}
+
+	// Here's where the cursor blinks
+	if(lastOn >= 10 && lastOn < 12)
+		output = output & ~(1 << lightPosition);  // Turn off cursor position.
+	else if(lastOn >= 12 && lastOn < 15)
+		output = output | (1 << lightPosition);   // Turn on cursor position.
+
+	lastOn++;
+	if(lastOn == 15)
+		lastOn = 0;		// Reset the finite state machine if we're at a certain point.
+
+  #else
 	char str1[LCD_WIDTH];	/* The upper LCD bar */
 	char str2[LCD_WIDTH];	/* The lower LCD bar */
 	int i;
@@ -307,5 +366,6 @@ void printLights()
 	}
 
 	dispMessage(str1, str2);
+  #endif
 #endif
 }
