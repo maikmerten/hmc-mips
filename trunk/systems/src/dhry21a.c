@@ -287,16 +287,61 @@ int main ()
 
   /* Check all of the results, and display pass or fail on the LEDs. */
   /* Assume tests succeeded and challenge. */
-  testsSucceeded = true;
-  testsSucceeded = Int_Glob == 5 && testsSucceeded;
+  testsSucceeded = (Int_Glob == 5) && 
+		(Bool_Glob == 1) &&
+		(Ch_1_Glob == 'A') && 
+		(Ch_2_Glob == 'B') &&
+		(Arr_1_Glob[8] == 7) && 
+		(Arr_2_Glob[8][7] == Number_Of_Runs + 10) &&
+		((int)Ptr_Glob->Ptr_Comp == (int)Next_Ptr_Glob->Ptr_Comp) &&
+		(Ptr_Glob->Discr == 0) && 
+		(Ptr_Glob->variant.Enum_Comp == 2) &&
+		(Ptr_Glob->variant.Int_Comp == 17) && 
+		!strcmp(Ptr_Glob->variant.Str_Comp, some_string) &&		// strcmp returns 0 if they're the same!
+		(Next_Ptr_Glob->Discr == 0) &&
+		(Next_Ptr_Glob->variant.Enum_Comp == 1) &&
+		(Next_Ptr_Glob->variant.Int_Comp == 18) &&
+		!strcmp(Next_Ptr_Glob->variant.Str_Comp, some_string) &&
+		(Int_1_Loc == 5) &&
+		(Int_2_Loc == 13) &&
+		(Int_3_Loc == 7) &&
+		(Enum_Loc == 1) &&
+		!strcmp(Str_1_Loc, first_string) &&
+		!strcmp(Str_2_Loc, second_string);
 
   if(testsSucceeded)
   {
-	/* LEDs blink one way */
+	/* LEDs show fireworks */
+	  while(1)
+	  {
+		  setLED(0x2);
+		  delay1clock(500);
+		  setLED(0x5);
+		  delay1clock(500);
+		  setLED(0x8);
+		  delay1clock(500);
+		  setLED(0x0);
+		  delay1000clock(2);
+		  setLED(0x4);
+		  delay1clock(500);
+		  setLED(0xA);
+		  delay1clock(500);
+		  setLED(0x1);
+		  delay1clock(500);
+		  setLED(0x0);
+		  delay1000clock(2);
+	  }
   }
   else
   {
-	/* LEDs blink another way */
+	/* LEDs flash quickly */
+	  while(1)
+	  {
+		  setLED(0xF);
+		  delay1clock(200);
+		  setLED(0x0);
+		  delay1clock(200);
+	  }
   }
 
 
