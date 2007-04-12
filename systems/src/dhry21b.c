@@ -16,6 +16,7 @@
  */
 
 #include "dhry.h"
+#include "muddCLib/muddCLib.h"
 
 
 #ifndef REG
