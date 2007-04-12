@@ -209,3 +209,20 @@ char* strcpy(char *dest, char *src)
 	*dest = '\0';
 	return dest;
 }
+
+/*
+ *  This was essentially taken from:
+ *  http://src.opensolaris.org/source/xref/onnv/onnv-gate/usr/src/lib/libc/sparcv9/gen/strcmp.s
+ *  on the OpenSolaris website.
+ */
+int strcmp(register const char *str1, register const char *str2)
+{
+	if (str1 == str2)
+		return 0;
+
+	while(*str1 == *str2++)
+		if(*str1++ == '\0')
+			return 0;
+
+	return(*s1 - s2[-1]);
+}
