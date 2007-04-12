@@ -224,5 +224,24 @@ int strcmp(register const char *str1, register const char *str2)
 		if(*str1++ == '\0')
 			return 0;
 
-	return(*s1 - s2[-1]);
+	return(*str1 - str2[-1]);
+}
+
+/*
+ * This was taken from:
+ * http://src.opensolaris.org/source/xref/onnv/onnv-gate/usr/src/common/util/memset.c
+ * on the OpenSolaris website.
+ *
+ * Thank God for OpenSolaris!
+ */
+void *memset(void *buffer, int ch, size_t count)
+{
+	if (count != 0) {
+		unsigned char *cbuff = buffer;
+		do {
+			*cbuff++ = (unsigned char)ch;
+		} while (--count != 0);
+	}
+
+	return (buffer);
 }

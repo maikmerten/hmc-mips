@@ -148,10 +148,15 @@ unsigned char checkLoc(unsigned char location);
  *  of yoda_warrior.
  */
 
+/* type definitions needed for standard library functions */
+typedef unsigned int size_t;
+
 /* The string copy function puts the data in str2 into str1.
    It assumes that there is enough space in str1 to copy all of str2! */
 char* strcpy(char *dest, char *src);
 
 int strcmp(register const char *str1, register const char *str2);
+
+void *memset(void *buffer, int ch, size_t count);
 
 #endif // MUDDCLIB_INCLUDED
