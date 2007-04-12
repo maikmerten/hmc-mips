@@ -155,6 +155,8 @@ typedef unsigned int size_t;
    It assumes that there is enough space in str1 to copy all of str2! */
 char* strcpy(char *dest, char *src);
 
+/* Returns positive if str1 is lexically greater than str2, 0 if they
+   are equal, and negative if str1 is lexcially less than str2.	   */
 int strcmp(register const char *str1, register const char *str2);
 
 void *memset(void *buffer, int ch, size_t count);
