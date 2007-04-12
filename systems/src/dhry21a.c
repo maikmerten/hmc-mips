@@ -90,6 +90,30 @@ int main ()
 	We no longer use the code itself for timing.
 	double   dtime(); */
 
+  /* CHANGE:
+     We need a strcpy function in MuddCLib.  Since we don't pull
+	 string literal data out of object files, we have to put them 
+	 on the stack.  */
+  /* "DHRYSTONE PROGRAM, SOME STRING" */
+  char some_string[32] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', 'S', 'O', 'M', 'E', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
+  /* "DHRYSTONE PROGRAM, 1'ST STRING" */
+  char first_string[32] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', '\'', 'S', 'T', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
+  /* Before we count down, we need to define the strings that will
+     be used in the tests. "DHRYSTONE PROGRAM, 2'ND STRING" */
+  char second_string[32] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '2', '\'', 'N', 'D', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+  /* "DHRYSTONE PROGRAM, 3'RD STRING" */
+  char third_string[32] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
+	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', '\'', 'R', 'D', ' ', 
+	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
+
         One_Fifty       Int_1_Loc;
   REG   One_Fifty       Int_2_Loc;
         One_Fifty       Int_3_Loc;
@@ -127,20 +151,6 @@ int main ()
   Ptr_Glob->Discr                       = Ident_1;
   Ptr_Glob->variant.Enum_Comp     = Ident_3;
   Ptr_Glob->variant.Int_Comp      = 40;
-
-  /* CHANGE:
-     We need a strcpy function in MuddCLib.  Since we don't pull
-	 string literal data out of object files, we have to put them 
-	 on the stack.  */
-  /* "DHRYSTONE PROGRAM, SOME STRING" */
-  char some_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', 'S', 'O', 'M', 'E', ' ', 
-	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
-
-  /* "DHRYSTONE PROGRAM, 1'ST STRING" */
-  char first_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', '\'', 'S', 'T', ' ', 
-	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
   strcpy (Ptr_Glob->variant.Str_Comp, some_string);
   strcpy (Str_1_Loc, first_string);
@@ -192,16 +202,6 @@ int main ()
 		flash some LEDs.
   printf ("Execution starts, %d runs through Dhrystone\n",Number_Of_Runs);
   */
-
-  /* Before we count down, we need to define the strings that will
-     be used in the tests. "DHRYSTONE PROGRAM, 2'ND STRING" */
-  char second_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ',
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '2', '\'', 'N', 'D', ' ', 
-	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
-  /* "DHRYSTONE PROGRAM, 3'RD STRING" */
-  char third_string[31] = {'D', 'H', 'R', 'Y', 'S', 'T', 'O', 'N', 'E', ' ', 
-	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', '\'', 'R', 'D', ' ', 
-	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
   /* The LEDs count down one at a time, then flash to indicate the
 	 beginning of tests. */
