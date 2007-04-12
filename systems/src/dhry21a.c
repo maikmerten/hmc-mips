@@ -125,8 +125,8 @@ int main ()
 
   Ptr_Glob->Ptr_Comp                    = Next_Ptr_Glob;
   Ptr_Glob->Discr                       = Ident_1;
-  Ptr_Glob->variant.var_1.Enum_Comp     = Ident_3;
-  Ptr_Glob->variant.var_1.Int_Comp      = 40;
+  Ptr_Glob->variant.Enum_Comp     = Ident_3;
+  Ptr_Glob->variant.Int_Comp      = 40;
 
   /* CHANGE:
      We need a strcpy function in MuddCLib.  Since we don't pull
@@ -142,7 +142,7 @@ int main ()
 	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '1', '\'', 'S', 'T', ' ', 
 	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
-  strcpy (Ptr_Glob->variant.var_1.Str_Comp, some_string);
+  strcpy (Ptr_Glob->variant.Str_Comp, some_string);
   strcpy (Str_1_Loc, first_string);
 
   Arr_2_Glob [8][7] = 10;
@@ -327,22 +327,22 @@ int main ()
   printf ("        should be:   (implementation-dependent)\n");
   printf ("  Discr:             %d\n", Ptr_Glob->Discr);
   printf ("        should be:   %d\n", 0);
-  printf ("  Enum_Comp:         %d\n", Ptr_Glob->variant.var_1.Enum_Comp);
+  printf ("  Enum_Comp:         %d\n", Ptr_Glob->variant.Enum_Comp);
   printf ("        should be:   %d\n", 2);
-  printf ("  Int_Comp:          %d\n", Ptr_Glob->variant.var_1.Int_Comp);
+  printf ("  Int_Comp:          %d\n", Ptr_Glob->variant.Int_Comp);
   printf ("        should be:   %d\n", 17);
-  printf ("  Str_Comp:          %s\n", Ptr_Glob->variant.var_1.Str_Comp);
+  printf ("  Str_Comp:          %s\n", Ptr_Glob->variant.Str_Comp);
   printf ("        should be:   DHRYSTONE PROGRAM, SOME STRING\n");
   printf ("Next_Ptr_Glob->\n");
   printf ("  Ptr_Comp:          %d\n", (int) Next_Ptr_Glob->Ptr_Comp);
   printf ("        should be:   (implementation-dependent), same as above\n");
   printf ("  Discr:             %d\n", Next_Ptr_Glob->Discr);
   printf ("        should be:   %d\n", 0);
-  printf ("  Enum_Comp:         %d\n", Next_Ptr_Glob->variant.var_1.Enum_Comp);
+  printf ("  Enum_Comp:         %d\n", Next_Ptr_Glob->variant.Enum_Comp);
   printf ("        should be:   %d\n", 1);
-  printf ("  Int_Comp:          %d\n", Next_Ptr_Glob->variant.var_1.Int_Comp);
+  printf ("  Int_Comp:          %d\n", Next_Ptr_Glob->variant.Int_Comp);
   printf ("        should be:   %d\n", 18);
-  printf ("  Str_Comp:          %s\n", Next_Ptr_Glob->variant.var_1.Str_Comp);
+  printf ("  Str_Comp:          %s\n", Next_Ptr_Glob->variant.Str_Comp);
   printf ("        should be:   DHRYSTONE PROGRAM, SOME STRING\n");
   printf ("Int_1_Loc:           %d\n", Int_1_Loc);
   printf ("        should be:   %d\n", 5);
@@ -431,9 +431,9 @@ void Proc_1 (Rec_Pointer Ptr_Val_Par)
   /* corresponds to "rename" in Ada, "with" in Pascal           */
   
   structassign (*Ptr_Val_Par->Ptr_Comp, *Ptr_Glob);
-  Ptr_Val_Par->variant.var_1.Int_Comp = 5;
-  Next_Record->variant.var_1.Int_Comp 
-        = Ptr_Val_Par->variant.var_1.Int_Comp;
+  Ptr_Val_Par->variant.Int_Comp = 5;
+  Next_Record->variant.Int_Comp 
+        = Ptr_Val_Par->variant.Int_Comp;
   Next_Record->Ptr_Comp = Ptr_Val_Par->Ptr_Comp;
   Proc_3 (&Next_Record->Ptr_Comp);
     /* Ptr_Val_Par->Ptr_Comp->Ptr_Comp 
@@ -441,12 +441,12 @@ void Proc_1 (Rec_Pointer Ptr_Val_Par)
   if (Next_Record->Discr == Ident_1)
     /* then, executed */
   {
-    Next_Record->variant.var_1.Int_Comp = 6;
-    Proc_6 (Ptr_Val_Par->variant.var_1.Enum_Comp, 
-           &Next_Record->variant.var_1.Enum_Comp);
+    Next_Record->variant.Int_Comp = 6;
+    Proc_6 (Ptr_Val_Par->variant.Enum_Comp, 
+           &Next_Record->variant.Enum_Comp);
     Next_Record->Ptr_Comp = Ptr_Glob->Ptr_Comp;
-    Proc_7 (Next_Record->variant.var_1.Int_Comp, 10, 
-           &Next_Record->variant.var_1.Int_Comp);
+    Proc_7 (Next_Record->variant.Int_Comp, 10, 
+           &Next_Record->variant.Int_Comp);
   }
   else /* not executed */
     structassign (*Ptr_Val_Par, *Ptr_Val_Par->Ptr_Comp);
@@ -494,7 +494,7 @@ void Proc_3 (Rec_Pointer *Ptr_Ref_Par)
   if (Ptr_Glob != Null)
     /* then, executed */
     *Ptr_Ref_Par = Ptr_Glob->Ptr_Comp;
-  Proc_7 (10, Int_Glob, &Ptr_Glob->variant.var_1.Int_Comp);
+  Proc_7 (10, Int_Glob, &Ptr_Glob->variant.Int_Comp);
 } /* Proc_3 */
 
 

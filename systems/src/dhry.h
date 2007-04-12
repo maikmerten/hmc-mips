@@ -380,7 +380,19 @@ typedef struct record
     {
     struct record *Ptr_Comp;
     Enumeration    Discr;
-    union {
+
+	struct {
+		Enumeration Enum_Comp;
+		int			Int_Comp;
+		char		Str_Comp [31];
+	} variant;
+
+	  /* CHANGE: 
+		This union is screwing up our output because
+		it makes the compiler emit invalid instructions.
+		We can get rid of it because it only uses the
+		var_1 type of struct anyway.
+		union {
           struct {
                   Enumeration Enum_Comp;
                   int         Int_Comp;
@@ -395,6 +407,8 @@ typedef struct record
                   char        Ch_2_Comp;
                   } var_3;
           } variant;
+
+	  */
       } Rec_Type;
 
 typedef Rec_Type	*Rec_Pointer;
