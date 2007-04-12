@@ -152,4 +152,6 @@ unsigned char checkLoc(unsigned char location);
    It assumes that there is enough space in str1 to copy all of str2! */
 char* strcpy(char *dest, char *src);
 
+int strcmp(register const char *str1, register const char *str2);
+
 #endif // MUDDCLIB_INCLUDED
