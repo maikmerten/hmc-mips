@@ -60,7 +60,7 @@ int main()
 
 		// Print "Hello, Word!"
 		//       "   HMC VLSI 07"
-
+		// manually, without using dispMessage...		
 		sendInst(L_clear);
 		move(0x00);
 
@@ -79,6 +79,16 @@ int main()
 				break;
 			dispChar(str2[i]);
 		}
+
+		delay1000clock(3000);
+
+		// Clear the screen.
+		sendInst(L_clear);
+
+		delay1000clock(500);
+
+		// And now print it using dispMessage...
+		dispMessage(str1, str2);
 
 		delay1000clock(3000);
 
