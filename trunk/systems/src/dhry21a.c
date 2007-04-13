@@ -215,15 +215,15 @@ int main ()
   /* The LEDs count down one at a time, then flash to indicate the
 	 beginning of tests. */
   setLED(0x8);
-  delay1000clock(1);
+  delay1000clock(200);
   setLED(0x4);
-  delay1000clock(1);
+  delay1000clock(200);
   setLED(0x2);
-  delay1000clock(1);
+  delay1000clock(200);
   setLED(0x1);
-  delay1000clock(1);
+  delay1000clock(200);
   setLED(0xF);
-  delay1clock(100);
+  delay1000clock(50);
   setLED(0x0);
 
   /***************/
@@ -289,9 +289,9 @@ int main ()
   for(i = 0; i < 10; ++i)
   {
 	  setLED(0xF);
-	  delay1clock(100);
+	  delay1000clock(100);
 	  setLED(0x0);
-	  delay1clock(100);
+	  delay1000clock(100);
   }
 
   /* Check all of the results, and display pass or fail on the LEDs. */
@@ -324,21 +324,21 @@ int main ()
 	  while(1)
 	  {
 		  setLED(0x2);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0x5);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0x8);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0x0);
-		  delay1000clock(2);
+		  delay1000clock(500);
 		  setLED(0x4);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0xA);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0x1);
-		  delay1clock(500);
+		  delay1000clock(100);
 		  setLED(0x0);
-		  delay1000clock(2);
+		  delay1000clock(700);
 	  }
   }
   else
@@ -347,9 +347,9 @@ int main ()
 	  while(1)
 	  {
 		  setLED(0xF);
-		  delay1clock(200);
+		  delay1000clock(50);
 		  setLED(0x0);
-		  delay1clock(200);
+		  delay1000clock(50);
 	  }
   }
 
