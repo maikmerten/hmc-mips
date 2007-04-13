@@ -5,10 +5,14 @@
  * 
  * The purpose of this test is to read the buttons on the board
  * and indicate by LEDs whether they are being read properly.
+ * It also tests a small version of the code used by lightsOut
+ * to read a single button press.
  *
  * - The left button causes LED0 to be turned on when pressed, and 
  *	off when released.
  * - The right button causes LED1 to toggle on and off.
+ *
+ * Some recommended additions to this program:
  * - The top button causes LED2 and LED3 to blink.
  * - The bottom button causes LED2 and LED3 to blink faster.
  * 
