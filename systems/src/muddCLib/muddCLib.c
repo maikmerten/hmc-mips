@@ -78,31 +78,28 @@ void dispChar(char character)
 */
 void dispMessage(char* line1, char* line2)
 {
-	char* curchar = line1;
-	int count = 0;
+	int i = 0;
+
 	// Clear the LCD.
 	sendInst(L_clear);
 
-	// Display first row (display addresses 0x00 - 0x0F)
-	//move(0x00); unnecessary.
-	for(count = 0; count < LCD_WIDTH; ++count)
+	// Display first row (display addresses 0x00 - 0x14)
+	for(i = 0; i < LCD_WIDTH; ++i)
 	{
-		if(*curchar == '\0')
+		if(line1[i] == '\0')
 			break;
-		dispChar(*curchar);
-		++curchar;
-		++count;
+		dispChar(line1[i]);
 	}
-	// Display second row (display addresses 0x40 - 0x4F)
-	curchar = line2;
-	count = 0;
+
+	// Display second row (display addresses 0x40 - 0x54)
 	move(0x40);
-	while ((*curchar != '\0' ) && (count < 16))
+	for(i = 0; i < LCD_WIDTH; ++i)
 	{
-		dispChar(*curchar);
-		++curchar;
-		++count;
+		if(line2[i] == '\0')
+			break;
+		dispChar(line2[i]);
 	}
+
 	// Move cursor back to first position
 	move(0x00);
 }
