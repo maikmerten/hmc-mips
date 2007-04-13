@@ -94,7 +94,7 @@ void delay1clock(int cycle_count);
 
 #define LCD_DATA (*(int*)0xA0044028)
 
-#define LCD_WIDTH 16
+#define LCD_WIDTH 20
 
 #define L_init 0x30		// Standard LCD initialization code
 #define L_8bit 0x38		// Code indicating 8-bit operating mode
