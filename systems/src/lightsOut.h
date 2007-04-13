@@ -3,6 +3,8 @@
  * 
  * Created by Matt McKnett on 4/1/07
  * VLSI Spring 2007
+ *
+ * $Author$,  $Date$ -- $Revision$
  * 
  * This is a demo program for the hmc-mips project.  It is a
  * "lights out" game playable on the LCD display onboard the

@@ -4,6 +4,8 @@
  *  Created by Matt McKnett on 4/1/07
  *  VLSI Spring 2007
  *
+ * $Author$,  $Date$ -- $Revision$
+ *
  *  This demo program is a "lights out" game playable on the 
  *  hmc-mips system.
  */
@@ -339,6 +341,9 @@ void printLights()
 		output = output & ~(1 << lightPosition);  // Turn off cursor position.
 	else if(lastOn >= 12 && lastOn < 15)
 		output = output | (1 << lightPosition);   // Turn on cursor position.
+
+	// Print the output on the LEDs.
+	setLED(output);
 
 	lastOn++;
 	if(lastOn == 15)

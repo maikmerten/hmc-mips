@@ -1,3 +1,19 @@
+/* test_leds.c
+ *
+ * Created by Matt McKnett, HMC-MIPS Project, VLSI Spring 2007
+ * $Author$,  $Date$ -- $Revision$
+ * 
+ * The purpose of this test is to constantly read the dip switches
+ * on the Xilinx board and make the LEDs reflect the value shown
+ * by the switches.  It also tests the system's ability to use
+ * global data by storing the values of the dip switches in memory.
+ *
+ * Systems tested:
+ *	- memory I/O -- dip switches
+ *	- memory I/O -- LEDs
+ *	- memory -- global pointer/global data
+ */
+
 #include "muddCLib/muddCLib.h"
 
 char dip_switch[4];

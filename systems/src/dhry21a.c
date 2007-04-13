@@ -3,6 +3,15 @@
  *
  *                   "DHRYSTONE" Benchmark Program
  *                   -----------------------------
+ *  This is a modified version of the Dhrystone benchmark modified
+ *  specifically for the Harvey Mudd College HMC-MIPS project, CMOS VLSI
+ *  Design, Spring 2007.  
+ *  Major modifications began Apr 10, 2007 by Matt McKnett
+ *  
+ *  Changes from the original are marked with a "CHANGED" comment in code.
+ *
+ *  $Author$,  $Date$ -- $Revision$
+ * 
  *
  *  Version:    C, Version 2.1
  *
