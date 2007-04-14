@@ -159,8 +159,10 @@ if "-debug" in args:
 else:
     params = {'debug': False}
 
-# If not specified, use boot loader.
-params['use_boot_loader'] = True
+if "-noboot" in args:
+    params['use_boot_loader'] = False
+else:
+    params['use_boot_loader'] = True
 
 # Continue parsing
 try:
@@ -191,16 +193,6 @@ except IndexError:
     sys.exit(1)
 except ValueError:
     print "-program requires a file name."
-    sys.exit(1)
-
-try:
-    if "-noboot" in args:
-        params['use_boot_loader'] = False
-except IndexError:
-    print "-boot flag requires 'True' or 'False'"
-    sys.exit(1)
-except ValueError:
-    print "-boot flag requires 'True' or 'False'"
     sys.exit(1)
 
 # Parse the parameter file.
