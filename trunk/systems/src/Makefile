@@ -56,8 +56,10 @@ include $(INCLUDEFILES)
 %.v: %.dat boot_loader.dat boot_start.dat
 ifeq ($(BOOTLOAD),true)
 	python generateVerilog.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+	cp $@ ROM.v
 else
 	python generateVerilog.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
+	cp $@ ROM.v
 endif
 
 %.rom: %.dat boot_loader.dat boot_start.dat
