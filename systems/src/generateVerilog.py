@@ -1,5 +1,5 @@
 """
-verilogBootAndProgram.py
+generateVerilog.py
 
 Created 2/27/07 by Matt McKnett
 HMC Spring 2007 CMOS VLSI, MIPS project
@@ -32,9 +32,10 @@ def verilogBootAndProgram(params):
         mem_size = int(params['mem_size'], 16) >> 2
         output_name = params['output_name']
         debug = params['debug']
+        boot = params['use_boot_loader']
         verilog_template = params['verilog_template']
     except KeyError:
-        print "verilogBootAndProgram: A needed parameter was not defined!"    
+        print "generateVerilog: A needed parameter was not defined!"    
 
     # Initialize the current location and the output file.
     current_loc = reset_loc
@@ -42,69 +43,70 @@ def verilogBootAndProgram(params):
     # We will construct our output in a string.
     outputString = ""
     caseStmtTemplate = "{1'b0, 16'h(address)}: instr <= 32'h(data);"
-    
-    #First open the bootstrapper start file and output the lines.
-    reset_file = open(reset_name, 'rU')
-    for line in reset_file:
-        line_data = line.replace("\n","")
-        caseStmt = caseStmtTemplate
-        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-        caseStmt = caseStmt.replace("(data)", line_data)
-        outputString += caseStmt
+
+    if boot:
+        #First open the bootstrapper start file and output the lines.
+        reset_file = open(reset_name, 'rU')
+        for line in reset_file:
+            line_data = line.replace("\n","")
+            caseStmt = caseStmtTemplate
+            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+            caseStmt = caseStmt.replace("(data)", line_data)
+            outputString += caseStmt
+            
+            outputString += "\n"
+            current_loc += 1
+        reset_file.close()
+
+        # Make sure the reset code didn't overrun the exception code.
+        offset = except_loc - current_loc
+        if offset < 0:
+            print "  Verilog Generation:  boot code exceeded available " \
+                    "memory region.  Read %d lines from %s." % (current_loc, reset_name)
+            sys.exit(1)
+
+        # Write 0's as a buffer between reset and exception.
+        while current_loc < except_loc :
+            caseStmt = caseStmtTemplate
+            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+            caseStmt = caseStmt.replace("(data)", "00000000")
+            outputString += caseStmt
+            
+            outputString += "\n"
+            current_loc += 1
+
+        #print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
+
+        # Next open the boot_loader and output its lines.
+        except_file = open(except_name, 'rU')
+        for line in except_file:
+            line_data = line.replace("\n","")
+            caseStmt = caseStmtTemplate
+            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+            caseStmt = caseStmt.replace("(data)", line_data)
+            outputString += caseStmt
+            
+            outputString += "\n"
+            current_loc += 1
+        except_file.close()
+
+        # Make sure the boot_loader didn't overrun the program code.
+        offset = program_loc - current_loc
+        if offset < 0:
+            print "  Verilog Generation:  exception code exceeded available memory region."\
+                      "  Read %d lines from %s" % (current_loc - except_loc, except_name)
         
-        outputString += "\n"
-        current_loc += 1
-    reset_file.close()
+        # Write 0's as a buffer between the boot_loader and the program
+        while current_loc < program_loc :
+            caseStmt = caseStmtTemplate
+            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
+            caseStmt = caseStmt.replace("(data)", "00000000")
+            outputString += caseStmt
+            
+            outputString += "\n"
+            current_loc += 1
 
-    # Make sure the reset code didn't overrun the exception code.
-    offset = except_loc - current_loc
-    if offset < 0:
-        print "Boot and Program Verilog:  initial boot code exceeded available " \
-                "memory region.  Read %d lines from %s." % (current_loc, reset_name)
-        sys.exit(1)
-
-    # Write 0's as a buffer between reset and exception.
-    while current_loc < except_loc :
-        caseStmt = caseStmtTemplate
-        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-        caseStmt = caseStmt.replace("(data)", "00000000")
-        outputString += caseStmt
-        
-        outputString += "\n"
-        current_loc += 1
-
-    print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
-
-    # Next open the boot_loader and output its lines.
-    except_file = open(except_name, 'rU')
-    for line in except_file:
-        line_data = line.replace("\n","")
-        caseStmt = caseStmtTemplate
-        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-        caseStmt = caseStmt.replace("(data)", line_data)
-        outputString += caseStmt
-        
-        outputString += "\n"
-        current_loc += 1
-    except_file.close()
-
-    # Make sure the boot_loader didn't overrun the program code.
-    offset = program_loc - current_loc
-    if offset < 0:
-        print "Boot and Program Verilog:  boot loader exceeded available memory region."\
-                  "  Read %d lines from %s" % (current_loc - except_loc, except_name)
-    
-    # Write 0's as a buffer between the boot_loader and the program
-    while current_loc < program_loc :
-        caseStmt = caseStmtTemplate
-        caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-        caseStmt = caseStmt.replace("(data)", "00000000")
-        outputString += caseStmt
-        
-        outputString += "\n"
-        current_loc += 1
-
-    print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
+        #print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
 
     # Last, write the program out to the memory.  
     program_file = open(program_name, 'rU')
@@ -122,7 +124,7 @@ def verilogBootAndProgram(params):
     # Make sure the program didn't overrun the memory (leave room for a final word of 0's)
     offset = mem_size - current_loc
     if offset < 0:
-        print "Boot and Program Verilog:  The program exceeded available memory region." \
+        print "  Verilog Generation:  The program exceeded available memory region." \
                   "  Read %d lines from %s" % (current_loc - program_loc, program_file)
 
     # Now that we have constructed the replacement string, we will replace the token
@@ -137,7 +139,7 @@ def verilogBootAndProgram(params):
     output_file.write(verilog_output)
     output_file.close()
 
-    print "Boot and Program Verilog: output %d words to file %s" % (current_loc / 4, output_name)
+    print "  Verilog Generation: output %d words to file %s" % (current_loc / 4, output_name)
 # End of verilogBootAndProgram()
 
 
@@ -156,6 +158,9 @@ if "-debug" in args:
     params = {'debug': True}
 else:
     params = {'debug': False}
+
+# If not specified, use boot loader.
+params['use_boot_loader'] = True
 
 # Continue parsing
 try:
@@ -186,6 +191,16 @@ except IndexError:
     sys.exit(1)
 except ValueError:
     print "-program requires a file name."
+    sys.exit(1)
+
+try:
+    if "-noboot" in args:
+        params['use_boot_loader'] = False
+except IndexError:
+    print "-boot flag requires 'True' or 'False'"
+    sys.exit(1)
+except ValueError:
+    print "-boot flag requires 'True' or 'False'"
     sys.exit(1)
 
 # Parse the parameter file.

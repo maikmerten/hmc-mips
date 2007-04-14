@@ -59,7 +59,7 @@ include $(INCLUDEFILES)
 ifeq ($(BOOTLOAD),true)
 	python generateVerilog.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 else
-	python generateVerilogNoBoot.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+	python generateVerilog.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
 endif
 
 
