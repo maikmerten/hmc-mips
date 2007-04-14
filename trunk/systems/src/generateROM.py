@@ -7,6 +7,8 @@ HMC Spring 2007 CMOS VLSI, MIPS project
 This script is designed to accept three dat files (each file composed of
 MIPS instructions in hex, one instruction per line) and convert them to a
 vector file simulatable in Modelsim.
+
+In debug mode, line numbers are included.
 """
 
 import sys
@@ -29,7 +31,7 @@ def dumpBootAndProgram(params):
         output_name = params['output_name']
         debug = params['debug']
     except KeyError:
-        print "dumpBootAndProgram: A needed parameter was not defined!"    
+        print "generateDat: A needed parameter was not defined!"    
 
     # Initialize the current location and the output file.
     current_loc = reset_loc
@@ -47,7 +49,7 @@ def dumpBootAndProgram(params):
     # Make sure the reset code didn't overrun the exception code.
     offset = except_loc - current_loc
     if offset < 0:
-        print "Boot and Program Dump:  initial boot code exceeded available " \
+        print "  Dat Generation:  initial boot code exceeded available " \
                 "memory region.  Read %d lines from %s." % (current_loc, reset_name)
         sys.exit(1)
 
@@ -58,7 +60,7 @@ def dumpBootAndProgram(params):
         output_file.write("00000000\n")
         current_loc += 4
 
-    print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
+    #print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
 
     # Next open the boot_loader and output its lines.
     except_file = open(except_name, 'rU')
@@ -72,7 +74,7 @@ def dumpBootAndProgram(params):
     # Make sure the boot_loader didn't overrun the program code.
     offset = program_loc - current_loc
     if offset < 0:
-        print "Boot and Program Dump:  boot loader exceeded available memory region."\
+        print "  Dat Generation:  boot loader exceeded available memory region."\
                   "  Read %d lines from %s" % (current_loc - except_loc, except_name)
     
     # Write 0's as a buffer between the boot_loader and the program
@@ -82,7 +84,7 @@ def dumpBootAndProgram(params):
         output_file.write("00000000\n")
         current_loc += 4
 
-    print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
+    #print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
 
     # Last, write the program out to the memory.  
     program_file = open(program_name, 'rU')
@@ -96,7 +98,7 @@ def dumpBootAndProgram(params):
     # Make sure the program didn't overrun the memory (leave room for a final word of 0's)
     offset = mem_size - current_loc
     if offset < 0:
-        print "Boot and Program Dump:  The program exceeded available memory region." \
+        print "  Dat Generation:  The program exceeded available memory region." \
                   "  Read %d lines from %s" % (current_loc - program_loc, program_file)
 
     # Write 0's as a buffer between the program and the end of memory
@@ -108,7 +110,7 @@ def dumpBootAndProgram(params):
         
     output_file.close()
 
-    print "Boot and Program Dump: output %d words to file %s" % (current_loc / 4, output_name)
+    print "  Dat Generation: output %d words to file %s" % (current_loc / 4, output_name)
 # End of dumpBootAndProgram()
 
 

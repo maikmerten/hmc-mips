@@ -42,7 +42,11 @@ include $(INCLUDEFILES)
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
 %.rom: %.dat boot_loader.dat boot_start.dat
-	python dumpBootAndProgram.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+ifeq ($(BOOTLOAD), true)
+	python generateROM.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+else
+	python generateROM.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
+endif
 
 
 # This magic grep command strips out the instruction hex from the objdump 
