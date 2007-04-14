@@ -30,6 +30,7 @@ def dumpBootAndProgram(params):
         mem_size = int(params['mem_size'], 16)
         output_name = params['output_name']
         debug = params['debug']
+        boot = params['use_boot_loader']
     except KeyError:
         print "generateDat: A needed parameter was not defined!"    
 
@@ -37,54 +38,55 @@ def dumpBootAndProgram(params):
     current_loc = reset_loc
     output_file = open(output_name, 'wb')
 
-    #First open the bootstrapper start file and output the lines.
-    reset_file = open(reset_name, 'rU')
-    for line in reset_file:
-        if debug:
-            output_file.write("%X: " % current_loc)
-        output_file.write(line)
-        current_loc += 4
-    reset_file.close()
+    if boot:
+        #First open the bootstrapper start file and output the lines.
+        reset_file = open(reset_name, 'rU')
+        for line in reset_file:
+            if debug:
+                output_file.write("%X: " % current_loc)
+            output_file.write(line)
+            current_loc += 4
+        reset_file.close()
 
-    # Make sure the reset code didn't overrun the exception code.
-    offset = except_loc - current_loc
-    if offset < 0:
-        print "  Dat Generation:  initial boot code exceeded available " \
-                "memory region.  Read %d lines from %s." % (current_loc, reset_name)
-        sys.exit(1)
+        # Make sure the reset code didn't overrun the exception code.
+        offset = except_loc - current_loc
+        if offset < 0:
+            print "  Dat Generation:  initial boot code exceeded available " \
+                    "memory region.  Read %d lines from %s." % (current_loc, reset_name)
+            sys.exit(1)
 
-    # Write 0's as a buffer between reset and exception.
-    while current_loc < except_loc :
-        if debug:
-            output_file.write("%X: " % current_loc)
-        output_file.write("00000000\n")
-        current_loc += 4
+        # Write 0's as a buffer between reset and exception.
+        while current_loc < except_loc :
+            if debug:
+                output_file.write("%X: " % current_loc)
+            output_file.write("00000000\n")
+            current_loc += 4
 
-    #print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
+        print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
 
-    # Next open the boot_loader and output its lines.
-    except_file = open(except_name, 'rU')
-    for line in except_file:
-        if debug:
-            output_file.write("%X: " % current_loc)
-        output_file.write(line)
-        current_loc += 4
-    except_file.close()
+        # Next open the boot_loader and output its lines.
+        except_file = open(except_name, 'rU')
+        for line in except_file:
+            if debug:
+                output_file.write("%X: " % current_loc)
+            output_file.write(line)
+            current_loc += 4
+        except_file.close()
 
-    # Make sure the boot_loader didn't overrun the program code.
-    offset = program_loc - current_loc
-    if offset < 0:
-        print "  Dat Generation:  boot loader exceeded available memory region."\
-                  "  Read %d lines from %s" % (current_loc - except_loc, except_name)
-    
-    # Write 0's as a buffer between the boot_loader and the program
-    while current_loc < program_loc :
-        if debug:
-            output_file.write("%X: " % current_loc)
-        output_file.write("00000000\n")
-        current_loc += 4
+        # Make sure the boot_loader didn't overrun the program code.
+        offset = program_loc - current_loc
+        if offset < 0:
+            print "  Dat Generation:  boot loader exceeded available memory region."\
+                      "  Read %d lines from %s" % (current_loc - except_loc, except_name)
+        
+        # Write 0's as a buffer between the boot_loader and the program
+        while current_loc < program_loc :
+            if debug:
+                output_file.write("%X: " % current_loc)
+            output_file.write("00000000\n")
+            current_loc += 4
 
-    #print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
+        print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
 
     # Last, write the program out to the memory.  
     program_file = open(program_name, 'rU')
@@ -129,6 +131,11 @@ if "-debug" in args:
     params = {'debug': True}
 else:
     params = {'debug': False}
+
+if "-noboot" in args:
+    params['use_boot_loader'] = False
+else:
+    params['use_boot_loader'] = True
 
 # Continue parsing
 try:

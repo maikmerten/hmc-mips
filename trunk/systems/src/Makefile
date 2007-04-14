@@ -41,19 +41,13 @@ include $(INCLUDEFILES)
 %.dump: %.out
 	$(DUMP) -d --disassemble-zeroes $< > $@
 
-%.rom: %.dat boot_loader.dat boot_start.dat
-ifeq ($(BOOTLOAD), true)
-	python generateROM.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
-else
-	python generateROM.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
-endif
-
 
 # This magic grep command strips out the instruction hex from the objdump 
 # output.
 
 %.dat: %.dump
 	cat $< | grep --only-matching "^ *[0-9a-fA-F]\+:[^0-9a-fA-F]*[0-9a-fA-F ]\+" | grep --only-matching ":[^0-9a-fA-F]*[0-9a-fA-F]\+" | tr -d " " | grep --only-matching "[0-9a-fA-F]\{8\}" > $@
+
 
 
 # If we want to generate a verilog file using the bootloader, we have different
@@ -64,6 +58,13 @@ ifeq ($(BOOTLOAD),true)
 	python generateVerilog.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
 else
 	python generateVerilog.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
+endif
+
+%.rom: %.dat boot_loader.dat boot_start.dat
+ifeq ($(BOOTLOAD), true)
+	python generateROM.py $(DEBUG) -params $(MEM_SPECS) -program $< -output $@
+else
+	python generateROM.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
 endif
 
 
