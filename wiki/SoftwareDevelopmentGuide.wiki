@@ -36,7 +36,7 @@ There are three steps to the setup:
 
 == Yoda_warrior Setup ==
 
-After Cygwin has been installed, run the command prompt for Cygwin.  (bash shell)  Copy the tar file for yoda_warrior into your home directory.  Make the directory `yoda_warrior` and enter it, then untar yoda_warrior from your home directory into the newly created directory using the command
+After Cygwin has been installed, run the command prompt for Cygwin (bash shell).  Copy the tar file for yoda_warrior into your home directory.  Make a directory called `yoda_warrior` and enter it, then untar yoda_warrior from your home directory into the newly created directory using the command
 
 {{{
 tar xvf ../yoda_warrior.tar.gz
