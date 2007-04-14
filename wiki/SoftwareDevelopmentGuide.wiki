@@ -24,7 +24,7 @@ There are three steps to the setup:
  # Set to install to a directory on your main drive (e.g. `C:\cygwin`), and click next
  # Set where download files will be placed, and click next twice
  # Select an ftp mirror near you geographically.  I usually use ftp://mirrors.xmission.com
- # Select the packages you want to install.  Please include the following packages (by clicking where it says "skip" next to each entry:
+ # Select the packages you want to install.  Please include the following packages (by clicking where it says "skip" next to each entry):
   * Everything in Base
   * Devel: automake, binutils, bison, gcc-core, make, subversion
   * Editors: Choose your favorite editor (e.g. vim or emacs)
