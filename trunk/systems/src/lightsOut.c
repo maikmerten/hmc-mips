@@ -20,20 +20,18 @@
 #include "muddCLib/muddCLib.h"
 #include "muddCLib/mtRand.h"
 
-/*char lightsOutMsg[LCD_WIDTH];
-char hmcMipsMsg[LCD_WIDTH];
-char youWinMsg[LCD_WIDTH];
-char playAgainMsg[LCD_WIDTH];
-char gameOverMsg[LCD_WIDTH];
-char blankMsg[LCD_WIDTH];*/
+char *lastPressed;
 
 int main() 
 {
-	/* Initialize variables */
+	/* Declare variables */
 	int i;
 	char* buttonPressed;
 	int numberExtracted;
-	int done;
+	int done = 0;
+
+	/* Initialize variables */
+	lastPressed = NOSWITCH;
 
 #ifndef USE_LEDS
 	/* Construct all of the strings used in the game. */
@@ -64,8 +62,6 @@ int main()
 	int numberSeed = getCycleCount();
 #endif
 
-	/* Initialize done to be 0. */
-	done = 0;
 	while(!done)  /* The main program loop */
 	{
 
@@ -150,8 +146,7 @@ int main()
 	return 0;
 } /* END of the main function. */
 
-char *lastPressed = 0;
-char lastVal = 0;
+
 
 /* This will find out if a button was just pressed and return the
    pointer to its address. */
@@ -185,45 +180,29 @@ char* readInput()
 	upVal = readSwitch(BUTTON_UP);
 	downVal = readSwitch(BUTTON_DOWN);
 
-	/* Ignore input if more than one button is pressed. */
-	if( (leftVal == BUTTON_PRESSED && rightVal == BUTTON_PRESSED)
-		|| (leftVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)
-		|| (rightVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)
-		|| (downVal == BUTTON_PRESSED && leftVal == BUTTON_PRESSED)
-		|| (downVal == BUTTON_PRESSED && rightVal == BUTTON_PRESSED)
-		|| (downVal == BUTTON_PRESSED && upVal == BUTTON_PRESSED)    )
-	{
-		return NOSWITCH;
-	}
-
 	/* Check to see if any button was just pressed. */
-	if( leftVal == BUTTON_PRESSED
-        && !(lastPressed == BUTTON_LEFT && lastVal == BUTTON_PRESSED) )
+	if(lastPressed == NOSWITCH)
 	{
-		lastPressed = BUTTON_LEFT;
-		lastVal = BUTTON_PRESSED;
-		return BUTTON_LEFT;
-	}
-	else if(rightVal == BUTTON_PRESSED
-		&& !(lastPressed == BUTTON_RIGHT && lastVal == BUTTON_PRESSED) )
-	{
-		lastPressed = BUTTON_RIGHT;
-		lastVal = BUTTON_PRESSED;
-		return BUTTON_RIGHT;
-	}
-	else if(upVal == BUTTON_PRESSED
-		&& !(lastPressed == BUTTON_UP && lastVal == BUTTON_PRESSED) )
-	{
-		lastPressed = BUTTON_UP;
-		lastVal = BUTTON_PRESSED;
-		return BUTTON_UP;
-	}
-	else if(downVal == BUTTON_PRESSED
-		&& !(lastPressed == BUTTON_DOWN && lastVal == BUTTON_PRESSED) )
-	{
-		lastPressed = BUTTON_DOWN;
-		lastVal = BUTTON_PRESSED;
-		return BUTTON_DOWN;
+		if(leftVal == BUTTON_PRESSED)
+		{
+			lastPressed = BUTTON_LEFT;
+			return BUTTON_LEFT;
+		}
+		else if(rightVal == BUTTON_PRESSED)
+		{
+			lastPressed = BUTTON_RIGHT;
+			return BUTTON_RIGHT;
+		}
+		else if(upVal == BUTTON_PRESSED)
+		{
+			lastPressed = BUTTON_UP;
+			return BUTTON_UP;
+		}
+		else if(downVal == BUTTON_PRESSED)
+		{
+			lastPressed = BUTTON_LEFT;
+			return BUTTON_DOWN;
+		}
 	}
 
 	/* If no button was just pressed, check to see if all buttons are
@@ -234,7 +213,7 @@ char* readInput()
 		&& upVal == BUTTON_RELEASED
 		&& downVal == BUTTON_RELEASED  )
 	{
-		lastVal = BUTTON_RELEASED;
+		lastVal = NOSWITCH;
 	}
 
 	return NOSWITCH;
