@@ -213,7 +213,7 @@ char* readInput()
 		&& upVal == BUTTON_RELEASED
 		&& downVal == BUTTON_RELEASED  )
 	{
-		lastVal = NOSWITCH;
+		lastPressed = NOSWITCH;
 	}
 
 	return NOSWITCH;
