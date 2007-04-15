@@ -23,7 +23,7 @@
 	#define NUM_LIGHTS 4
 	int lastOn;
 #else
-	#define NUM_LIGHTS LCD_WIDTH
+	#define NUM_LIGHTS 20
 #endif
 
 #define LIGHT_OFF 1
