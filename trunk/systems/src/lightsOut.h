@@ -14,6 +14,8 @@
 #ifndef LIGHTSOUT_INCLUDED
 #define LIGHTSOUT_INCLUDED 1
 
+#include "muddCLib/muddCLib.h"
+
 /* Comment this line to use the LCD instead of LEDs */
 //#define USE_LEDS 1
 
