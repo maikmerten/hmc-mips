@@ -115,7 +115,6 @@ int main()
 					ledVal = ledVal | 0x8;	// Turn LED3 on
 
 				lastPressed = BUTTON_RIGHT;
-				//lastVal = BUTTON_PRESSED;
 			}
 		}
 		else

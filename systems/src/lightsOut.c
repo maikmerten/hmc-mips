@@ -56,6 +56,8 @@ int main()
 	dispMessage(lightsOutMsg, hmcMipsMsg);
   #endif //USE_LEDS
 
+
+
 	/* Wait for a button press. */
 	while(readInput() == NOSWITCH);
 
