@@ -34,13 +34,20 @@ module testbench;
     begin
       counter <= 0;
       successfulTests = 0;
+	// ********************************
+	// Modify me for customizing tests!
+	// ********************************
       numTests = 1;
       // Be sure to keep timing synced with imem's memory loads
       for(currentTest = 0; currentTest < numTests; 
           currentTest = currentTest + 1) begin
         currentSuccess <= 0;
         reset <= 1; # 30; reset <= 0;
-        // Pausing
+        
+	// ********************************
+	// Modify me for customizing tests!
+	// ********************************	
+	// Pausing
         if(currentTest == 0)begin
           # 49970;
         end
@@ -113,6 +120,9 @@ module testbench;
   always@(posedge ph2)
     begin
       case (currentTest)
+	// ********************************
+	// Modify me for customizing tests!
+	// ********************************
         0:
           if(memwrite) begin
             if(writedata === 2201) begin
