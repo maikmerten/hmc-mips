@@ -31,10 +31,13 @@
 
 #include "muddCLib/muddCLib.h"
 
+// Uncomment this line if you want to try making the right button toggle LED3.
+// #define TRY_TOGGLE 1
+
 int main()
 {
-	// Initially, LED1 is on, all others off.
-	char ledVal = 0x2;
+	// Initially, all LEDs off.
+	char ledVal = 0x0;
 
 	// These variables let us make a button press only happen
 	// when the button is first read as pressed.
@@ -57,18 +60,58 @@ int main()
 			ledVal = ledVal & ~0x1;  // binary 1110
 		}
 
-		// Right button press toggles LED1
+		// Top button press causes the LED1 to light up
+		// when pressed.
+		if(readSwitch(BUTTON_UP) == BUTTON_PRESSED)
+		{
+			ledVal = ledVal | 0x2;  // binary 0001
+			lastPressed = BUTTON_UP;
+			// We don't care about lastVal for BUTTON_LEFT.
+		}
+		else
+		{
+			ledVal = ledVal & ~0x2;  // binary 1110
+		}
+
+		// Bottom button press causes the LED2 to light up
+		// when pressed.
+		if(readSwitch(BUTTON_DOWN) == BUTTON_PRESSED)
+		{
+			ledVal = ledVal | 0x4;  // binary 0001
+			lastPressed = BUTTON_DOWN;
+			// We don't care about lastVal for BUTTON_LEFT.
+		}
+		else
+		{
+			ledVal = ledVal & ~0x4;  // binary 1110
+		}
+
+#ifndef TRY_TOGGLE
+		// Right button press turns on LED3 for as long as it is held.
+		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED)
+		{
+			ledVal = ledVal | 0x8;  // binary 0001
+			lastPressed = BUTTON_RIGHT;
+			// We don't care about lastVal for BUTTON_LEFT.
+		}
+		else
+		{
+			ledVal = ledVal & ~0x8;  // binary 1110
+		}
+#else
+		// Right button press toggles LED3
 		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED &&
 			(lastPressed != BUTTON_RIGHT ||	lastVal == BUTTON_RELEASED))
 		{
-			// If LED1 is not off
+			// If LED3 is not off
 			if(ledVal & 0x2)
-				ledVal = ledVal | 0x2;	// Turn LED1 on
+				ledVal = ledVal | 0x8;	// Turn LED1 on
 			else
-				ledVal = ledVal & ~0x2;	// Turn LED1 off
+				ledVal = ledVal & ~0x8;	// Turn LED1 off
 		}
+#endif
 			
-
+		// After figuring out what buttons were pressed, show the LEDs.
 		setLED(ledVal);
 	}
 
