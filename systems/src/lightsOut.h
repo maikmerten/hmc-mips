@@ -15,7 +15,7 @@
 #define LIGHTSOUT_INCLUDED 1
 
 /* Comment this line to use the LCD instead of LEDs */
-#define USE_LEDS 1
+//#define USE_LEDS 1
 
 #ifdef USE_LEDS
 	#define NUM_LIGHTS 4
