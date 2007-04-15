@@ -21,11 +21,15 @@
 	#define NUM_LIGHTS 4
 	int lastOn;
 #else
-	#define NUM_LIGHTS 16
+	#define NUM_LIGHTS LCD_WIDTH
 #endif
 
 #define LIGHT_OFF 1
 #define LIGHT_ON 0
+
+#define PRINT_LIGHT_ON 0x20
+#define PRINT_LIGHT_OFF 0xFF
+#define PRINT_CARAT	'^'
 
 int lights[NUM_LIGHTS];
 int lightsOut;

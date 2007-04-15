@@ -35,7 +35,7 @@ int main()
 
 #ifndef USE_LEDS
 	/* Construct all of the strings used in the game. */
-	char lightsOutMsg[LCD_WIDTH] = {' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
+	char lightsOutMsg[LCD_WIDTH] = {' ', ' ', ' ', ' ', ' ', 'L', 'i', 'g', 'h', 't', 's', 'O', 'u', 't', '!'};
 	char hmcMipsMsg[LCD_WIDTH] = {'H', 'M', 'C', '-', 'M', 'I', 'P', 'S', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
 	char youWinMsg[LCD_WIDTH] = {'Y', 'o', 'u', ' ', 'w', 'i', 'n', '!'};
 	char playAgainMsg[LCD_WIDTH] = {'P', 'l', 'a', 'y', ' ', 'a', 'g', 'a', 'i', 'n', '?'};
@@ -82,19 +82,27 @@ int main()
 	}
 	lightsOut = 0;
 	lightPosition = 0;
-	buttonPressed = 0;
+
+	printLights();
+	buttonPressed = NOSWITCH;
 
 	while(!lightsOut)
 	{
-		printLights();
 		/* Read input from the buttons and update the game state. */
-		update(readInput());
+		buttonPressed = readInput();
+		update(buttonPressed);
 		lightsOut = areLightsOut();
+		if(buttonPressed != NOSWITCH)
+		{
+			printLights();
+		}
 	}
 
 	/* The lights are out, the game is over */
 #ifdef USE_LEDS
 	lastOn = 0;
+#else
+	dispMessage(youWinMsg, playAgainMsg);
 #endif
 
 	/* Any button press continues except down, which ends. */
@@ -124,8 +132,6 @@ int main()
 		}
 
 		++lastOn;
-  #else
-		dispMessage(youWinMsg, playAgainMsg);
   #endif
 #endif
 		buttonPressed = readInput();
@@ -338,15 +344,15 @@ void printLights()
 	for(i = 0; i < NUM_LIGHTS; ++i)
 	{
 		if(lights[i] == LIGHT_ON)
-			str1[i] = '_';
+			str1[i] = PRINT_LIGHT_ON;
 		else
-			str2[i] = '*';
+			str2[i] = PRINT_LIGHT_OFF;
 	}
 
 	for(i = 0; i < NUM_LIGHTS; ++i)
 	{
 		if(i == lightPosition)
-			str2[i] = '^';
+			str2[i] = PRINT_CARAT;
 		else
 			str2[i] = ' ';
 	}
