@@ -342,8 +342,11 @@
  *************************************************************************
  */
 
-/* Compiler and system dependent definitions: */
 
+#ifndef DHRY_INCLUDED
+#define DHRY_INCLUDED 1
+
+/* Compiler and system dependent definitions: */
 #define Mic_secs_Per_Second     1000000.0
                 /* Berkeley UNIX C returns process times in seconds/HZ */
 
@@ -438,3 +441,9 @@ void Proc_8 (Arr_1_Dim Arr_1_Par_Ref, Arr_2_Dim Arr_2_Par_Ref, int Int_1_Par_Val
 Enumeration Func_1 (Capital_Letter Ch_1_Par_Val, Capital_Letter Ch_2_Par_Val);
 Boolean Func_2 (Str_30 Str_1_Par_Ref, Str_30 Str_2_Par_Ref);
 Boolean Func_3 (Enumeration Enum_Par_Val);
+
+#ifdef  NOSTRUCTASSIGN
+	memcpy (register char *d, register char *s, register int l);
+#endif
+
+#endif // DHRY_INCLUDED

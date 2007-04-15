@@ -4,20 +4,21 @@
 
 DHRYFILES = dhry.h timers_b.c $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
 
-dhry21a.asm: dhry21a.c $(DHRYFILES)
-	$(CC) $(CFLAGS) -O2 -S dhry21a.c -o $@
+dhrystone.asm: dhrystone.c $(DHRYFILES)
+	$(CC) $(CFLAGS) -O2 -S $< -o $@ 
 
-dhry21b.asm: dhry21b.c $(DHRYFILES)
-	$(CC) $(CFLAGS) -O2 -S dhry21b.c -o $@ 
+dhryFuncs.asm: dhryFuncs.c $(DHRYFILES)
+	$(CC) $(CFLAGS) -O2 -S $< -o $@ 
 
-dhry21a.o: dhry21a.asm
-	python $(SRC)/checkInstructions.py $< 
-	$(AS) -EL -o $@ $<
 
-dhry21b.o: dhry21b.asm
+dhrystone.o: dhrystone.asm
 	python $(SRC)/checkInstructions.py $<
 	$(AS) -EL -o $@ $<
 
-dhrystone.out: dhry21a.o dhry21b.o $(SRC)/muddCLib/muddCLib.o
+dhryFuncs.o: dhryFuncs.asm
+	python $(SRC)/checkInstructions.py $<
+	$(AS) -EL -o $@ $<
+
+dhrystone.out: dhrystone.o dhryFuncs.o $(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
 
