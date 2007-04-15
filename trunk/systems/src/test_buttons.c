@@ -32,7 +32,7 @@
 #include "muddCLib/muddCLib.h"
 
 // Uncomment this line if you want to try making the right button toggle LED3.
-// #define TRY_TOGGLE 1
+#define TRY_TOGGLE 1
 
 int main()
 {
@@ -43,7 +43,6 @@ int main()
 	// These variables let us make a button press only happen
 	// when the button is first read as pressed.
 	char *lastPressed = NOSWITCH;
-	char lastVal = BUTTON_RELEASED;
 
 	/* Read each button and light up LEDs accordingly. */
 	while(1)
@@ -54,13 +53,12 @@ int main()
 		{
 			ledVal = ledVal | 0x1;  // binary 0001
 			lastPressed = BUTTON_LEFT;
-			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
 			ledVal = ledVal & ~0x1;  // binary 1110
 			if(lastPressed == BUTTON_LEFT)
-				lastVal = BUTTON_RELEASED;
+				lastPressed = NOSWITCH;
 		}
 
 		// Top button press causes the LED1 to light up
@@ -69,13 +67,12 @@ int main()
 		{
 			ledVal = ledVal | 0x2;  // binary 0010
 			lastPressed = BUTTON_UP;
-			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
 			ledVal = ledVal & ~0x2;  // binary 1101
 			if(lastPressed == BUTTON_UP)
-				lastVal = BUTTON_RELEASED;
+				lastPressed = NOSWITCH;
 		}
 
 		// Bottom button press causes the LED2 to light up
@@ -84,13 +81,12 @@ int main()
 		{
 			ledVal = ledVal | 0x4;  // binary 0100
 			lastPressed = BUTTON_DOWN;
-			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
 			ledVal = ledVal & ~0x4;  // binary 1011
 			if(lastPressed == BUTTON_DOWN)
-				lastVal = BUTTON_RELEASED;
+				lastPressed = NOSWITCH;
 		}
 
 #ifndef TRY_TOGGLE
@@ -99,34 +95,33 @@ int main()
 		{
 			ledVal = ledVal | 0x8;  // binary 1000
 			lastPressed = BUTTON_RIGHT;
-			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
 			ledVal = ledVal & ~0x8;  // binary 0111
 			if(lastPressed == BUTTON_RIGHT)
-				lastVal = BUTTON_RELEASED;
+				lastVal = NOSWITCH;
 		}
 #else
 		// Right button press toggles LED3
 		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED)
 		{
-			if(lastPressed != BUTTON_RIGHT || lastVal == BUTTON_RELEASED)
+			if(lastPressed == NOSWITCH)
 			{
 				// If LED3 is not off
 				if(ledVal & 0x8)
-					ledVal = ledVal | 0x8;	// Turn LED3 on
-				else
 					ledVal = ledVal & ~0x8;	// Turn LED3 off
+				else
+					ledVal = ledVal | 0x8;	// Turn LED3 on
 
 				lastPressed = BUTTON_RIGHT;
-				lastVal = BUTTON_PRESSED;
+				//lastVal = BUTTON_PRESSED;
 			}
 		}
 		else
 		{
 			if(lastPressed == BUTTON_RIGHT)
-				lastVal = BUTTON_RELEASED;
+				lastPressed = NOSWITCH;
 		}
 #endif
 			
