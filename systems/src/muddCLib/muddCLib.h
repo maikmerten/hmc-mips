@@ -25,10 +25,11 @@
 #define BUTTON_LEFT ((char*)0xA0044020)
 #define BUTTON_RIGHT ((char*)0xA0044024)
 
-/* if a button is pressed, then a value of 0 is returned by
-   the memory system.  */
-#define BUTTON_PRESSED ((char)0x01)
-#define BUTTON_RELEASED ((char)0x00)
+/* if a button is pressed, then a value of 1 is returned by
+   the memory system.  If it is up (released), then the system
+   returns 0.  */
+#define BUTTON_PRESSED ((char)0x00)
+#define BUTTON_RELEASED ((char)0x01)
 
 /* Switch addresses encoded for function use */
 #define SWITCH0 ((char*)0xA0044004)
