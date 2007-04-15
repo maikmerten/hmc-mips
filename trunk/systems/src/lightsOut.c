@@ -21,6 +21,7 @@
 #include "muddCLib/mtRand.h"
 
 char *lastPressed;
+int numLoops;
 
 int main() 
 {
@@ -32,6 +33,7 @@ int main()
 
 	/* Initialize variables */
 	lastPressed = NOSWITCH;
+	numLoops = 0;
 
 #ifndef USE_LEDS
 	/* Construct all of the strings used in the game. */
@@ -45,7 +47,6 @@ int main()
 
 #ifdef DEBUG_SIMULATOR
 	printf("LightsOut!\n");
-	int numberSeed = 2;
 #else
   #ifdef USE_LEDS
 	lastOn = 0;
@@ -56,12 +57,8 @@ int main()
 	dispMessage(lightsOutMsg, hmcMipsMsg);
   #endif //USE_LEDS
 
-
-
 	/* Wait for a button press. */
 	while(readInput() == NOSWITCH);
-
-	int numberSeed = getCycleCount();
 #endif
 
 	while(!done)  /* The main program loop */
@@ -69,7 +66,7 @@ int main()
 
 	/* Initialize the random number generator.
 	   Seed it with the cycle count.			*/
-	initializeGenerator(numberSeed);
+	initializeGenerator(numLoops);
 	generateNumbers();
 	numberExtracted = extractNumber(NUM_LIGHTS);
 	
@@ -86,24 +83,40 @@ int main()
 	printLights();
 	buttonPressed = NOSWITCH;
 
+	// Here's the game loop where all of the light selection
+	// happens.
 	while(!lightsOut)
 	{
 		/* Read input from the buttons and update the game state. */
 		buttonPressed = readInput();
 		update(buttonPressed);
 		lightsOut = areLightsOut();
+		if(buttonPressed == BUTTON_DOWN)
+		{
+			break;
+		}
 		if(buttonPressed != NOSWITCH)
 		{
 			printLights();
 		}
 	}
 
+	// If we exited the main game loop without the winning
+	// condition satisfied, the user wanted to start over,
+	// so just give them a new board.
+	if(!lightsOut) 
+		continue;
+
+#ifndef DEBUG_SIMULATOR
 	/* The lights are out, the game is over */
-#ifdef USE_LEDS
+  #ifdef USE_LEDS
 	lastOn = 0;
-#else
+  #else
 	dispMessage(youWinMsg, playAgainMsg);
+  #endif
 #endif
+
+	buttonPressed = NOSWITCH;
 
 	/* Any button press continues except down, which ends. */
 	while(buttonPressed == NOSWITCH)
@@ -160,6 +173,9 @@ int main()
    pointer to its address. */
 char* readInput()
 {
+	// Increment the number of loops at readInput.
+	++numLoops;
+
 #ifdef DEBUG_SIMULATOR /* Are we simulating? */
 
 	char c;
