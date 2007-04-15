@@ -69,7 +69,7 @@ int main()
 		{
 			ledVal = ledVal | 0x2;  // binary 0010
 			lastPressed = BUTTON_UP;
-			lastVal = BUTTON_UP;
+			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
@@ -84,7 +84,7 @@ int main()
 		{
 			ledVal = ledVal | 0x4;  // binary 0100
 			lastPressed = BUTTON_DOWN;
-			lastval = BUTTON_PRESSED;
+			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
