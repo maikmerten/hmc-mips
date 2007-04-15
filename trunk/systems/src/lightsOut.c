@@ -346,7 +346,7 @@ void printLights()
 		if(lights[i] == LIGHT_ON)
 			str1[i] = PRINT_LIGHT_ON;
 		else
-			str2[i] = PRINT_LIGHT_OFF;
+			str1[i] = PRINT_LIGHT_OFF;
 	}
 
 	for(i = 0; i < NUM_LIGHTS; ++i)
