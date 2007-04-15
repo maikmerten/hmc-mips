@@ -38,6 +38,7 @@ int main()
 {
 	// Initially, all LEDs off.
 	char ledVal = 0x0;
+	setLED(ledVal);
 
 	// These variables let us make a button press only happen
 	// when the button is first read as pressed.
@@ -53,61 +54,79 @@ int main()
 		{
 			ledVal = ledVal | 0x1;  // binary 0001
 			lastPressed = BUTTON_LEFT;
-			// We don't care about lastVal for BUTTON_LEFT.
+			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
 			ledVal = ledVal & ~0x1;  // binary 1110
+			if(lastPressed == BUTTON_LEFT)
+				lastVal = BUTTON_RELEASED;
 		}
 
 		// Top button press causes the LED1 to light up
 		// when pressed.
 		if(readSwitch(BUTTON_UP) == BUTTON_PRESSED)
 		{
-			ledVal = ledVal | 0x2;  // binary 0001
+			ledVal = ledVal | 0x2;  // binary 0010
 			lastPressed = BUTTON_UP;
-			// We don't care about lastVal for BUTTON_LEFT.
+			lastVal = BUTTON_UP;
 		}
 		else
 		{
-			ledVal = ledVal & ~0x2;  // binary 1110
+			ledVal = ledVal & ~0x2;  // binary 1101
+			if(lastPressed == BUTTON_UP)
+				lastVal = BUTTON_RELEASED;
 		}
 
 		// Bottom button press causes the LED2 to light up
 		// when pressed.
 		if(readSwitch(BUTTON_DOWN) == BUTTON_PRESSED)
 		{
-			ledVal = ledVal | 0x4;  // binary 0001
+			ledVal = ledVal | 0x4;  // binary 0100
 			lastPressed = BUTTON_DOWN;
-			// We don't care about lastVal for BUTTON_LEFT.
+			lastval = BUTTON_PRESSED;
 		}
 		else
 		{
-			ledVal = ledVal & ~0x4;  // binary 1110
+			ledVal = ledVal & ~0x4;  // binary 1011
+			if(lastPressed == BUTTON_DOWN)
+				lastVal = BUTTON_RELEASED;
 		}
 
 #ifndef TRY_TOGGLE
 		// Right button press turns on LED3 for as long as it is held.
 		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED)
 		{
-			ledVal = ledVal | 0x8;  // binary 0001
+			ledVal = ledVal | 0x8;  // binary 1000
 			lastPressed = BUTTON_RIGHT;
-			// We don't care about lastVal for BUTTON_LEFT.
+			lastVal = BUTTON_PRESSED;
 		}
 		else
 		{
-			ledVal = ledVal & ~0x8;  // binary 1110
+			ledVal = ledVal & ~0x8;  // binary 0111
+			if(lastPressed == BUTTON_RIGHT)
+				lastVal = BUTTON_RELEASED;
 		}
 #else
 		// Right button press toggles LED3
-		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED &&
-			(lastPressed != BUTTON_RIGHT ||	lastVal == BUTTON_RELEASED))
+		if(readSwitch(BUTTON_RIGHT) == BUTTON_PRESSED)
 		{
-			// If LED3 is not off
-			if(ledVal & 0x2)
-				ledVal = ledVal | 0x8;	// Turn LED1 on
-			else
-				ledVal = ledVal & ~0x8;	// Turn LED1 off
+			if(lastPressed != BUTTON_RIGHT || lastVal == BUTTON_RELEASED)
+			{
+				// If LED3 is not off
+				if(ledVal & 0x8)
+					ledVal = ledVal | 0x8;	// Turn LED3 on
+				else
+					ledVal = ledVal & ~0x8;	// Turn LED3 off
+
+				lastPressed = BUTTON_RIGHT;
+				lastVal = BUTTON_PRESSED;
+			}
+		}
+		else
+		{
+			if(lastPressed == BUTTON_RIGHT)
+				lastVal = BUTTON_RELEASED;
 		}
 #endif
 			
