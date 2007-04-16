@@ -7,7 +7,27 @@ from operands import *
 from codegenClasses import *
 import random
 
-CACHED = True
+
+# NOTE: this breaks our length agnosticism. it only works with 32bit addresses
+# since I don't know how mips64 actually WORKS, I can't be nice to our
+# fearless SGI users.
+
+def loadReg(reg, address32, machine, act=True):
+    outIns = ""
+    address_h = (address32 & 0xffff0000) >> 16
+    address_l = address32 & 0xffff
+    
+    #load upper, then lower
+    address_h_str = hex(address_h).strip('L')
+    outIns += "lui $%s, %s\n" % (str(reg.reg), address_h_str)
+    outIns += "addiu $%s, $%s, %d\n" % (str(reg.reg), 
+                str(reg.reg), address_l)
+                
+    # set the register contents to the full 32bit value
+    if act:
+        machine.regs[reg.reg] = address32
+        
+    return outIns
 
 class Memop:
     name = 'nop'
@@ -26,17 +46,8 @@ class Memop:
         addressReg = treg()
         offset = random.randint(0,32)
         regVector = loc - offset
-        if act:
-            if CACHED:
-                machine.regs[addressReg.reg] = (regVector + 0x80100000) 
-            else:
-                machine.regs[addressReg.reg] = regVector
         
-        if CACHED:
-            outIns += "lui $%s, 0x8010\n" % str(addressReg.reg)
-        
-        outIns += "addiu $%s, $%s, %d\n" % (str(addressReg.reg), 
-                str(addressReg.reg), regVector)
+        outIns += loadReg(addressReg, regVector, machine, act)
         
         if self.isLoad:
             dataReg = treg()
@@ -61,6 +72,7 @@ class lw(Memop):
     name = 'lw'
     isLoad = True
 
+#these don't work because I'm not really being careful about sign extensions
 class sb(Memop):
     name = 'sb'
     isLoad = False
@@ -78,9 +90,9 @@ if __name__ == '__main__':
     m = MIPSComputer()
     print m.regs
     print m.mem
-    s = sb()
+    s = sw()
     print s(m)
-    l = lb()
+    l = lw()
     print l(m)
     print m.regs
     print m.mem
