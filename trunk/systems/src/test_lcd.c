@@ -87,21 +87,13 @@ int main()
 
 		delay1000clock(500);
 
-		// And now print it using dispMessage...
+		// And now print "Hello World!" using dispMessage...
 		dispMessage(str1, str2);
 
 		delay1000clock(3000);
 
 		sendInst(L_clear);
 	}
-
-	/* for some reason, dispMessage doesn't work. */
-	//dispMessage(str1, str2);
-	
-	/* Turn off the cursor. */
-	//sendInst(L_disp);
-
-	//while(1); // Loop forever
 
 	return 0;
 }
