@@ -9,8 +9,11 @@ myProgram.asm: myProgram.c $(MYPROGFILES)
 
 myProgram.o: myProgram.asm
 	python $(SRC)/checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 myProgram.out: myProgram.o $(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
+
+clean-myProgram:
+	rm -f myProgram.asm
 

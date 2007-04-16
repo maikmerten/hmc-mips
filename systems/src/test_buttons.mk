@@ -7,8 +7,11 @@ test_buttons.asm: test_buttons.c muddCLib/muddCLib.h boot_start.dat boot_loader.
 
 test_buttons.o:	test_buttons.asm
 	python checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 test_buttons.out: test_buttons.o muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
+
+clean-test_buttons:
+	rm -f test_buttons.asm
 

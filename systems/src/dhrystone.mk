@@ -13,12 +13,14 @@ dhryFuncs.asm: dhryFuncs.c $(DHRYFILES)
 
 dhrystone.o: dhrystone.asm
 	python $(SRC)/checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 dhryFuncs.o: dhryFuncs.asm
 	python $(SRC)/checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 dhrystone.out: dhrystone.o dhryFuncs.o $(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
 
+clean-dhry:
+	rm -f dhryFuncs.asm dhrystone.asm

@@ -7,8 +7,11 @@ test_leds.asm: test_leds.c muddCLib/muddCLib.h boot_start.dat boot_loader.dat
 
 test_eds.o: test_leds.asm
 	python checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 test_leds.out: test_leds.o muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o test_leds.out test_leds.o muddCLib/muddCLib.o
+
+clean-test_leds:
+	rm -f test_leds.asm
 
