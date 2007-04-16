@@ -61,6 +61,9 @@ else
 	python generateVerilog.py $(DEBUG) -noboot -params $(MEM_SPECS) -program $< -output $@
 	cp $@ ROM.v
 endif
+	@echo ""
+	@echo "   Verilog file generated successfully!"
+	@echo "   It is a good idea to inspect $*.dump before continuing further to ensure that the program's main routine is the first symbol (address 0x9fc01000)."
 
 %.rom: %.dat boot_loader.dat boot_start.dat
 ifeq ($(BOOTLOAD), true)

@@ -131,7 +131,7 @@ int main ()
         Str_30          Str_1_Loc;
         Str_30          Str_2_Loc;
   REG   int             Run_Index;
-  REG   int             Number_Of_Runs = 100000;
+  REG	int				Number_Of_Runs = 10000;
 		int				i;
 		int				testsSucceeded;
   /* We'll hard-code 100,000 runs in for now and see how that does. */
@@ -246,6 +246,7 @@ int main ()
     strcpy (Str_2_Loc, second_string);
     Enum_Loc = Ident_2;
     Bool_Glob = ! Func_2 (Str_1_Loc, Str_2_Loc);
+
       /* Bool_Glob == 1 */
     while (Int_1_Loc < Int_2_Loc)  /* loop body executed once */
     {
@@ -255,10 +256,12 @@ int main ()
         /* Int_3_Loc == 7 */
       Int_1_Loc += 1;
     } /* while */
+
       /* Int_1_Loc == 3, Int_2_Loc == 3, Int_3_Loc == 7 */
     Proc_8 (Arr_1_Glob, Arr_2_Glob, Int_1_Loc, Int_3_Loc);
       /* Int_Glob == 5 */
     Proc_1 (Ptr_Glob);
+
     for (Ch_Index = 'A'; Ch_Index <= Ch_2_Glob; ++Ch_Index)
                              /* loop body executed twice */
     {
