@@ -10,7 +10,7 @@
  *  
  *  Changes from the original are marked with a "CHANGED" comment in code.
  *
- *  $Author: whiterook2004 $,  $Date: 2007-04-12 18:46:58 -0700 (Thu, 12 Apr 2007) $ -- $Revision: 547 $
+ *  $Author$,  $Date$ -- $Revision$
  * 
  *
  *  Version:    C, Version 2.1
