@@ -3,6 +3,8 @@
 # 26mar2007, Thomas W. Barr
 # tbarr at cs dot hmc dot edu
 
+# THIS VERSION HAS NOT BEEN TESTED AGAINST THE CHIP
+
 # unidirectional code tester (code never branches backwards)
 
 from branch import *
@@ -13,7 +15,9 @@ from rtype import *
 import random
 import sys
 
-DESIRED_INSTRUCTION_COUNT = 3000
+DESIRED_INSTRUCTION_COUNT = 1000
+
+print "THIS VERSION NOT TESTED AGAINST CHIP"
 
 print "# randomly generated test\n"
 print ".set noreorder"
@@ -26,17 +30,17 @@ machine = MIPSComputer()
 
 # for the simulation, we need to reset everything we touch
 # reset the memory space we're looking at
+print "addi $2, $0, 42"
 for addr in mempool:
-    if CACHED:
-        print "lui $1, 0x8010"
-    print "addi $1, $1, %d" % addr
-    print "addi $2, $0, 42"
+    addrReg = treg(1)
+    print loadReg(addrReg, addr, machine)
     print "sw $2, 0($1)"
     machine.mem[addr] = 42
-
+    
 # reset all regs to zero
 for x in range(31):
     print "addi $%d, $0, 0" % (x+1)
+    machine.regs[x] = 0
 
 # populate some registers
 for x in range(32):

@@ -6,7 +6,7 @@
 from codegenClasses import *
 import random
 
-mempool = [x*4 + 0x3500 for x in range(20)]
+mempool = [x*4 + 0x80011000 for x in range(10)]
 
 class sreg(Operand):
     reg = None
@@ -14,14 +14,20 @@ class sreg(Operand):
     def __str__(self):
         return "$" + str(self.reg)
     
-    def __init__(self):
+    def __init__(self, reg=None):
         # generates a random source register
-        self.reg = random.randint(2, 31)
+        if reg == None:
+            self.reg = random.randint(0, 31)
+        else:
+            self.reg = reg
         
 class treg(sreg):
-    def __init__(self):
+    def __init__(self, reg=None):
         # generates a random target register (not including $0)
-        self.reg = random.randint(2, 31)
+        if reg == None:
+            self.reg = random.randint(1, 31)
+        else:
+            self.reg = reg
     
 class simm16(Operand):
     """

@@ -75,11 +75,17 @@ class xori(Rtype):
     operandTypes = (treg, sreg, uimm16)
     actFunction = lambda self, m, (d,s,j): \
             m.setReg(d.reg, (m.regs[s.reg] ^ j.imm))
+            
+class lui(Rtype):
+    name = 'lui'
+    operandTypes = (treg, uimm16)
+    actFunction = lambda self, m, (d,j): \
+            m.setReg(d.reg, (j.imm << 16))
 
 #debug
 if __name__ == '__main__':
     m = MIPSComputer()
     print m.regs
-    ins = ori()
+    ins = lui()
     print ins(m)
     print m.regs
