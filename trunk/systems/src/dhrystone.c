@@ -131,7 +131,7 @@ int main ()
         Str_30          Str_1_Loc;
         Str_30          Str_2_Loc;
   REG   int             Run_Index;
-  REG	int				Number_Of_Runs = 10000;
+  REG	int				Number_Of_Runs = 10000;  // Number of runs is 10,000
 		int				i;
 		int				testsSucceeded;
   /* We'll hard-code 100,000 runs in for now and see how that does. */
