@@ -2,7 +2,7 @@
 #
 # The makefile responsible for making dhrystone.
 
-DHRYFILES = dhry.h timers_b.c $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
+DHRYFILES = dhry.h $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
 
 dhrystone.asm: dhrystone.c $(DHRYFILES)
 	$(CC) $(CFLAGS) -O2 -S $< -o $@ 
