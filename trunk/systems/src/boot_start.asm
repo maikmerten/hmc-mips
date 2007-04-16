@@ -25,9 +25,9 @@ load:
 	break	0x0
 
 	# Once the cache setup is done, jump to the first instruction (in the
-	# uncached region).  This ought to be at 0x9FC01000
+	# uncached region).  This ought to be at 0x9FC00200
 	lui	$8, 0x9FC0
-	ori	$8, $8, 0x1000
+	ori	$8, $8, 0x0200
 	jr	$8
 	nop
 

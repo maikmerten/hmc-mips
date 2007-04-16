@@ -7,8 +7,11 @@ test_lcd.asm: test_lcd.c muddCLib/muddCLib.h boot_start.dat boot_loader.dat
 
 test_lcd.o: test_lcd.asm
 	python checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 test_lcd.out: test_lcd.o muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
+
+clean-test_lcd:
+	rm -f test_lcd.asm
 

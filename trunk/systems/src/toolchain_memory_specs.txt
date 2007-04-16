@@ -2,6 +2,6 @@ reset_loc:0x00000000
 reset_name:boot_start.dat
 except_loc:0x00000100
 except_name:boot_loader.dat
-program_loc:0x00001000
+program_loc:0x00000200
 mem_size:0x00016A7C
 verilog_template:verilog_template.txt

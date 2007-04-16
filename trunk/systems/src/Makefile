@@ -7,21 +7,20 @@ DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe
 # Where the source directories are
 BLD = ../build
 SRC = ./
-INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk dhrystone.mk test_buttons.mk
+INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk dhrystone.mk test_buttons.mk test_simple.mk
 
 # These variables control the build process.
-CFLAGS = -Wall -msoft-float -march=r3000 -EL
-LDFLAGS = -Tdata 0x80016A80 -EL
+CFLAGS = -Wall -msoft-float -march=r3000 
+LDFLAGS = -Tdata 0x80016A80 
 DEBUG = -nodebug
 BOOTLOAD = true
 MEM_SPECS = toolchain_memory_specs.txt
 RESET_LOC = 0xbfc00000
 BOOT_LOC = 0xbfc00100
-PROG_LOC = 0x9fc01000
+PROG_LOC = 0x9fc00200
 
 # Build all of the main programs in the src folder
-all: test_012.dat test_012.asm test_016.dat test_fp_001.dat test_fp_001.asm test_017.dat test_026.dat test_026.asm yoda_test_001.dat yoda_test_001.asm
-
+all: lightsOut.v dhrystone.v test_simple.v test_leds.v test_lcd.v test_buttons.v
 
 # This line prevents make from automatically deleting these files as temporary
 .PRECIOUS: %.dat %.dump %.o %.s %.asm
@@ -33,7 +32,7 @@ include $(INCLUDEFILES)
 
 %.o: %.asm
 	python checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 %.out: %.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $<
@@ -74,11 +73,11 @@ endif
 
 
 
-clean:
+clean: 
 	rm -f *.o *.out *.dump *.coe *.dat
 	rm -f muddCLib/*.o
 
-clean-all: 
+clean-all: clean-dhry clean-lightsOut clean-test_buttons clean-test_lcd clean-test_leds clean-test_simple
 	rm -f *.rom *.v 
 	make clean
 

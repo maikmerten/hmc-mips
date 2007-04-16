@@ -9,8 +9,12 @@ test_simple.asm: test_simple.c $(MYPROGFILES)
 
 test_simple.o: test_simple.asm
 	python $(SRC)/checkInstructions.py $<
-	$(AS) -EL -o $@ $<
+	$(AS) -o $@ $<
 
 test_simple.out: test_simple.o $(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
+
+clean-test_simple:
+	rm -f test_simple.asm
+
 
