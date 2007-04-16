@@ -65,15 +65,8 @@ def verilogBootAndProgram(params):
                     "memory region.  Read %d lines from %s." % (current_loc, reset_name)
             sys.exit(1)
 
-        # Write 0's as a buffer between reset and exception.
-        while current_loc < except_loc :
-            caseStmt = caseStmtTemplate
-            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-            caseStmt = caseStmt.replace("(data)", "00000000")
-            outputString += caseStmt
-            
-            outputString += "\n"
-            current_loc += 1
+        # We don't need to write any 0's in between memory blocks.
+        current_loc = except_loc
 
         #print "  Diagnostic: current_loc = %d, and boot_loc = %d (should match)" % (current_loc, except_loc)
 
@@ -95,16 +88,9 @@ def verilogBootAndProgram(params):
         if offset < 0:
             print "  Verilog Generation:  exception code exceeded available memory region."\
                       "  Read %d lines from %s" % (current_loc - except_loc, except_name)
-        
-        # Write 0's as a buffer between the boot_loader and the program
-        while current_loc < program_loc :
-            caseStmt = caseStmtTemplate
-            caseStmt = caseStmt.replace("(address)", "%x" % current_loc)
-            caseStmt = caseStmt.replace("(data)", "00000000")
-            outputString += caseStmt
-            
-            outputString += "\n"
-            current_loc += 1
+
+        # Again, no 0's needed between memory blocks.
+        current_loc = program_loc
 
         #print "  Diagnostic: current_loc = %d, and prog_loc = %d (should match)" % (current_loc, program_loc)
 
