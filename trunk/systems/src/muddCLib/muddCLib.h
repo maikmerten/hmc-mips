@@ -65,7 +65,9 @@ char readSwitch(char* switchOrButton);
 /* The location of the cycle counter.  It counts every thousand 
    cycles.
    Note that this macro defines it as dereferenced.  This
-   makes it easy to set and get CYCLE_CNT.  */
+   makes it easy to set and get CYCLE_CNT.  
+   
+   NO CYCLE COUNTER CURRENTLY EXISTS IN HARDWARE!*/
 #define CYCLE_CNT (*(int*)0xA004402C)
 
 /* Gets the cycle count from the memory contoller's clock.
