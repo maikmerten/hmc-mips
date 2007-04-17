@@ -77,7 +77,9 @@ clean:
 	rm -f *.o *.out *.dump *.coe *.dat
 	rm -f muddCLib/*.o
 
-clean-all: clean-dhry clean-lightsOut clean-test_buttons clean-test_lcd clean-test_leds clean-test_simple
+# Assuming that clean- is the prefix for any cleaning rule defined in the 
+# included makefiles, this rule will use it. 
+clean-all: $(patsubst %.mk, clean-%, $(INCLUDEFILES))
 	rm -f *.rom *.v 
 	make clean
 

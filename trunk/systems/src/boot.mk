@@ -9,3 +9,5 @@ boot_start.out: boot_start.o
 boot_loader.out: boot_loader.o
 	$(LD) $(LDFLAGS) -Ttext=$(BOOT_LOC) -o $@ $<
 
+clean-boot:
+
