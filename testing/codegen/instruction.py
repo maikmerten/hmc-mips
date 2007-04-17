@@ -6,6 +6,7 @@
 import random
 from rtype import *
 from memops import *
+from multdiv import *
 
 weights =  [(addu,    2),
             (subu,    2),
@@ -17,6 +18,18 @@ weights =  [(addu,    2),
             (ori,     2),
             (xori,    2),
             (lui,     5),
+            (mult,    1),
+            (multu,   1),
+            (div,     1),
+            (divu,    1),
+            (mfhi,    1),
+            (mflo,    1),
+            (sll,     1),
+            (sllv,    1),
+            (sra,     1),
+            (srav,    1),
+            (srl,     1),
+            (srlv,    1),
             (sw,      5),
             (lw,      5),
             (sb,      0),
