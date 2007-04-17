@@ -56,7 +56,7 @@ svn checkout http://hmc-mips.googlecode.com/svn/trunk/ hmc-mips
 to get all of the source from the mips project.  Then go to the 'hmc-mips/systems/src' folder.  From here, you can write your programs.  If your program is called "`myfile.c`", then you should be able to execute
 
 {{{
-make myfile.coe
+make myfile.v
 }}}
 
-which will compile your program, check it for invalid instructions, and dump a coefficient file (along with the bootloader) for simulation in verilog into the folder.
+which will compile your program, check it for invalid instructions, and dump a verilog file (along with the bootloader) for synthesis in Xilinx into the folder.
