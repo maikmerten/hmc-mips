@@ -22,5 +22,5 @@ dhryFuncs.o: dhryFuncs.asm
 dhrystone.out: dhrystone.o dhryFuncs.o $(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
 
-clean-dhry:
+clean-dhrystone:
 	rm -f dhryFuncs.asm dhrystone.asm
