@@ -42,6 +42,9 @@ for x in range(31):
     print "addi $%d, $0, 0" % (x+1)
     machine.regs[x] = 0
 
+# reset hilo (we won't stall here because it cranks away in the background)
+print 'mult $0 $0'
+
 # populate some registers
 for x in range(32):
     addi_ins = addiu()

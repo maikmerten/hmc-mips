@@ -15,6 +15,8 @@ class MIPSComputer:
     regs = {} # stores unsigned values
     mem = {} # memory not yet implemented
     blockCounter = 0 #increment on block
+    hi = 0
+    low = 0
     
     def __init__(self):
         for reg in range(32):
