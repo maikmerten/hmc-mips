@@ -154,8 +154,8 @@ void sendInst(unsigned char instruction)
 unsigned char checkLoc(unsigned char location)
 {
 	// Valid location
-	if ( (location < 0x10) ||
-		 ((location >= 0x40) && (location < 0x50)))
+	if ( (location < 0x14) ||
+		 ((location >= 0x40) && (location < 0x54)))
 	{
 		return location;
 	}
@@ -170,7 +170,7 @@ unsigned char checkLoc(unsigned char location)
 		location = location % 0xE0;
 	}
 	// If off end of first line, wrap to second
-	else if ((location >= 0x10) && (location < 0x20))
+	else if ((location >= 0x14) && (location < 0x20))
 	{
 		location = location + 0x30;
 	}
