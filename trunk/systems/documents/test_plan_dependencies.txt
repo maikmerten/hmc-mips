@@ -1,0 +1,8 @@
+Matt McKnett, 4/24/07
+
+Test Plan documentation dependencies:
+1. PCB set-up instructions
+2. Xilinx project set-up instructions & package pin definitions for Single-FPGA and FPGA-PCB operations
+3. Single-FPGA operation set-up instructions
+4. FPGA-PCB operation set-up instructions
+5. The Chip Report
