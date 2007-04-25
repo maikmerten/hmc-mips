@@ -1,6 +1,9 @@
 # test_led_asm.asm
+# 
+# Created by Matt McKnett on 4/19/2007
 #
-# This file is designed for debugging the dual FPGA
+# This file is designed for debugging the dual FPGA.
+# It turns on LED0 and LED3, and turns off LED1 and LED2.
 #
 
 .set noreorder
