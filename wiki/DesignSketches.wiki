@@ -39,7 +39,7 @@ http://hmc-mips.googlecode.com/svn/trunk/images/executestageblock.jpg
 
 http://hmc-mips.googlecode.com/svn/trunk/images/memorystageblock.jpg
 
-== Coprocessor 0 Synthesized ==
+== Coprocessor 0 ==
 
 http://hmc-mips.googlecode.com/svn/trunk/images/cop0.jpg
 
