@@ -15,6 +15,10 @@
 #define MUDDCLIB_INCLUDED 1
 
 
+/* Set the clock frequency you're running at here: */
+#define CLK_FREQ 8
+
+
 /* LED addresses encoded for easy use of functions. */
 #define LEDS ((char*)0xA0044000)
 
