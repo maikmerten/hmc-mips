@@ -70,7 +70,7 @@ void initLCD(void)
 void dispChar(char character)
 {
 	LCD_DATA = LCD_RS_MASK | (LCD_DATA_MASK & character);
-	delay1clock(200);
+	delay1clock(CLK_FREQ * 100);
 }
 
 /*
@@ -139,11 +139,11 @@ void sendInst(unsigned char instruction)
 	if(instruction == L_clear || instruction == L_moveHome)
 	{
 		setLED(0x1);			// Make an LED turn on if we get a clear.
-		delay1000clock(5);		// We need at least 1.53 ms delay for a clear.
+		delay1000clock(CLK_FREQ * 3);		// We need at least 1.53 ms delay for a clear.
 	}
 	else
 	{
-		delay1clock(200);		// All of the other instructions take
+		delay1clock(CLK_FREQ * 100);		// All of the other instructions take
 								// less than 50us.
 	}
 }
