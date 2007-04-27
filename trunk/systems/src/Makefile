@@ -20,7 +20,7 @@ BOOT_LOC = 0xbfc00100
 PROG_LOC = 0x9fc00200
 
 # Build all of the main programs in the src folder
-all: lightsOut.v dhrystone.v test_simple.v test_leds.v test_lcd.v test_buttons.v
+all: lightsOut.v dhrystone.v test_simple.v test_leds.v test_lcd.v test_buttons.v test_led_asm.v
 
 # This line prevents make from automatically deleting these files as temporary
 .PRECIOUS: %.dat %.dump %.o %.s %.asm
