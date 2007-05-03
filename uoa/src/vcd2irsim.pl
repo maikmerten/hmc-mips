@@ -15,19 +15,19 @@ use Switch;
 
 #print "Enter path of file to be written: ";
 #chomp ($writepath = <STDIN>); # path of file to be written
-$readpath = "vcd_chopped.vcd";#input file.
+$readpath = "robsout.vcd";#input file.
 $writepath = "irsim_vcd.cmd";
 open(SOURCE, "<", $readpath) || die "couldnt open source file: $readpath ! \n";
 open(SINK, ">", $writepath) || die "couldnt open destination file: $writepath ! \n";
 
 
 #headers and vector definition.
-print SINK "| vcd_irsim.cmd\n\n";
+#print SINK "| vcd_irsim.cmd\n\n";
 print SINK "stepsize 1ns\n\n";
 
 print SINK "vector interrupts interrupts[7] interrupts[6] interrupts[5] interrupts[4] interrupts[3] interrupts[2] interrupts[1] interrupts[0]\n\n";
 
-print SINK "vector memadr memadr[31] memadr[30] memadr[29] memadr[28] memadr[27] memadr[26] memadr[25] memadr[24] memadr[23] memadr[22] memadr[21] memadr[20] memadr[19] memadr[18] memadr[17] memadr[16] memadr[15] memadr[14] memadr[13] memadr[12] memadr[11] memadr[10] memadr[9] memadr[8] memadr[7] memadr[6] memadr[5] memadr[4] memadr[3] memadr[2] memadr[1] memadr[0]\n\n";
+print SINK "vector memadr memadr[28] memadr[27] memadr[26] memadr[25] memadr[24] memadr[23] memadr[22] memadr[21] memadr[20] memadr[19] memadr[18] memadr[17] memadr[16] memadr[15] memadr[14] memadr[13] memadr[12] memadr[11] memadr[10] memadr[9] memadr[8] memadr[7] memadr[6] memadr[5] memadr[4] memadr[3] memadr[2]\n\n";
 
 print SINK "vector memdata memdata[31] memdata[30] memdata[29] memdata[28] memdata[27] memdata[26] memdata[25] memdata[24] memdata[23] memdata[22] memdata[21] memdata[20] memdata[19] memdata[18] memdata[17] memdata[16] memdata[15] memdata[14] memdata[13] memdata[12] memdata[11] memdata[10] memdata[9] memdata[8] memdata[7] memdata[6] memdata[5] memdata[4] memdata[3] memdata[2] memdata[1] memdata[0]\n\n";
 
@@ -66,7 +66,7 @@ $ph1_at_posedge = 0;
 
 $TIME1=0;
 $DELTA = 0;
-
+$elapsed=0;
 while(<SOURCE>){  #each loop examines a line in the SOURCE file
   chomp;#grab a line
 
@@ -84,9 +84,10 @@ while(<SOURCE>){  #each loop examines a line in the SOURCE file
 
 
     #step for a time delta
-    $DELTA = ($str_sym_token - $TIME1)/1000;
-    #print "current time: $TIME1\n";
+    $DELTA = ($str_sym_token - $TIME1);
+    $elapsed = $elapsed +$DELTA;
     print SINK "\n\ns ",$DELTA,"\n\n";
+    print SINK "|current time: $elapsed\n\n";
     $TIME1 = $str_sym_token;
 
   }
@@ -204,39 +205,39 @@ while(<SOURCE>){  #each loop examines a line in the SOURCE file
 	if($value eq "0"){
 	  $memdata_is_output="1";
 	  #need to release memdata from being driven by IRSIM so the outputs can form on the lines....
-	  print SINK "u memdata[31]\n";
-	  print SINK "u memdata[31]\n";
-	  print SINK "u memdata[30]\n";
-	  print SINK "u memdata[29]\n";
-	  print SINK "u memdata[28]\n";
-	  print SINK "u memdata[27]\n";
-	  print SINK "u memdata[26]\n";
-	  print SINK "u memdata[25]\n";
-	  print SINK "u memdata[24]\n";
-	  print SINK "u memdata[23]\n";
-	  print SINK "u memdata[22]\n";
-	  print SINK "u memdata[21]\n";
-	  print SINK "u memdata[20]\n";
-	  print SINK "u memdata[19]\n";
-	  print SINK "u memdata[18]\n";
-	  print SINK "u memdata[17]\n";
-	  print SINK "u memdata[16]\n";
-	  print SINK "u memdata[15]\n";
-	  print SINK "u memdata[14]\n";
-	  print SINK "u memdata[13]\n";
-	  print SINK "u memdata[12]\n";
-	  print SINK "u memdata[11]\n";
-	  print SINK "u memdata[10]\n";
-	  print SINK "u memdata[9]\n";
-	  print SINK "u memdata[8]\n";
-	  print SINK "u memdata[7]\n";
-	  print SINK "u memdata[6]\n";
-	  print SINK "u memdata[5]\n";
-	  print SINK "u memdata[4]\n";
-	  print SINK "u memdata[3]\n";
-	  print SINK "u memdata[2]\n";
-	  print SINK "u memdata[1]\n";
-	  print SINK "u memdata[0]\n"; 
+	  print SINK "x memdata[31]\n";
+	  print SINK "x memdata[31]\n";
+	  print SINK "x memdata[30]\n";
+	  print SINK "x memdata[29]\n";
+	  print SINK "x memdata[28]\n";
+	  print SINK "x memdata[27]\n";
+	  print SINK "x memdata[26]\n";
+	  print SINK "x memdata[25]\n";
+	  print SINK "x memdata[24]\n";
+	  print SINK "x memdata[23]\n";
+	  print SINK "x memdata[22]\n";
+	  print SINK "x memdata[21]\n";
+	  print SINK "x memdata[20]\n";
+	  print SINK "x memdata[19]\n";
+	  print SINK "x memdata[18]\n";
+	  print SINK "x memdata[17]\n";
+	  print SINK "x memdata[16]\n";
+	  print SINK "x memdata[15]\n";
+	  print SINK "x memdata[14]\n";
+	  print SINK "x memdata[13]\n";
+	  print SINK "x memdata[12]\n";
+	  print SINK "x memdata[11]\n";
+	  print SINK "x memdata[10]\n";
+	  print SINK "x memdata[9]\n";
+	  print SINK "x memdata[8]\n";
+	  print SINK "x memdata[7]\n";
+	  print SINK "x memdata[6]\n";
+	  print SINK "x memdata[5]\n";
+	  print SINK "x memdata[4]\n";
+	  print SINK "x memdata[3]\n";
+	  print SINK "x memdata[2]\n";
+	  print SINK "x memdata[1]\n";
+	  print SINK "x memdata[0]\n"; 
 	}else{
 	  $memdata_is_output="0";
 	}
