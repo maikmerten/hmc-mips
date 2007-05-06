@@ -11,14 +11,41 @@
 #
 
 
-use Switch;
 #print "Enter path of file to be read: ";
 #chomp ($readpath = <STDIN>); # path of file to be read
 
 #print "Enter path of file to be written: ";
 #chomp ($writepath = <STDIN>); # path of file to be written
-$readpath = "robsout.vcd";#input file.
-$writepath = "test.cmd";
+#$readpath = "robsout.vcd";#input file.
+#$writepath = "test.cmd";
+
+if ($ARGV[0]) {
+if (-T $ARGV[0]) {
+        $readpath = $ARGV[0];
+        if($ARGV[1]) {
+          if(-T $ARGV[1]) { 
+            print "output file $ARGV[1] already exists, aborting";
+            exit();
+            }else {
+              $writepath=$ARGV[1];
+            }
+        } else {
+         $writepath="irsim.cmd";
+        }
+        
+        print"VCD2IRSIM\nBy Robert Moric and Joel Stanley\n\n";
+        print "Converting Verilog Change Dump $readpath to IRSIM cmd file $writepath\n";
+}else {
+        print "input file $ARGV[0] does not exist.\n";
+        print "Usage:\tvcd2irsim vcdfile.vcd [irsimfile.cmd]\n";
+        exit();
+}
+}else {
+         print "Usage:\tvcd2irsim vcdfile.vcd [irsimfile.cmd]\n";
+         exit();
+ }
+       
+        
 open(SOURCE, "<", $readpath) || die "couldnt open source file: $readpath ! \n";
 open(SINK, ">", $writepath) || die "couldnt open destination file: $writepath ! \n";
 
@@ -32,16 +59,16 @@ for($i=7;$i>=0;$i--) { print SINK "interrupts_",$i,"_ " }
 print SINK "\n\n";
 
 print SINK "vector memadr ";
-for($i=28;$i>=2;i++) { print SINK "memadr_",$i,"_ " }
-print SINK "\n\n"
+for($i=28;$i>=2;$i--) { print SINK "memadr_",$i,"_ " }
+print SINK "\n\n";
 
 print SINK "vector memdata ";
-for($i=31;$i>=0;i--) { print SINK "memdata_",$i,"_ " }
-print SINK "\n\n"
+for($i=31;$i>=0;$i--) { print SINK "memdata_",$i,"_ " }
+print SINK "\n\n";
 
 print SINK "vector membyteen ";
-for($i=3;$i>=0;i--) { print SINK "membyteen_",$i,"_ " }
-print SINK "\n\n"
+for($i=3;$i>=0;$i--) { print SINK "membyteen_",$i,"_ " }
+print SINK "\n\n";
 
 print SINK "ana ph1\n";
 print SINK "ana ph2\n";
@@ -57,13 +84,13 @@ print SINK "ana memadr\n";
 $ph1="x";
 $ph2="x";
 $reset="x";
-@interrupts=("1","1","1","1","1","1","1","1");
+@interrupts = (1) x 8;
 $memdone="1";
 #in-outs
-@memdata=("x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x");
+@memdata = ("x") x 32;
 #outputs
-@memadr=("x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x");
-@membyteen=("x","x","x","x");
+@memadr= ("x") x 27;
+@membyteen=("x") x 4;
 #memrwb & memen are useful in determining when to 
 #assert memdata as an output. 
 $memrwb="1";
@@ -75,7 +102,7 @@ $ph1_at_posedge = 0;
 
 $TIME1=0;
 $DELTA = 0;
-$elapsed=0;
+#$elapsed=0;
 while(<SOURCE>){  #each loop examines a line in the SOURCE file
   chomp;#grab a line
 
@@ -90,15 +117,12 @@ while(<SOURCE>){  #each loop examines a line in the SOURCE file
   $str_sym_token =~ s/\s//g;
 
   if($value eq "#"){
-
-
     #step for a time delta
     $DELTA = ($str_sym_token - $TIME1);
     #$elapsed = $elapsed +$DELTA;
     print SINK "\n\ns ",$DELTA,"\n\n";
     #print SINK "print current time: $elapsed\n\n";
     $TIME1 = $str_sym_token;
-
   }
   else{
     
