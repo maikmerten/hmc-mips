@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 #Robert Moric April 2007
 #robertmoric at gmail dot com
 #
@@ -25,14 +27,21 @@ open(SINK, ">", $writepath) || die "couldnt open destination file: $writepath ! 
 #print SINK "| vcd_irsim.cmd\n\n";
 print SINK "stepsize 1ns\n\n";
 
-print SINK "vector interrupts interrupts_7_ interrupts_6_ interrupts_5_ interrupts_4_ interrupts_3_ interrupts_2_ interrupts_1_ interrupts_0_\n\n";
+print SINK "vector interrupts ";
+for($i=7;$i>=0;$i--) { print SINK "interrupts_",$i,"_ " }
+print SINK "\n\n";
 
-print SINK "vector memadr memadr_28_ memadr_27_ memadr_26_ memadr_25_ memadr_24_ memadr_23_ memadr_22_ memadr_21_ memadr_20_ memadr_19_ memadr_18_ memadr_17_ memadr_16_ memadr_15_ memadr_14_ memadr_13_ memadr_12_ memadr_11_ memadr_10_ memadr_9_ memadr_8_ memadr_7_ memadr_6_ memadr_5_ memadr_4_ memadr_3_ memadr_2_\n\n";
+print SINK "vector memadr ";
+for($i=28;$i>=2;i++) { print SINK "memadr_",$i,"_ " }
+print SINK "\n\n"
 
-print SINK "vector memdata memdata_31_ memdata_30_ memdata_29_ memdata_28_ memdata_27_ memdata_26_ memdata_25_ memdata_24_ memdata_23_ memdata_22_ memdata_21_ memdata_20_ memdata_19_ memdata_18_ memdata_17_ memdata_16_ memdata_15_ memdata_14_ memdata_13_ memdata_12_ memdata_11_ memdata_10_ memdata_9_ memdata_8_ memdata_7_ memdata_6_ memdata_5_ memdata_4_ memdata_3_ memdata_2_ memdata_1_ memdata_0_\n\n";
+print SINK "vector memdata ";
+for($i=31;$i>=0;i--) { print SINK "memdata_",$i,"_ " }
+print SINK "\n\n"
 
-print SINK "vector membyteen membyteen_3_ membyteen_2_ membyteen_1_ membyteen_0_\n\n";
-
+print SINK "vector membyteen ";
+for($i=3;$i>=0;i--) { print SINK "membyteen_",$i,"_ " }
+print SINK "\n\n"
 
 print SINK "ana ph1\n";
 print SINK "ana ph2\n";
@@ -205,39 +214,7 @@ while(<SOURCE>){  #each loop examines a line in the SOURCE file
 	if($value eq "0"){
 	  $memdata_is_output="1";
 	  #need to release memdata from being driven by IRSIM so the outputs can form on the lines....
-	  print SINK "x memdata_31_\n";
-	  print SINK "x memdata_31_\n";
-	  print SINK "x memdata_30_\n";
-	  print SINK "x memdata_29_\n";
-	  print SINK "x memdata_28_\n";
-	  print SINK "x memdata_27_\n";
-	  print SINK "x memdata_26_\n";
-	  print SINK "x memdata_25_\n";
-	  print SINK "x memdata_24_\n";
-	  print SINK "x memdata_23_\n";
-	  print SINK "x memdata_22_\n";
-	  print SINK "x memdata_21_\n";
-	  print SINK "x memdata_20_\n";
-	  print SINK "x memdata_19_\n";
-	  print SINK "x memdata_18_\n";
-	  print SINK "x memdata_17_\n";
-	  print SINK "x memdata_16_\n";
-	  print SINK "x memdata_15_\n";
-	  print SINK "x memdata_14_\n";
-	  print SINK "x memdata_13_\n";
-	  print SINK "x memdata_12_\n";
-	  print SINK "x memdata_11_\n";
-	  print SINK "x memdata_10_\n";
-	  print SINK "x memdata_9_\n";
-	  print SINK "x memdata_8_\n";
-	  print SINK "x memdata_7_\n";
-	  print SINK "x memdata_6_\n";
-	  print SINK "x memdata_5_\n";
-	  print SINK "x memdata_4_\n";
-	  print SINK "x memdata_3_\n";
-	  print SINK "x memdata_2_\n";
-	  print SINK "x memdata_1_\n";
-	  print SINK "x memdata_0_\n"; 
+    for($i=31;$i>=0;$i--) { print SINK "x memdata_",$i,"_\n" }
 	}else{
 	  $memdata_is_output="0";
 	}
