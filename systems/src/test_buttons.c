@@ -32,7 +32,7 @@
 #include "muddCLib/muddCLib.h"
 
 // Uncomment this line if you want to try making the right button toggle LED3.
-#define TRY_TOGGLE 1
+//#define TRY_TOGGLE 1
 
 int main()
 {
