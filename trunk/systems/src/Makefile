@@ -7,7 +7,7 @@ DUMP = ~/yoda_warrior/bin/mips-cygwin-elf-objdump.exe
 # Where the source directories are
 BLD = ../build
 SRC = ./
-INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk dhrystone.mk test_buttons.mk test_simple.mk
+INCLUDEFILES = boot.mk test_leds.mk test_lcd.mk lightsOut.mk dhrystone.mk test_buttons.mk test_simple.mk test_buttons2.mk
 
 # These variables control the build process.
 CFLAGS = -Wall -msoft-float -march=r3000 
