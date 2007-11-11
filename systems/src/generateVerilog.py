@@ -120,6 +120,7 @@ def verilogBootAndProgram(params):
     verilog_file.close()
 
     verilog_output = verilog_output.replace("(case_statements)", outputString)
+    verilog_output = verilog_output.replace("(source_filename)", program_name)
 
     output_file = open(output_name, 'wb')
     output_file.write(verilog_output)
