@@ -23,11 +23,18 @@
 #define LEDS ((char*)0xA0044000)
 
 /* Button addresses encoded for function use */
+/*
 #define BUTTON_ENTER ((char*)0xA0044014)
 #define BUTTON_UP ((char*)0xA0044018)
 #define BUTTON_DOWN ((char*)0xA004401C)
 #define BUTTON_LEFT ((char*)0xA0044020)
 #define BUTTON_RIGHT ((char*)0xA0044024)
+*/
+#define BUTTON_UP ((char*)0xA0044014)
+#define BUTTON_DOWN ((char*)0xA0044018)
+#define BUTTON_LEFT ((char*)0xA004401C)
+#define BUTTON_RIGHT ((char*)0xA0044020)
+#define BUTTON_ENTER ((char*)0xA0044024)
 
 /* if a button is pressed, then a value of 1 is returned by
    the memory system.  If it is up (released), then the system
@@ -145,6 +152,8 @@ void sendInst(unsigned char instruction);
 
 /* Check to see if the location specified is valid. */
 unsigned char checkLoc(unsigned char location);
+
+void wiggleLED(void);
 
 
 /*  =============================================

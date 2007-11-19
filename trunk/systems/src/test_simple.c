@@ -14,13 +14,10 @@
 
 int main() {
 	char count = 0;
-
-	while(1)
-	{
-		setLED(count);
-		delay1000clock(50);
-		++count;
-	}
-
+	
+	while(1) {
+	  setLED(count++);
+	  delay1000clock(20);
+        }
 	return 0;
 }

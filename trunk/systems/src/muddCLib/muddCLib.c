@@ -242,3 +242,20 @@ void *memset(void *buffer, int ch, size_t count)
 
 	return (buffer);
 }
+
+
+// Wiggle LEDs a few times to know we are alive
+void wiggleLED(void) {
+	setLED(0x5);
+	delay1000clock(30);
+	setLED(0xA);
+	delay1000clock(30);
+	setLED(0x5);
+	delay1000clock(30);
+	setLED(0xA);
+	delay1000clock(30);
+	setLED(0x5);
+	delay1000clock(30);
+	setLED(0xA);
+	delay1000clock(30);
+}

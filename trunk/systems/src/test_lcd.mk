@@ -3,7 +3,7 @@
 # Defines the dependencies for making test_lcd
 
 test_lcd.asm: test_lcd.c $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
-	$(CC) $(CFLAGS) -O2 -S $< -o $@ 
+	$(CC) $(CFLAGS) -O0 -S $< -o $@ 
 
 test_lcd.o: test_lcd.asm
 	python $(SRC)/checkInstructions.py $<

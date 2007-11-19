@@ -2,10 +2,11 @@
 #
 # The makefile responsible for making my program
 
-MYPROGFILES = $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
+#MYPROGFILES = $(SRC)/muddCLib/muddCLib.h boot_start.dat boot_loader.dat
+MYPRGOFILES = boot_start.dat boot_loader.dat
 
 test_simple.asm: test_simple.c $(MYPROGFILES)
-	$(CC) $(CFLAGS) -O2 -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 test_simple.o: test_simple.asm
 	python $(SRC)/checkInstructions.py $<
