@@ -12,12 +12,18 @@
 
 #include "muddCLib/muddCLib.h"
 
+//asm("lui $sp, 0x8004;");
+
 int main() {
-	char count = 0;
+	char count = 1;
+	int i;
 	
 	while(1) {
-	  setLED(count++);
-	  delay1000clock(20);
+	  //setLED(count++);
+	  *LEDS = count++;
+	  i = 16000;
+	  while(i--);
+	  //delay1000clock(20);
         }
 	return 0;
 }

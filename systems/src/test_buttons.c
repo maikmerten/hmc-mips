@@ -31,6 +31,8 @@
 
 #include "muddCLib/muddCLib.h"
 
+//asm("lui $sp, 0x8004;");
+
 // Uncomment this line if you want to try making the right button toggle LED3.
 //#define TRY_TOGGLE 1
 
@@ -41,11 +43,6 @@ int main()
 	setLED(0x0);
 
 	// Do a little wiggle
-	//delay1000clock(20);
-	//setLED(0x5);
-	//delay1000clock(20);
-	//setLED(0xa);
-	//delay1000clock(20);
 	wiggleLED();
 
 	// Main loop

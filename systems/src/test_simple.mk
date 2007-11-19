@@ -12,7 +12,7 @@ test_simple.o: test_simple.asm
 	python $(SRC)/checkInstructions.py $<
 	$(AS) -o $@ $<
 
-test_simple.out: test_simple.o $(SRC)/muddCLib/muddCLib.o
+test_simple.out: test_simple.o #$(SRC)/muddCLib/muddCLib.o
 	$(LD) $(LDFLAGS) -Ttext=$(PROG_LOC) -o $@ $^
 
 clean-test_simple:
