@@ -26,22 +26,12 @@ int main()
 	char str2[16] = {' ', ' ', ' ', 'H', 'M', 'C', ' ', 'V', 'L', 'S', 'I', ' ', '0', '7'};
 	int i;
 
+	wiggleLED();
+
 	initLCD();
 
 	while(1)
 	{
-		// Make some LEDs blink so we know we're getting
-		// some response from the board.
-		setLED(0x1);
-		delay1000clock(300);
-		setLED(0x2);
-		delay1000clock(300);
-		setLED(0x4);
-		delay1000clock(300);
-		setLED(0x8);
-		delay1000clock(300);
-		setLED(0x9);
-
 		// Move test
 		move(L_secondRow);
 		dispChar('*');

@@ -45,6 +45,8 @@ int main()
 	char blankMsg[LCD_WIDTH] = {'\0'};
 #endif
 
+	wiggleLED();
+
 #ifdef DEBUG_SIMULATOR
 	printf("LightsOut!\n");
 #else
