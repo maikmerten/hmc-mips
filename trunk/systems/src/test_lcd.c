@@ -20,6 +20,8 @@
 
 #include "muddCLib/muddCLib.h"
 
+//asm("lui $sp, 0x8004;");
+
 int main() 
 {
 	char str1[16] = {'H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
