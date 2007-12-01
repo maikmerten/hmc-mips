@@ -14,13 +14,10 @@ CFLAGS = -Wall -msoft-float -march=r3000 -O0
 LDFLAGS = -Tdata 0x80016A80 
 DEBUG = -nodebug
 BOOTLOAD = true
-#BOOTLOAD = false
 MEM_SPECS = toolchain_memory_specs.txt
 RESET_LOC = 0xbfc00000
 BOOT_LOC = 0xbfc00100
 PROG_LOC = 0x9fc00200
-#PROG_LOC = 0xbfc00000
-#PROG_LOC = 0xbfc00200
 
 # Build all of the main programs in the src folder
 all: lightsOut.v dhrystone.v test_simple.v test_leds.v test_lcd.v test_buttons.v test_led_asm.v test_led_asm.asm
