@@ -125,6 +125,17 @@ int main ()
 	  'P', 'R', 'O', 'G', 'R', 'A', 'M', ',', ' ', '3', '\'', 'R', 'D', ' ', 
 	  'S', 'T', 'R', 'I', 'N', 'G', '\0'};
 
+  /* Now some strings for LCD printing: */
+  char str_empty[1] = {'\0'};
+  char str_title[16] = {'D', 'h', 'r', 'y', 's', 't', 'o', 'n', 'e', ' ',
+                        'v', '2', '.', '1', '\0'};
+  char str_starting[18] = {'S', 't', 'a', 'r', 't', 'i', 'n', 'g', ' ', 'i',
+                           'n', ' ', '4', '.', '.', '.', '\0'};
+  char str_running[9] = {'R', 'u', 'n', 'n', 'i', 'n', 'g', '\0'};
+  char str_done[7] = {'D', 'o', 'n', 'e', '!', '\0'};
+  char str_success[9] = {'S', 'u', 'c', 'c', 'e', 's', 's', '\0'};
+  char str_failure[9] = {'F', 'a', 'i', 'l', 'u', 'r', 'e', '\0'};
+
         One_Fifty       Int_1_Loc;
   REG   One_Fifty       Int_2_Loc;
         One_Fifty       Int_3_Loc;
@@ -214,18 +225,37 @@ int main ()
   printf ("Execution starts, %d runs through Dhrystone\n",Number_Of_Runs);
   */
 
+  /* Initialize the LCD. */
+  initLCD();
+  sendInst( L_curs | L_blink );
+
   /* The LEDs count down one at a time, then flash to indicate the
 	 beginning of tests. */
   setLED(0x8);
+  dispMessage(str_title, str_starting); 
   delay1000clock(200);
+
   setLED(0x4);
+  move(0x4C);
+  dispChar( '3' );
   delay1000clock(200);
+
   setLED(0x2);
+  move(0x4C);
+  dispChar( '2' );
   delay1000clock(200);
+
   setLED(0x1);
+  move(0x4C);
+  dispChar( '1' );
   delay1000clock(200);
+
   setLED(0xF);
+  move(0x4C);
+  dispChar( '0' );
   delay1000clock(50);
+
+  dispMessage(str_running, str_empty);
   setLED(0x0);
 
   /***************/
@@ -290,8 +320,9 @@ int main ()
   /* Stop timer */
   /**************/
 
+  setLED(0xF);
   /* Flash the LEDs to indicate the end of the tests. */
-  for(i = 0; i < 10; ++i)
+  for(i = 0; i < 3; ++i)
   {
 	  setLED(0xF);
 	  delay1000clock(100);
@@ -325,6 +356,7 @@ int main ()
 
   if(testsSucceeded)
   {
+	dispMessage(str_done, str_success);
 	/* LEDs show fireworks */
 	  while(1)
 	  {
@@ -348,6 +380,7 @@ int main ()
   }
   else
   {
+	dispMessage(str_done, str_failure);
 	/* LEDs flash quickly */
 	  while(1)
 	  {
