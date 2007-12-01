@@ -138,7 +138,6 @@ void sendInst(unsigned char instruction)
 	LCD_DATA = (LCD_DATA_MASK & instruction);
 	if(instruction == L_clear || instruction == L_moveHome)
 	{
-		setLED(0x1);			// Make an LED turn on if we get a clear.
 		delay1000clock(CLK_FREQ * 3);		// We need at least 1.53 ms delay for a clear.
 	}
 	else
