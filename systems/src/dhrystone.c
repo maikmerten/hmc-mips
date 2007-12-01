@@ -227,7 +227,7 @@ int main ()
 
   /* Initialize the LCD. */
   initLCD();
-  sendInst( L_curs | L_blink );
+  sendInst( L_disp );
 
   /* The LEDs count down one at a time, then flash to indicate the
 	 beginning of tests. */
